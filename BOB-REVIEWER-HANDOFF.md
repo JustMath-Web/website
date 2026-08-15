@@ -1,6 +1,185 @@
 # Bob Reviewer Handoff - Just Math Malaysia
 
-Date: 2026-08-14
+Date: 2026-08-15
+
+## 2026-08-15 - Vertical slice development review
+
+Role: Bob, independent development reviewer. Claude is the implementer. Bob did not edit
+application code, `docs/DECISIONS.md`, or root `HANDOFF.md`.
+
+Scoped verdict: **Revision required.** This is the first review of the vertical slice (landing page
+rendering from the real component tree and local fallback content; no blog routes yet) — it
+continues past the already-closed scaffold review below, which covered only tokens/Sanity
+wiring/schemas before any real page existed.
+
+Governing guideline: `02-INFORMATIVE-BLOG.md`, guideline_version `1.6.0`. Framework/backend branch:
+Astro in `web/`, standalone Sanity Studio in `studio/`, no commerce backend.
+
+Commit reviewed: `770965218abcbc048c1261c9ca0ad3f4b6bb832c` (branch `main`, clean working tree,
+confirmed via `git log -1` / `git status`).
+
+### Capabilities and fallbacks actually used
+
+| Capability | Status | Notes |
+| --- | --- | --- |
+| Bash / Read / Grep / Glob | Available | Used throughout. |
+| Playwright (`mcp__plugin_playwright_playwright__*`) | Available | Used for all real-browser verification — no manual-checklist fallback needed. |
+| `gh` CLI | Available, authenticated (`charliekhc`) | Used to confirm the CI run for the exact commit under review, not just trust the badge. |
+| Docs-lookup MCP (context7 etc.) | Not invoked | Nothing in this pass required a fresh framework-API lookup beyond what the scaffold review already confirmed (Sanity perspectives, unchanged); WCAG 2.2 SC 2.5.8 applied from the same standard the project's own `design/STATES.md` §0 already codifies, not from memory of an unstable API. |
+| Lighthouse / Chrome DevTools performance audit | Not available in this session | Performance pass (10) is marked partially unverified — page-weight facts (byte sizes, request counts) were measured directly instead; Core Web Vitals scores were not run and are not asserted. |
+
+### Files/evidence reviewed
+
+- `Setup_Instructions/Guidelines/Web-Development/Web-Development-Guidelines/02-INFORMATIVE-BLOG.md`
+  (full read).
+- `docs/DECISIONS.md`, `docs/CONTENT-MODEL.md`, `HANDOFF.md` (both pages, full read).
+- `design/DESIGN.md`, `design/STATES.md` (tap-target rule, §0 and §2.6), `design/COPY-GAPS.md`
+  (unresolved-placeholder check).
+- All four prior `review/bob/*.md` files and the pre-existing `BOB-REVIEWER-HANDOFF.md` content
+  (preserved below, unmodified).
+- `web/src/**` in full: `pages/index.astro`, `layouts/BaseLayout.astro`, all 6 components
+  (`SiteHeader`, `SiteFooter`, `WhatsAppCta`, `GapChart`, `SectionMarker`, `LogoLockup`),
+  `lib/content/{landingData,defaultLandingData}.ts`, `lib/sanity/{client,queries,types,image}.ts`,
+  `styles/**`.
+- `studio/schemaTypes/documents/{homePage,redirect}.ts`, `studio/schemaTypes/objects/navItem.ts`.
+- `.github/workflows/ci.yml`, `web/astro.config.mjs`, `web/package.json`, both `.env.example` files.
+- `web/dist/` after a clean local build (`index.html`, CSS bundle, `og-default.png`).
+
+### Tools and commands actually run
+
+- `git log -1`, `git status`, `git branch -a`.
+- `web`: `pnpm install --frozen-lockfile` (already up to date), `pnpm format:check` (clean),
+  `pnpm check` (`astro check` — 0 errors/warnings/hints, 17 files), `pnpm build` (clean, 1 page).
+- `studio`: `pnpm install --frozen-lockfile` (already up to date), `pnpm format:check` (clean),
+  `pnpm typecheck` (clean), `pnpm lint` (clean), `pnpm build` (clean, only the documented Sanity
+  auto-update version-drift warning), `pnpm seed:dry-run` (6 categories, 1 author, 3 singletons, no
+  writes).
+- `gh run list --limit 5`, `gh run list --json headSha,conclusion,workflowName` — confirmed the
+  latest run (`31891195182`) is `success` on `headSha 77096521...`, the exact commit under review.
+- `pnpm preview --port 4325` in `web/`, then Playwright MCP against the served static build.
+- Targeted `rg`/`grep` sweeps: `href="#"` (clean), analytics/`gtag`/`dataLayer` (clean, confirms N/A
+  as decided), JSON-LD/`schema.org` (empty — a finding), font-loading (`@font-face`/Google Fonts —
+  confirms still-external), security headers (empty — a finding), secret patterns across tracked
+  files (clean), `.github/` contents (only `ci.yml`, no Dependabot — a finding).
+- A Python one-liner reading the PNG header of `og-default.png` to confirm its real pixel dimensions
+  match the `og:image:width`/`height` meta tags (1200×630, confirmed correct).
+
+### Viewports/flows actually tested (real browser, not inferred from markup)
+
+- **Viewports:** 390×844, 560×900 (documented breakpoint), 768×1024, 1440×900.
+- **Overflow:** `document.documentElement.scrollWidth === clientWidth` confirmed at all four
+  widths; a separate per-element "right edge past viewport" test additionally confirmed the pricing
+  table's known/intended horizontal scroll stays contained inside its own `overflow-x: auto`
+  wrapper rather than leaking to the page body.
+- **Landmarks/headings:** counted `h1`/`main`/`header`/`footer`/`nav` and the full heading-level
+  sequence at all four widths — structurally correct, no skipped levels, both `nav`s distinctly
+  labelled.
+- **Tap targets:** measured every `<a>`/`<button>` under 44px in either dimension at all four
+  widths, then re-measured the worst offenders precisely with `getBoundingClientRect()` plus
+  computed `min-height`/`padding` to confirm root cause, not just symptom.
+- **Keyboard:** real `Tab` traversal through the first 6 focusable elements, confirming order and a
+  visible, consistent `2px solid rgb(43, 68, 104)` focus ring on every one; separately confirmed the
+  skip link becomes fully visible (`top: 12, left: 12`, no transform) once its transition settles on
+  focus.
+- **FAQ accordion:** a real click on the third question confirmed correct `aria-expanded` toggling,
+  panel `hidden`/`inert` state changes, and exclusive single-open behavior; separately confirmed (by
+  reading the server-rendered HTML, not a live no-JS browser run) that 12 of 13 panels ship `hidden`
+  with no non-JS fallback path.
+- **Contrast:** sampled and computed actual contrast ratios (alpha-composited against the true
+  ancestor background, not assumed) for 11 selectors across dev-authored areas not previously
+  checked at the code level — footer links/contact/brand copy, level-row links, trust-band text,
+  pricing table cells, gap-chart axis labels, FAQ buttons, availability card, portrait fallback.
+  Lowest ratio found: 5.90:1 (large text) — no contrast failures.
+- **Reduced motion:** emulated `prefers-reduced-motion: reduce` and confirmed the session-card hover
+  transition duration collapses to `0s`.
+- **Console/network:** zero console errors, zero page errors, zero failed requests, zero non-2xx
+  responses across the full page load at 1440px, including the real external Google Fonts requests
+  (which do succeed — 8 requests, 2 CSS + 6 unique woff2 files after dedup).
+
+### Resolved from the scaffold review (re-verified independently, not trusted from the record)
+
+All ten scaffold-stage findings (2 P1, 7 P2, 1 P3) remain closed on independent re-check: the
+published/preview Sanity client split, `href="#"` absence, navItem/redirect URL allowlisting,
+explicit CMS result types, explicit GROQ projections, slug validation, Studio dependency pinning,
+project-specific READMEs, the scaffold FE self-check's continued presence, and byte-identical
+tokens. Nothing regressed.
+
+### Open findings, this review (full detail and evidence in `review/bob/CODE-REVIEW.md`)
+
+**P1 (4, all new to this vertical slice — none present at scaffold stage):**
+
+- VS-01: `GapChart.astro` hardcodes chart data that `homePage.problem.gapChartAnnotations` already
+  models, is already fetched by `queries.ts`, and is already typed — the CMS field is fetched and
+  then silently discarded. Several other on-page figures (24, 2, 20, 30, the availability time
+  blocks) are likewise hardcoded literals duplicating facts already present in editable prose
+  fields, creating real content-drift risk once the dataset is seeded and edited.
+- VS-02: "Blog notes" level-to-category links measure 67.6×16.8px — fails both WCAG 2.2 SC 2.5.8 AA
+  and the project's own `design/STATES.md` §0 ≥44×44 rule, at every tested viewport.
+- VS-03: Footer navigation links measure ~350×18.2px — same failure, shared component, ships on
+  every future page.
+- VS-04: No Playwright suite exists anywhere in the repository. `@playwright/test` was explicitly
+  earmarked in `docs/DECISIONS.md` §4 to be added with this exact vertical slice, and was not. All
+  browser verification in this review was performed ad hoc by Bob and is not committed, repeatable,
+  or CI-enforced.
+
+**P2 (9):** header/footer nav not marked up as lists (FE-04); 12 of 13 FAQ answers unreachable
+without JS (FE-32); no JSON-LD anywhere; no security headers configured; no dependency/advisory
+scanning in CI; fonts still loaded from Google Fonts, not self-hosted (previously known, confirmed
+still open); old-site redirects still not implemented as executable config despite three of six
+targets now genuinely existing on the real page (previously known, confirmed still open); no
+vertical-slice FE self-check recorded in `docs/DECISIONS.md` (repeat of a gap the scaffold review
+already caught once); header brand/logo link at 114×40.3px, under the house 44×44 rule by ~4px.
+
+**P3 (4):** skip link 1.6px short of the house 44×44 rule; sitemap/robots/RSS still not wired
+(expected-incomplete at this stage, not a regression); FAQ accordion could be native
+`<details>`/`<summary>` (would also fix VS-06); `index.astro` is a large single-file component (no
+duplication found, just a size/maintainability note for later).
+
+### Disagreements
+
+None with the implementer's own record — every claim in `HANDOFF.md`/`docs/DECISIONS.md` checked in
+this pass was found accurate. The disagreement, if any, is with the completeness of what was
+delivered relative to the guideline's Section 19 MUST for this exact stage (Playwright), not with
+anything Claude claimed was true.
+
+### Residual unverified risk
+
+- **Performance (Lighthouse/Core Web Vitals):** not run — no Lighthouse/DevTools tool was available
+  in this session. Page-weight facts were measured directly instead (47,115-byte HTML, 44,197-byte
+  CSS, zero client JS beyond a small inline script) and are a reasonable proxy, but LCP/CLS/INP
+  numbers themselves are unverified.
+- **No-JS FAQ behavior:** established by reading the server-rendered HTML's `hidden` attributes, not
+  by running an actual browser session with JavaScript disabled. The conclusion (12 of 13 panels
+  unreachable) follows directly from the markup and script logic and is not expected to change under
+  a literal no-JS run, but that literal run was not performed.
+- **Branch protection:** confirmed still blocked by GitHub's Free org plan (403 on both APIs), which
+  is the owner's explicit, already-accepted tradeoff per `docs/DECISIONS.md` §18 — restated here as
+  a residual risk (an unprotected `main` relying on team discipline alone), not reopened as a
+  finding.
+
+### Prioritized next steps for the implementer
+
+1. Fix the two tap-target regressions (VS-02, VS-03) and the header logo (VS-13) — mechanical
+   `min-height` additions, same technique already used and verified elsewhere in this codebase.
+2. Wire `GapChart` to the CMS field that already exists for it (VS-01), and record a decision for
+   the other hardcoded figures.
+3. Install `@playwright/test`, write a suite covering at minimum overflow/tap-targets/landmarks/
+   keyboard/FAQ, wire it into CI (VS-04).
+4. Work through the P2 list (nav list markup, FAQ no-JS fallback, JSON-LD, security headers,
+   advisory scanning, font self-hosting, redirects, FE self-check) before the next review.
+5. Record a vertical-slice FE self-check in `docs/DECISIONS.md` before requesting the next review,
+   per guideline Section 9.
+
+### Artifacts updated by Bob
+
+- `review/bob/CODE-REVIEW.md` (new dated section at top; scaffold section preserved below as
+  history).
+- `review/bob/FE-GATE-AUDIT.md` (new dated section at top; scaffold section preserved below).
+- `review/bob/APPROVAL-CHECKLIST.md` (new dated section at top; scaffold and design sections
+  preserved below).
+- This handoff section.
+
+---
 
 ## 2026-08-14 - Development scaffold re-review
 
