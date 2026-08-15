@@ -1,5 +1,41 @@
 # Just Math Malaysia — Project Handoff
 
+> ## STATUS 2026-08-15: Git set up · repo live on GitHub · this closes the top-priority reminder below
+>
+> Per Charlie's instruction to act on the top-priority item flagged below (no version control
+> anywhere, real data-loss risk). Full detail in `docs/DECISIONS.md` §17; summary here.
+>
+> **What changed:** project root, `web/`, and `studio/` are now one Git repo rooted at
+> `Personal/Math/` (`studio/`'s old standalone repo — one stale commit, no remote — was folded in,
+> not preserved separately; nothing in it wasn't already captured by the fresh commit). A root
+> `.gitignore` was added (merges `web/`'s and `studio/`'s own `.gitignore` rules plus
+> `.pnpm-store/`, `.DS_Store`, `.claude/settings.local.json`, and non-example `.env*`). Swept for
+> secrets before committing — none found; only `.env.example` files exist. Initial commit: 215 files,
+> `web/` + `studio/` + `design/` + `docs/` + `review/` + root docs, working tree clean after.
+>
+> **GitHub:** Charlie created a new dedicated org, **`JustMath-Web`** (matching the developer-owned-org
+> convention already used for BOMY), since org creation has no CLI/API path for a personal account —
+> only the web UI. Repo created and pushed: **`JustMath-Web/website`, private**,
+> `main` tracking `origin/main`. One snag: the first push was rejected (`GH007`, private-email
+> protection) because the commit author's email wasn't verified/public on the `charliekhc` account —
+> fixed by switching commit identity to GitHub's noreply address
+> (`7158367+charliekhc@users.noreply.github.com`) rather than making a personal email public.
+>
+> **Deliberately not done this pass:** branch protection on `main` and CI (GitHub Actions —
+> typecheck/lint/tests/build), both still required by guideline Section 7. Branch protection
+> requiring "passing CI" needs a CI workflow to exist first, and `web/` and `studio/` are separate
+> `pnpm-workspace.yaml` roots (not one unified workspace), so the CI matrix is its own small decision
+> — next repository task, not done implicitly here.
+>
+> **This closes the git/backup half of the ⚠ reminder immediately below.** Bob's independent
+> development review (the reminder's other flagged item) is still open and unaffected by this entry.
+
+> ## ⚠ REMINDER FOR THE NEXT SESSION: set up Git — RESOLVED 2026-08-15, see entry above
+>
+> Superseded by the entry directly above. Left here as history per the guideline's handoff rule
+> (newest entries first, prior sections kept). Original text follows, describing the state *before*
+> this session's fix — the "no Git repository anywhere" problem it describes no longer applies.
+
 > ## STATUS 2026-08-15: Header mobile-nav-hide fixed and verified · dev may continue
 >
 > Per Charlie's instruction, fixed the one real finding from the cross-check entry below before dev

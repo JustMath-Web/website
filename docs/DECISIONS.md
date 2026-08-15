@@ -410,3 +410,37 @@ broad `unknown` types → FE-22/23; whole-document GROQ fetches → FE-34; unenf
 content-model/FE-13 adjacent; Studio dependency pinning → FE-40) are addressed. Gates marked N/A
 above remain genuinely not assessable until the first vertical slice exists, per Bob's own scoping
 in `review/bob/FE-GATE-AUDIT.md`.
+
+## 17. Repository (guideline Section 7) — 2026-08-15
+
+Neither the project root nor `web/` had ever been a Git repository, and `studio/`'s standalone repo
+had only one stale bootstrap commit with everything since uncommitted and no remote — flagged as the
+top-priority risk in `HANDOFF.md`. Resolved this session:
+
+- **Repo scope: one monorepo at the project root**, not one repo per package. `web/`, `studio/`,
+  `design/`, `docs/`, `review/`, and the root loose files (briefs, approved copy, handoff/decision
+  docs) are all tracked together, so implementation, the design authority, and Bob's review evidence
+  share one backed-up history. `studio/`'s prior standalone `.git` (one commit, no remote, fully
+  superseded by current working-tree state) was removed rather than preserved or merged in — nothing
+  of value was in it beyond what the fresh initial commit already captures.
+- **GitHub owner: new dedicated org**, per owner's choice — `JustMath-Web`, matching the
+  developer-owned-org convention already used for BOMY (`BOMY-Inflow-Vision`) rather than the
+  personal account, so the project isn't tied to one person's account long-term.
+- **Repo: `JustMath-Web/website`, private.** Created via `gh repo create --private`; local `main` is
+  the initial commit and tracks `origin/main`.
+- **Root `.gitignore`** merges the ignore rules already present in `web/.gitignore` and
+  `studio/.gitignore` (each subproject's own `.gitignore` is left in place and still applies) plus
+  root-level concerns: `.pnpm-store/`, `.DS_Store`, `.claude/settings.local.json` (machine-local, not
+  shared), and `*.env*` variants other than the tracked `.env.example` files. Swept for secrets
+  before the first commit — no `.env` (non-example) or credential-bearing files existed to leak.
+- **Commit identity:** GitHub's push-protection rejected the first attempt (GH007 — private email)
+  because the local commit author email wasn't a verified/public address on the `charliekhc`
+  account. Re-configured to the account's GitHub-provided noreply address
+  (`7158367+charliekhc@users.noreply.github.com`) instead of making a personal address public.
+
+**Not done in this pass, deliberately out of scope for "set up git":** branch protection on `main`
+and CI (GitHub Actions running typecheck/lint/tests/build) — both still required by guideline
+Section 7 before this counts as fully compliant, but branch protection requiring "passing CI" needs
+a CI workflow to exist first, and this is a two-package (non-monorepo-workspace) layout (`web/` and
+`studio/` are separate `pnpm-workspace.yaml` roots), so the CI matrix needs its own decision. Tracked
+as the next repository task in `HANDOFF.md`.
