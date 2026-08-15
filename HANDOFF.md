@@ -1,5 +1,57 @@
 # Just Math Malaysia — Project Handoff
 
+> ## STATUS 2026-08-15: Bob's independent dev review of the vertical slice — Revision required
+>
+> Ran as a genuinely separate session (fresh agent, no memory of this project's implementation
+> history) against commit `7709652` (`770965218abcbc048c1261c9ca0ad3f4b6bb832c`), per guideline
+> Section 3's independence requirement — Claude did not review its own work. Full detail in
+> `review/bob/CODE-REVIEW.md`, `review/bob/FE-GATE-AUDIT.md`, `review/bob/APPROVAL-CHECKLIST.md`,
+> `BOB-REVIEWER-HANDOFF.md` (all new dated sections at the top; prior scaffold/design history
+> preserved unmodified below each).
+>
+> **Verdict: Revision required.** 4 P1, 9 P2, 4 P3. All ten prior scaffold-review findings remain
+> closed — nothing regressed. Reproduced CI green independently (not trusted from the badge), ran
+> real-browser Playwright checks at 390/560/768/1440px.
+>
+> **The four P1s, all new to this vertical slice (none present at scaffold time):**
+>
+> 1. **VS-01 — `GapChart.astro` hardcodes chart data that Sanity already models, fetches, and
+>    types** (`homePage.problem.gapChartAnnotations`, wired through `queries.ts` and `types.ts`, but
+>    `<GapChart />` in `index.astro:147` is rendered with zero props and the component hardcodes its
+>    own `stops`/`measured` values instead). Several other big-numeral figures on the page (`24`
+>    years, `2` independent checks, `20` students/year, `30` minutes free, the `3pm-6pm`/`8pm-11pm`
+>    availability blocks) are likewise hardcoded, each duplicating a fact already sitting in an
+>    editable prose field. Once the Sanity dataset is seeded, an editor changing the real field
+>    won't change what's on screen — the page can end up contradicting itself.
+> 2. **VS-02 — "Blog notes" level-to-category links measure 67.6×16.8px**, well under the WCAG 2.2
+>    24px floor and this project's own ≥44×44 house rule (`design/STATES.md` §0). New to this slice;
+>    didn't exist during the design-phase touch-target hardening pass.
+> 3. **VS-03 — Footer nav links measure ~350×18.2px**, same failure, and `SiteFooter` is a shared
+>    component — ships on every future page, not just the landing page.
+> 4. **VS-04 — No Playwright suite exists anywhere in the repo.** `docs/DECISIONS.md` §4 explicitly
+>    earmarked this vertical slice as "add [Playwright] with the first Playwright verification
+>    pass" — it didn't happen. Every browser check in Bob's review was done ad hoc against the local
+>    build; none of it is committed or CI-enforced, so nothing would catch a regression (Bob's own
+>    example: the header mobile-nav-hide bug fixed earlier this session — nothing in CI would have
+>    caught it if it came back).
+>
+> **9 P2s** (full list/evidence in `review/bob/APPROVAL-CHECKLIST.md`): header/footer nav not marked
+> up as `<ul>`/`<li>` (FE-04); FAQ answers 2-13 depend on JS with no native fallback; no sitewide
+> `Organization` JSON-LD; no security headers configured; no dependency/advisory scanning in CI;
+> Google Fonts `@import` instead of self-hosted (repeat, previously flagged); the six documented
+> old-site redirects still not implemented as executable config (repeat — three of six targets now
+> exist on the real page, so nothing blocks doing this now); no vertical-slice-stage FE self-check
+> recorded in `docs/DECISIONS.md` (repeat of a gap the scaffold review already caught once);
+> header brand/logo link at 114×40.3px, a hair under 44×44.
+>
+> **4 P3s**, all minor/expected-at-this-stage: skip link 1.6px short of 44×44; sitemap/robots/RSS
+> still unwired (expected — revisit with blog routes); FAQ accordion could use native
+> `<details>/<summary>` (fixes the P2 JS-dependency finding as a side effect); `index.astro` is a
+> large single-file component, not yet a defect.
+>
+> **Not fixed yet — none of this has been implemented in this pass.** Reported to Charlie for a
+> decision on whether to fix now or triage.
+
 > ## STATUS 2026-08-15: CI added and green · branch protection blocked by plan, owner-accepted · moving to Bob's review
 >
 > Per Charlie's instruction, in order: CI → get `main` green → branch protection → Bob's independent
