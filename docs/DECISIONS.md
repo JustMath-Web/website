@@ -444,3 +444,47 @@ Section 7 before this counts as fully compliant, but branch protection requiring
 a CI workflow to exist first, and this is a two-package (non-monorepo-workspace) layout (`web/` and
 `studio/` are separate `pnpm-workspace.yaml` roots), so the CI matrix needs its own decision. Tracked
 as the next repository task in `HANDOFF.md`.
+
+## 18. CI (guideline Section 7) — 2026-08-15
+
+`.github/workflows/ci.yml` added: two jobs, `web` and `studio` (one per `pnpm-workspace.yaml` root,
+per §17 — not a unified matrix, since their real scripts differ). Each installs with
+`pnpm install --frozen-lockfile`, then runs the project's own existing scripts — no script was
+invented that wasn't already in `package.json`:
+
+| Job | format:check | typecheck | lint | test | build |
+| --- | --- | --- | --- | --- | --- |
+| `web` | `pnpm format:check` | `pnpm check` (`astro check`) | *(none — web has no separate lint script, only Prettier)* | *(none — no test script exists yet)* | `pnpm build` |
+| `studio` | `pnpm format:check` | `pnpm typecheck` (`tsc --noEmit`) | `pnpm lint` (`eslint .`) | *(none — no test script exists yet)* | `pnpm build` |
+
+Pinned to the recorded baseline (§4): pnpm `11.6.0`, Node `26`. Actions pinned to their current
+majors (`actions/checkout@v7`, `actions/setup-node@v7`, `pnpm/action-setup@v6`) after the first run
+flagged `actions/checkout@v4`/`setup-node@v4`/`action-setup@v4` as targeting a deprecated Node 20
+runtime.
+
+No secrets are configured or required: `PUBLIC_SANITY_PROJECT_ID`/`PUBLIC_SANITY_DATASET` are
+deliberately left unset in CI, so `web`'s build always takes the local-fallback content path
+(`landingData.ts`'s `hasSanityEnv()` check) rather than hitting the live, still-unseeded production
+Sanity dataset over the network — keeps the build deterministic and avoids a network dependency in
+CI. `studio`'s `projectId`/`dataset` are hardcoded in `sanity.cli.ts`/`sanity.config.ts` (public,
+non-secret values) so `sanity build` needs nothing from the environment either.
+
+Verified: pushed to `main` directly (both projects' scripts were run locally first as a pre-flight
+and passed), watched via `gh run watch` — both jobs green in ~40-50s each, no failures, no
+annotations after the action-version bump.
+
+**Branch protection: blocked, not skipped by choice.** Both the classic branch-protection API and
+the newer rulesets API return `403 Upgrade to GitHub Pro or make this repository public` — GitHub's
+Free org plan doesn't allow protecting a **private** repo's branches at all, for either mechanism.
+Owner's decision: **do not** pay for GitHub Team or make the repo public just to unblock this.
+`main` stays technically unprotected (force-push and direct pushes remain technically possible), with
+these compensating measures instead:
+
+- CI (this section) still runs and is still the thing to check before merging.
+- **Manual discipline going forward: feature branches + PRs, wait for both CI jobs to go green,
+  merge — treat `main` as if it were protected even though GitHub isn't enforcing it.** No more
+  direct pushes to `main` from this point on (the git-setup and CI-setup commits earlier in this
+  session were pushed directly to bootstrap the repo before this discipline existed to apply).
+- This is a recorded, owner-approved exception to guideline Section 7's "Branch protection on `main`:
+  require PR + passing CI" — not a silently-shipped gap. Revisit if the plan situation changes (an
+  org upgrade, or a reason to make the repo public).

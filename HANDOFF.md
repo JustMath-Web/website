@@ -1,5 +1,36 @@
 # Just Math Malaysia — Project Handoff
 
+> ## STATUS 2026-08-15: CI added and green · branch protection blocked by plan, owner-accepted · moving to Bob's review
+>
+> Per Charlie's instruction, in order: CI → get `main` green → branch protection → Bob's independent
+> dev review. First three done as far as GitHub's Free-org plan allows; full detail in
+> `docs/DECISIONS.md` §18.
+>
+> **CI:** `.github/workflows/ci.yml`, two jobs (`web`, `studio` — separate `pnpm-workspace.yaml`
+> roots, not a unified matrix). Each runs the project's *real, already-existing* scripts —
+> `format:check`, typecheck (`astro check` / `tsc --noEmit`), `lint` (studio only — web has none),
+> `build`. No test step for either (no test script exists yet in either package). No secrets needed:
+> web's build takes the local-fallback content path in CI (Sanity env vars deliberately left unset,
+> so it never hits the live, still-empty production dataset); studio's project/dataset are hardcoded,
+> public values.
+>
+> **Pushed straight to `main` and watched it go green** (`gh run watch`), per Charlie's explicit
+> order — both jobs pre-flighted locally first, then ~40-50s each in CI. First run flagged
+> `actions/checkout@v4`/`setup-node@v4`/`action-setup@v4` as targeting a deprecated Node 20 runtime;
+> bumped to `v7`/`v7`/`v6`, re-ran clean with no annotations.
+>
+> **Branch protection: hit a real wall, not skipped casually.** Both the classic protection API and
+> the newer rulesets API returned `403 Upgrade to GitHub Pro or make this repository public` —
+> GitHub's Free org plan does not allow protecting a *private* repo's branches at all. Gave Charlie
+> the actual tradeoff (pay for GitHub Team vs. make the repo public vs. skip for now); **he chose to
+> skip** rather than pay or change visibility. `main` is technically unprotected. Compensating for it
+> going forward: **feature branches + PRs + wait for both CI checks before merging, by discipline
+> rather than enforcement** — no more direct pushes to `main` after this session's bootstrap commits.
+> Recorded as an explicit, owner-approved exception in `docs/DECISIONS.md` §18, not a silent gap.
+>
+> **Next:** Bob's independent development review (`BOB-WEB-DEV-REVIEWER-PROMPT.md`) against this now
+> backed-up, CI-checked commit — the other item the ⚠ reminder below (superseded) originally flagged.
+
 > ## STATUS 2026-08-15: Git set up · repo live on GitHub · this closes the top-priority reminder below
 >
 > Per Charlie's instruction to act on the top-priority item flagged below (no version control
