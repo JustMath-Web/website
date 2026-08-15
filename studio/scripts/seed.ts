@@ -212,6 +212,10 @@ function homePageDocument(categoryIdsBySlug: Record<string, string>): Identified
         ...row,
       })),
       availability: withSubSection(page.pricing.availability),
+      availabilityTimeBlocks: page.pricing.availabilityTimeBlocks?.map((item) => ({
+        _type: 'timeBlock',
+        ...item,
+      })),
       cta: withCta(page.pricing.cta),
     },
     processSteps: page.processSteps.map((step) => ({

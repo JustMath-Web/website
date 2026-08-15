@@ -221,6 +221,7 @@ export interface GapChartAnnotation {
 export interface ProblemSection {
 	heading: string;
 	body: string;
+	independentChecksCount: number;
 	gapChartAnnotations?: GapChartAnnotation[];
 }
 
@@ -250,6 +251,8 @@ export interface AboutSection {
 	byline: string;
 	heading: string;
 	body: string;
+	yearsExperience: number;
+	studentsPerYear: number;
 	portrait?: ImageWithAlt;
 	statPanel?: SubSection;
 }
@@ -262,6 +265,12 @@ export interface PricingRow {
 	perSession: string;
 }
 
+export interface TimeBlock {
+	_key: string;
+	range: string;
+	label: string;
+}
+
 export interface PricingSection {
 	heading: string;
 	body: string;
@@ -269,6 +278,7 @@ export interface PricingSection {
 	includedList: string[];
 	paymentNote: string;
 	availability?: SubSection;
+	availabilityTimeBlocks?: TimeBlock[];
 	cta?: Cta;
 }
 
@@ -287,6 +297,7 @@ export interface FaqItem {
 export interface FinalCtaSection {
 	heading: string;
 	body: string;
+	freeMinutes: number;
 	cta: Cta;
 	smallNote: string;
 }

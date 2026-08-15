@@ -95,7 +95,7 @@ Checked on 2026-08-14.
 | Prettier (web/) | `3.9.6` |
 | `prettier-plugin-astro` | `0.14.1` |
 | `prettier-plugin-tailwindcss` | `0.8.1` |
-| `@playwright/test` | `1.62.1` (not yet installed — add with the first Playwright verification pass) |
+| `@playwright/test` | `1.62.1`, installed 2026-08-16 with the vertical-slice Playwright suite (§19 below) |
 | Vitest | `4.1.10` (not yet installed — add with the first business-logic test) |
 | Pagefind, if added later | `1.5.2` |
 | Zod, if forms are added later | `4.4.3` |
@@ -488,3 +488,79 @@ these compensating measures instead:
 - This is a recorded, owner-approved exception to guideline Section 7's "Branch protection on `main`:
   require PR + passing CI" — not a silently-shipped gap. Revisit if the plan situation changes (an
   org upgrade, or a reason to make the repo public).
+
+## 19. Vertical-slice P1 fixes — Bob review response (2026-08-16)
+
+Fixes the four P1 findings from Bob's 2026-08-15 vertical-slice review (`review/bob/CODE-REVIEW.md`)
+that block approval. Scope deliberately held to the P1s plus the one P2 (VS-05) that shares a file
+with a P1 fix — not a general cleanup pass. The other eight P2s and four P3s are still open.
+
+**VS-01 — CMS data wired instead of hardcoded.** `homePage.problem.gapChartAnnotations` was already
+modeled, fetched, and typed but never passed to `GapChart.astro`; the component now takes an
+`annotations` prop and builds its internal `measured` lookup by matching each annotation's `year`
+against the chart's fixed stop codes (`stops.indexOf(annotation.year)`), so authoring order in
+Studio doesn't matter. The description on that field ("if/when built") was stale and is corrected.
+
+For the other hardcoded figures Bob flagged (`2`, `24`, `20`, `30`, the two availability time
+blocks), added typed CMS fields rather than parsing them out of prose or recording them as an
+accepted decorative-duplication exception — Bob offered both options; wiring is the more correct fix
+since these are already distinct, independently-true facts, not values derivable from the prose
+fields they sit beside:
+
+- `problem.independentChecksCount` (number) — the "2" figure-callout. Corroborated by the page's own
+  heading text ("checks...twice before SPM"): 2 counts before SPM, SPM itself is the third and final
+  measure, not one of the "2".
+- `about.yearsExperience`, `about.studentsPerYear` (number) — the portrait-fallback "24" and stat-panel
+  "20" figures.
+- `pricing.availabilityTimeBlocks` (array of `{range, label}`, min 1) — the two time-range figures;
+  placed as a sibling of `availability` rather than inside it, because `availability`'s type
+  (`subSection`) is shared with `sessions.subSections` and `about.statPanel` and gaining a
+  time-blocks field there would leak an irrelevant field into both.
+- `finalCta.freeMinutes` (number) — the close-section "30" figure.
+
+All five are `Rule.required()` (the page has no sensible default for an unset business fact) except
+`availabilityTimeBlocks`, which is `Rule.min(1)` — plural by nature, not a single required scalar.
+Schema, GROQ projection (`queries.ts`), types (`types.ts`), the local fallback
+(`defaultLandingData.ts`), and the seed script (`scripts/seed.ts`'s `_type: 'timeBlock'` tagging for
+the new array) were all updated together; `pnpm seed:dry-run` still reports the same 6/1/3 counts.
+
+**VS-02 / VS-03 — tap targets fixed using the established `--control-h` technique.** Same pattern
+already verified for the header "Blog" link and post breadcrumb (`design/STATES.md` §2.6):
+`min-height: var(--control-h)` with a compensating negative `margin-block` so the enlarged hit area
+folds back into surrounding whitespace instead of shifting sibling content. `.level-row__heading a`
+("Blog notes") only needed height (width was already 67.6px, over 44). `.site-footer__link` needed
+both dimensions.
+
+**VS-05 (P2, rolled in — shares both touched nav components).** Header and footer navigation link
+groups now render as `<ul>/<li>` (FE-04). Doing this moved each `<a>` one level deeper than the grid
+that previously stretched it to full column width, which silently broke the footer fix's width (an
+`inline-flex` link shrinks to content width instead of stretching) — caught by the new Playwright
+suite's own tap-target test, not by manual inspection. Fixed by using `display: flex` (block-level,
+stretches to the `<li>`) instead of `inline-flex`.
+
+**VS-04 — Playwright suite added and wired into CI.** `@playwright/test` `1.62.1` installed (matches
+the version pinned in §4 since scaffold time). `tests/e2e/landing.spec.ts` covers, at the four
+widths this project's own reviews measure at (390/560/768/1440): no horizontal overflow; landmark
+counts (`main`, `h1`, `header`, `footer`); the VS-02/VS-03 tap-target fixes specifically (so a
+regression is caught, not just today's fix); keyboard tab order reaching the skip link with a
+visible focus ring, and the skip link's actual behavior; and the FAQ accordion's click and keyboard
+interaction (single-open, correct `aria-expanded`/hidden state).
+
+**`astro preview` doesn't work as Playwright's `webServer` command.** It daemonizes — prints
+"Preview server running... pid N" and returns immediately, leaving a detached child actually serving
+— so Playwright's process-tracking reports `"Process from config.webServer exited early"` even
+though the server is healthy. Rather than add a static-file-server dependency for a one-page site,
+`scripts/serve-dist.mjs` is a ~40-line zero-dependency Node `http`/`fs` server (FE-40 ladder: native
+capability was sufficient, no package needed). `playwright.config.ts`'s `webServer.command` is
+`pnpm run build && node scripts/serve-dist.mjs 4321` — tests always run against the real built
+`dist/` output, never dev mode, per guideline Section 19.
+
+CI (`.github/workflows/ci.yml`, `web` job): added `pnpm exec playwright install --with-deps
+chromium` and `pnpm test:e2e` steps after the existing build step, plus an `actions/upload-artifact`
+step (HTML report, 14-day retention, uploads even on failure via `!cancelled()`) for debugging a CI
+failure without re-running locally. `playwright.config.ts` reporter is `list` locally and
+`["list", "html"]` in CI.
+
+**Verified:** all 19 tests pass locally against the built `dist/` output (`pnpm test:e2e`); `web`'s
+`format:check`, `check`, and `build` all still pass after every change; `studio`'s `format:check`,
+`typecheck`, `lint`, `build`, and `seed:dry-run` all still pass after the schema/seed changes.
