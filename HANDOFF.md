@@ -1,5 +1,33 @@
 # Just Math Malaysia — Project Handoff
 
+> ## STATUS 2026-08-16: Two re-review follow-ups fixed · merge log backfilled · new no-self-merge rule
+>
+> Charlie confirmed PR #3 merged (fast-forwarded to `5853485`) and made two decisions: fix the two
+> minor items Bob's scoped re-review flagged, in a tiny PR, now — and don't self-merge PRs going
+> forward (he merges). He also updated `02-INFORMATIVE-BLOG.md` to `v1.7.1`, which codifies both:
+> Section 7 now has an explicit **"No auto-merge"** rule and a new **merge-log** requirement (one
+> `log/YYYY-MM-DD_PR<number>_<slug>.md` entry per merged PR, written only after confirming the merge
+> actually happened).
+>
+> **Merge log backfilled (PR #4):** `log/` didn't exist before this requirement, so PR #1–#3 each got
+> a backfilled entry — merge status independently re-confirmed via `gh pr view <n> --json
+> state,mergedAt,mergeCommit` before writing each one, not assumed from earlier context. CI green;
+> not merged (Charlie merges).
+>
+> **Two follow-ups fixed (next PR, not yet opened as of this entry):**
+>
+> 1. `web/.prettierignore` now excludes the Playwright artifact dirs, matching `.gitignore` — fixes
+>    the spurious local `format:check` failure after `pnpm test:e2e`. Verified by reproducing the
+>    bug first, then confirming the fix resolves it.
+> 2. `studio/schemaTypes/documents/homePage.ts`'s `gapChartAnnotations[].year` now validates against
+>    the 11 real stop codes and renders as a Studio picklist instead of free text. First attempt
+>    (`Rule.valid(...)`) doesn't exist on Sanity 6.x's `StringRule` — confirmed against the installed
+>    package's own type definitions, not assumed; `Rule.custom()` is correct. Full detail in
+>    `docs/DECISIONS.md` §20.
+>
+> The remaining 8 P2s / 4 P3s from Bob's original review are still open, queued for normal triage —
+> not part of this pass.
+
 > ## STATUS 2026-08-16: P1 fixes merged · Bob's scoped re-review — Approved with conditions
 >
 > Per Charlie's instruction: fix the four P1s (objective approval blockers, not triage candidates),

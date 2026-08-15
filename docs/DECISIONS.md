@@ -564,3 +564,28 @@ failure without re-running locally. `playwright.config.ts` reporter is `list` lo
 **Verified:** all 19 tests pass locally against the built `dist/` output (`pnpm test:e2e`); `web`'s
 `format:check`, `check`, and `build` all still pass after every change; `studio`'s `format:check`,
 `typecheck`, `lint`, `build`, and `seed:dry-run` all still pass after the schema/seed changes.
+
+## 20. Two follow-ups from Bob's scoped re-review — 2026-08-16
+
+Both flagged as new-minor by Bob's re-review of §19's fixes (`review/bob/CODE-REVIEW.md`, 2026-08-16
+section); neither blocked that verdict, but both were cheap and adjacent, so fixed immediately rather
+than queued.
+
+- **`web/.prettierignore`** now excludes `test-results`, `playwright-report`, `blob-report` —
+  matching the `.gitignore` entries added in §19 but missed there. Reproduced the bug first
+  (`pnpm test:e2e` then `pnpm format:check` failed on `test-results/.last-run.json`), confirmed the
+  fix resolves it (same sequence now passes clean), then cleaned the artifacts before committing.
+- **`studio/schemaTypes/documents/homePage.ts`**: `gapChartAnnotations[].year` now has
+  `Rule.required().custom(...)` restricting it to the 11 valid stop codes (a local
+  `GAP_CHART_STOP_CODES` constant, duplicated by hand from `web/src/components/GapChart.astro`'s
+  `stops` array since the two packages don't share code — comment notes they must stay in sync), plus
+  `options: {list: GAP_CHART_STOP_CODES}` so Studio renders it as a picklist rather than free text,
+  preventing the typo at entry time rather than only rejecting it after. Note: `Rule.valid(...)`,
+  the first thing tried, doesn't exist on Sanity 6.x's `StringRule` type (confirmed against the
+  installed package's own `.d.ts`, not assumed) — `Rule.custom()` is the correct API for restricting
+  a string field to an arbitrary allowed set.
+
+**Verified:** `studio`: `format:check`, `typecheck`, `lint`, `build`, `seed:dry-run` all pass (the
+existing fallback annotations — `S4`, `F3`, `F5` — are all valid stop codes, so the new required
+validation doesn't break seeding). `web`: unaffected by either change, but full check/build/test
+suite re-run anyway to confirm — all pass.

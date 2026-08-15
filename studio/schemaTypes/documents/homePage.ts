@@ -1,6 +1,13 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
 
 /**
+ * The gap chart's 11 fixed stop codes (web/src/components/GapChart.astro's `stops` array). Kept
+ * duplicated here rather than shared across the web/studio package boundary — must stay in sync by
+ * hand if the chart's stops ever change.
+ */
+const GAP_CHART_STOP_CODES = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'F1', 'F2', 'F3', 'F4', 'F5']
+
+/**
  * Singleton, explicit _id "homePage" (see studio/structure.ts). Fixed typed template matching the
  * approved design and just-math-page-copy-final.md — not a page builder (docs/CONTENT-MODEL.md §3).
  */
@@ -107,7 +114,20 @@ export const homePage = defineType({
               type: 'object',
               name: 'gapChartAnnotation',
               fields: [
-                defineField({name: 'year', title: 'Year label', type: 'string'}),
+                defineField({
+                  name: 'year',
+                  title: 'Year label',
+                  type: 'string',
+                  description:
+                    "Must be one of the gap chart's 11 fixed stop codes — anything else silently fails to match and the annotation never renders.",
+                  options: {list: GAP_CHART_STOP_CODES},
+                  validation: (Rule) =>
+                    Rule.required().custom((value) =>
+                      !value || GAP_CHART_STOP_CODES.includes(value)
+                        ? true
+                        : `Must be one of: ${GAP_CHART_STOP_CODES.join(', ')}`,
+                    ),
+                }),
                 defineField({name: 'label', title: 'Annotation', type: 'string'}),
               ],
             }),

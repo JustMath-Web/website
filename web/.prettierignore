@@ -3,6 +3,11 @@ dist
 .vercel
 .astro
 
+# Playwright local run artifacts (see .gitignore) — not source, shouldn't gate format:check.
+test-results
+playwright-report
+blob-report
+
 # Byte-for-byte copies of the design authority (../design/tokens/*.css) — must stay verbatim.
 # Regenerate by re-copying from ../design/tokens/, never by formatting in place.
 src/styles/tokens/
