@@ -1,0 +1,1489 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import GapChart from "../components/GapChart.astro";
+import SectionMarker from "../components/SectionMarker.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import WhatsAppCta from "../components/WhatsAppCta.astro";
+import { getLandingPageData } from "../lib/content/landingData";
+import type { LevelBlock } from "../lib/sanity/types";
+
+const { homePage, siteSettings, navigation, categories } =
+	await getLandingPageData();
+
+const pageSeo = homePage.seo ?? siteSettings.defaultSeo;
+const pageTitle =
+	pageSeo.metaTitle ??
+	siteSettings.defaultSeo.metaTitle ??
+	siteSettings.siteName;
+const pageDescription =
+	pageSeo.metaDescription ??
+	siteSettings.defaultSeo.metaDescription ??
+	homePage.hero.subheadline;
+const heroCta = homePage.hero.cta;
+
+function splitParagraphs(value: string | undefined) {
+	return (value ?? "")
+		.split(/\n{2,}/)
+		.map((item) => item.trim())
+		.filter(Boolean);
+}
+
+function trustParts(text: string) {
+	const match = /^([0-9+]+)\s+(.+)$/.exec(text);
+	return match
+		? { figure: match[1], label: match[2] }
+		: { figure: "", label: text };
+}
+
+function categoryHref(level: LevelBlock) {
+	const category = categories.find((item) => item._id === level.category?._ref);
+	return category?.slug?.current
+		? `/blog/level/${category.slug.current}/`
+		: undefined;
+}
+---
+
+<BaseLayout
+	title={pageTitle}
+	description={pageDescription}
+	canonicalUrl={pageSeo.canonicalUrl}
+	noindex={pageSeo.noindex}
+	ogImageAlt={pageSeo.ogImageAlt}
+>
+	<SiteHeader
+		navigation={navigation}
+		siteSettings={siteSettings}
+		ctaHref={heroCta.href}
+	/>
+	<main id="main">
+		<section
+			id="top"
+			class="section section--hero graph-ground"
+			aria-labelledby="hero-title"
+		>
+			<div class="hero-grid container">
+				<div class="hero-copy">
+					<p class="eyebrow">Standard 1 to Form 5 / IGCSE / one to one</p>
+					<h1 id="hero-title">{homePage.hero.headline}</h1>
+					<p class="hero-lead">{homePage.hero.subheadline}</p>
+					<p class="hero-support">{homePage.hero.supportingLine}</p>
+					<WhatsAppCta
+						href={heroCta.href}
+						label={heroCta.label}
+						note={homePage.hero.noteUnderButton}
+						full
+					/>
+				</div>
+				<aside class="spine-panel" aria-label="Malaysian school years covered">
+					<div class="spine-panel__top">
+						<span>Every level, one tutor</span>
+						<span>11 years</span>
+					</div>
+					<ol class="spine-list">
+						{
+							[
+								"Standard 1",
+								"Standard 2",
+								"Standard 3",
+								"Standard 4",
+								"Standard 5",
+								"Standard 6",
+								"Form 1",
+								"Form 2",
+								"Form 3",
+								"Form 4",
+								"Form 5",
+							].map((item) => (
+								<li>
+									<span aria-hidden="true" />
+									{item}
+								</li>
+							))
+						}
+					</ol>
+					<p>
+						IGCSE Mathematics and IGCSE Additional Mathematics, taught to the
+						international syllabus rather than translated across from SPM.
+					</p>
+				</aside>
+			</div>
+		</section>
+
+		<section
+			class="trust-band graph-ground graph-ground--invert"
+			aria-label="Teaching experience"
+		>
+			<div class="trust-grid container">
+				{
+					homePage.trustItems.map((item) => {
+						const stat = trustParts(item.text);
+						return stat.figure ? (
+							<div class="trust-item">
+								<strong>{stat.figure}</strong>
+								<span>{stat.label}</span>
+							</div>
+						) : (
+							<p class="trust-item trust-item--line">{stat.label}</p>
+						);
+					})
+				}
+			</div>
+		</section>
+
+		<section
+			id="problem"
+			class="section section--ruled"
+			aria-labelledby="problem-title"
+		>
+			<div class="two-column two-column--sticky container">
+				<div class="sticky-col">
+					<SectionMarker number="01" label="The gap" />
+					<h2 id="problem-title">{homePage.problem.heading}</h2>
+					<div class="figure-callout">
+						<strong>2</strong>
+						<span>independent checks in eleven years of schooling</span>
+					</div>
+					<GapChart />
+				</div>
+				<div class="prose prose--large">
+					{
+						splitParagraphs(homePage.problem.body).map((paragraph) => (
+							<p>{paragraph}</p>
+						))
+					}
+				</div>
+			</div>
+		</section>
+
+		<section
+			id="sessions"
+			class="section section--sunken"
+			aria-labelledby="sessions-title"
+		>
+			<div class="container">
+				<SectionMarker number="02" label="One to one" />
+				<div class="section-intro">
+					<h2 id="sessions-title">{homePage.sessions.heading}</h2>
+					<div class="prose prose--lead">
+						{
+							splitParagraphs(homePage.sessions.body).map((paragraph) => (
+								<p>{paragraph}</p>
+							))
+						}
+					</div>
+				</div>
+				<ul class="session-grid">
+					{
+						homePage.sessions.subSections.map((section, index) => (
+							<li
+								class:list={[
+									"session-card",
+									{ "session-card--wide": index < 2 },
+								]}
+							>
+								<span>{String(index + 1).padStart(2, "0")}</span>
+								<h3>{section.heading}</h3>
+								<div class="prose prose--small">
+									{splitParagraphs(section.body).map((paragraph) => (
+										<p>{paragraph}</p>
+									))}
+								</div>
+							</li>
+						))
+					}
+				</ul>
+				{
+					homePage.sessions.cta && (
+						<WhatsAppCta
+							href={homePage.sessions.cta.href}
+							label={homePage.sessions.cta.label}
+							align="center"
+						/>
+					)
+				}
+			</div>
+		</section>
+
+		<section
+			id="levels"
+			class="section section--ruled"
+			aria-labelledby="levels-label"
+		>
+			<div class="container">
+				<SectionMarker number="03" label="Levels taught" id="levels-label" />
+				<ul class="level-list">
+					{
+						homePage.levels.map((level, index) => (
+							<li class="level-row">
+								<div class="level-row__heading">
+									<span>{String(index + 1).padStart(2, "0")} / 04</span>
+									<h2>{level.title}</h2>
+									{categoryHref(level) && (
+										<a href={categoryHref(level)}>Blog notes</a>
+									)}
+								</div>
+								<div class="level-row__body">
+									<p>{level.tagline}</p>
+									<ul class="dash-list">
+										{level.bullets.map((bullet) => (
+											<li>{bullet}</li>
+										))}
+									</ul>
+								</div>
+							</li>
+						))
+					}
+				</ul>
+				<div class="level-close">
+					<p>{homePage.levelsClosingStatement}</p>
+				</div>
+			</div>
+		</section>
+
+		<section
+			id="about"
+			class="section section--sunken"
+			aria-labelledby="about-title"
+		>
+			<div class="two-column two-column--portrait container">
+				<aside
+					class="portrait-fallback"
+					aria-label="Typographic fallback for Mr Kong portrait"
+				>
+					<div>
+						<span>{homePage.about.byline}</span>
+						<strong>24</strong>
+						<p>years teaching every level from Standard 1 to Form 5</p>
+					</div>
+				</aside>
+				<div>
+					<SectionMarker number="04" label="The tutor" />
+					<h2 id="about-title">{homePage.about.heading}</h2>
+					<div class="prose">
+						{
+							splitParagraphs(homePage.about.body).map((paragraph) => (
+								<p>{paragraph}</p>
+							))
+						}
+					</div>
+					{
+						homePage.about.statPanel && (
+							<aside class="ink-panel graph-ground graph-ground--invert">
+								<h3>{homePage.about.statPanel.heading}</h3>
+								<div class="ink-panel__grid">
+									<div class="ink-panel__figure">
+										<strong>20</strong>
+										<span>students a year</span>
+									</div>
+									<div class="prose prose--invert">
+										{splitParagraphs(homePage.about.statPanel.body).map(
+											(paragraph) => (
+												<p>{paragraph}</p>
+											),
+										)}
+									</div>
+								</div>
+							</aside>
+						)
+					}
+				</div>
+			</div>
+		</section>
+
+		<section id="pricing" class="section" aria-labelledby="pricing-title">
+			<div class="container">
+				<SectionMarker number="05" label="Fees" />
+				<div class="section-intro section-intro--bottom">
+					<h2 id="pricing-title">{homePage.pricing.heading}</h2>
+					<p class="lead">{homePage.pricing.body}</p>
+				</div>
+				<div class="table-wrap">
+					<table>
+						<caption> Monthly one-to-one maths tuition fees </caption>
+						<colgroup>
+							<col class="col-level" />
+							<col class="col-session" />
+							<col class="col-price" />
+							<col class="col-price" />
+						</colgroup>
+						<thead>
+							<tr>
+								<th scope="col">Level</th>
+								<th scope="col">Session</th>
+								<th scope="col">Per month</th>
+								<th scope="col">Per session</th>
+							</tr>
+						</thead>
+						<tbody>
+							{
+								homePage.pricing.pricingRows.map((row) => (
+									<tr
+										class:list={{
+											"pricing-row--highlight": row.sessionLength === "90 min",
+										}}
+									>
+										<th scope="row">{row.level}</th>
+										<td>{row.sessionLength}</td>
+										<td>{row.perMonth}</td>
+										<td>{row.perSession}</td>
+									</tr>
+								))
+							}
+						</tbody>
+					</table>
+				</div>
+				<p class="table-note">
+					IGCSE runs at 90 minutes because the international syllabus moves
+					faster than the national one and an hour a week does not keep pace
+					with it.
+				</p>
+				<div class="pricing-detail">
+					<div>
+						<h3>Every month includes:</h3>
+						<ul class="dash-list">
+							{homePage.pricing.includedList.map((item) => <li>{item}</li>)}
+						</ul>
+						<div class="prose prose--small">
+							{
+								splitParagraphs(homePage.pricing.paymentNote).map(
+									(paragraph) => <p>{paragraph}</p>,
+								)
+							}
+						</div>
+					</div>
+					{
+						homePage.pricing.availability && (
+							<aside class="availability-card">
+								<h3>{homePage.pricing.availability.heading}</h3>
+								<div
+									class="time-list"
+									aria-label="Available weekday time blocks"
+								>
+									<div>
+										<strong>3pm to 6pm</strong>
+										<span>primary</span>
+									</div>
+									<div>
+										<strong>8pm to 11pm</strong>
+										<span>upper secondary</span>
+									</div>
+								</div>
+								<div class="prose prose--small">
+									{splitParagraphs(homePage.pricing.availability.body).map(
+										(paragraph) => (
+											<p>{paragraph}</p>
+										),
+									)}
+								</div>
+							</aside>
+						)
+					}
+				</div>
+				{
+					homePage.pricing.cta && (
+						<WhatsAppCta
+							href={homePage.pricing.cta.href}
+							label={homePage.pricing.cta.label}
+							align="center"
+						/>
+					)
+				}
+			</div>
+		</section>
+
+		<section
+			id="how"
+			class="section section--sunken"
+			aria-labelledby="how-title"
+		>
+			<div class="container">
+				<SectionMarker number="06" label="How it works" />
+				<h2 id="how-title" class="visually-hidden">How it works</h2>
+				<ol class="process-list">
+					{
+						homePage.processSteps.map((step, index) => (
+							<li>
+								<span>{String(index + 1).padStart(2, "0")}</span>
+								<h3>{step.title}</h3>
+								<p>{step.body}</p>
+							</li>
+						))
+					}
+				</ol>
+			</div>
+		</section>
+
+		<section id="faq" class="section" aria-labelledby="faq-label">
+			<div class="two-column two-column--faq container">
+				<div class="sticky-col">
+					<SectionMarker number="07" label="Questions" id="faq-label" />
+					<div class="faq-count">
+						<strong>{homePage.faqs.length}</strong>
+						<span>things parents ask before booking</span>
+					</div>
+				</div>
+				<div>
+					<ul class="faq-list" data-faq-list>
+						{
+							homePage.faqs.map((item, index) => {
+								const buttonId = `faq-q-${index}`;
+								const panelId = `faq-a-${index}`;
+								const open = index === 0;
+								return (
+									<li>
+										<button
+											id={buttonId}
+											type="button"
+											aria-expanded={open ? "true" : "false"}
+											aria-controls={panelId}
+										>
+											<span>{item.question}</span>
+											<i aria-hidden="true" />
+										</button>
+										<div
+											id={panelId}
+											role="region"
+											aria-labelledby={buttonId}
+											hidden={!open}
+											inert={!open}
+										>
+											<p>{item.answer}</p>
+										</div>
+									</li>
+								);
+							})
+						}
+					</ul>
+					<WhatsAppCta
+						href={heroCta.href}
+						label={heroCta.label}
+						align="center"
+					/>
+				</div>
+			</div>
+		</section>
+
+		<section
+			id="start"
+			class="section section--close graph-ground graph-ground--invert"
+			aria-labelledby="start-title"
+		>
+			<div class="close-copy container">
+				<div class="close-figure">
+					<strong>30</strong>
+					<span>minutes, free</span>
+				</div>
+				<h2 id="start-title">{homePage.finalCta.heading}</h2>
+				<div class="prose prose--invert prose--center">
+					{
+						splitParagraphs(homePage.finalCta.body).map((paragraph) => (
+							<p>{paragraph}</p>
+						))
+					}
+				</div>
+				<WhatsAppCta
+					href={homePage.finalCta.cta.href}
+					label={homePage.finalCta.cta.label}
+					align="center"
+				/>
+				<p class="close-note">{homePage.finalCta.smallNote}</p>
+			</div>
+		</section>
+	</main>
+	<SiteFooter navigation={navigation} siteSettings={siteSettings} />
+</BaseLayout>
+
+<script>
+	const list = document.querySelector<HTMLElement>("[data-faq-list]");
+	if (list) {
+		const rows = Array.from(list.querySelectorAll<HTMLLIElement>("li"));
+		const setOpen = (row: HTMLLIElement, open: boolean) => {
+			const button = row.querySelector<HTMLButtonElement>("button");
+			const panel = row.querySelector<HTMLElement>("[role='region']");
+			if (!button || !panel) return;
+			button.setAttribute("aria-expanded", String(open));
+			panel.hidden = !open;
+			if (open) {
+				panel.removeAttribute("inert");
+			} else {
+				panel.setAttribute("inert", "");
+			}
+		};
+
+		rows.forEach((row) => {
+			const button = row.querySelector("button");
+			button?.addEventListener("click", () => {
+				const isOpen = button.getAttribute("aria-expanded") === "true";
+				rows.forEach((item) => setOpen(item, false));
+				setOpen(row, !isOpen);
+			});
+		});
+	}
+</script>
+
+<style>
+	:root {
+		--fluid-hero: clamp(38px, 7.4vw, 84px);
+		--fluid-h2: clamp(28px, 4.4vw, 52px);
+		--fluid-h3: clamp(19px, 2.3vw, 26px);
+		--fluid-lead: clamp(17px, 2vw, 22px);
+		--fluid-body: clamp(16px, 1.7vw, 18px);
+		--fluid-figure: clamp(52px, 11vw, 132px);
+		--fluid-figure-mid: clamp(38px, 6vw, 72px);
+		--fluid-figure-sm: clamp(28px, 4vw, 44px);
+		--fluid-section-y: clamp(64px, 9vw, 132px);
+	}
+
+	.container {
+		position: relative;
+		max-width: var(--page-max);
+		margin: 0 auto;
+		padding-inline: clamp(20px, 5vw, var(--gutter));
+	}
+
+	.section {
+		position: relative;
+		overflow: hidden;
+		padding-block: var(--fluid-section-y);
+		background: var(--paper);
+	}
+
+	.section--sunken {
+		background: var(--surface-sunken);
+	}
+
+	.section--ruled {
+		border-top: 1px solid var(--rule);
+	}
+
+	.section--hero {
+		padding-block: clamp(44px, 7vw, 104px);
+	}
+
+	.section--close {
+		background: var(--ink-900);
+		color: var(--paper);
+		text-align: center;
+	}
+
+	.graph-ground::before {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background-image:
+			linear-gradient(rgba(20, 22, 26, 0.055) 1px, transparent 1px),
+			linear-gradient(90deg, rgba(20, 22, 26, 0.055) 1px, transparent 1px);
+		background-size: 48px 48px;
+		mask-image: linear-gradient(180deg, #000 0%, #000 62%, transparent 100%);
+		content: "";
+	}
+
+	.graph-ground--invert::before {
+		background-image:
+			linear-gradient(rgba(251, 250, 247, 0.09) 1px, transparent 1px),
+			linear-gradient(90deg, rgba(251, 250, 247, 0.09) 1px, transparent 1px);
+	}
+
+	.hero-grid,
+	.two-column,
+	.section-intro,
+	.pricing-detail {
+		display: grid;
+		gap: clamp(var(--space-6), 6vw, var(--space-9));
+	}
+
+	.hero-grid {
+		grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.95fr);
+		align-items: start;
+	}
+
+	.hero-copy h1 {
+		max-width: 15ch;
+		margin: 0;
+		color: var(--ink-900);
+		font: var(--weight-semibold) var(--fluid-hero) / 0.98 var(--font-serif);
+		letter-spacing: -0.038em;
+		text-wrap: balance;
+	}
+
+	.eyebrow {
+		margin: 0 0 clamp(20px, 2.6vw, 30px);
+		color: var(--text-muted);
+		font: var(--type-label);
+		letter-spacing: var(--tracking-wide);
+		text-transform: uppercase;
+	}
+
+	.hero-lead,
+	.lead {
+		max-width: 44ch;
+		color: var(--text-body);
+		font: var(--weight-regular) var(--fluid-lead) / 1.5 var(--font-sans);
+	}
+
+	.hero-lead {
+		margin: clamp(22px, 2.8vw, 32px) 0 0;
+	}
+
+	.hero-support,
+	.table-note {
+		max-width: 44ch;
+		margin: var(--space-3) 0 0;
+		color: var(--text-muted);
+		font: var(--type-small);
+	}
+
+	.hero-copy :global(.cta-wrap) {
+		margin-top: clamp(30px, 3.6vw, 44px);
+	}
+
+	.spine-panel {
+		border-top: 3px solid var(--ink-900);
+		padding-top: var(--space-5);
+	}
+
+	.spine-panel__top {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--space-3);
+		margin-bottom: var(--space-4);
+		color: var(--text-muted);
+		font: var(--type-label);
+		letter-spacing: var(--tracking-wide);
+		text-transform: uppercase;
+	}
+
+	.spine-panel__top span:last-child {
+		color: var(--text-faint);
+		font-family: var(--font-mono);
+	}
+
+	.spine-list {
+		display: grid;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.spine-list li {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		align-items: center;
+		gap: var(--space-3);
+		border-bottom: 1px solid var(--rule);
+		padding-block: 9px;
+		color: var(--ink-900);
+		font: var(--weight-regular) clamp(13px, 1.5vw, 15px) / 1.2 var(--font-sans);
+	}
+
+	.spine-list span {
+		width: 12px;
+		height: 1px;
+		background: var(--ink-900);
+	}
+
+	.spine-panel p {
+		margin: var(--space-4) 0 0;
+		border-top: 2px solid var(--ink-900);
+		padding-top: var(--space-4);
+		color: var(--text-muted);
+		font: var(--type-small);
+	}
+
+	.trust-band {
+		position: relative;
+		overflow: hidden;
+		background: var(--ink-900);
+		padding-block: clamp(36px, 5vw, 64px);
+	}
+
+	.trust-grid {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+
+	.trust-item {
+		display: grid;
+		align-content: start;
+		gap: var(--space-3);
+		border-left: 1px solid rgba(251, 250, 247, 0.18);
+		padding-inline: clamp(20px, 2.4vw, 32px);
+	}
+
+	.trust-item:first-child {
+		border-left: 0;
+		padding-left: 0;
+	}
+
+	.trust-item strong {
+		color: var(--paper);
+		font: var(--weight-semibold) var(--fluid-figure-sm) / 0.86 var(--font-mono);
+		letter-spacing: -0.045em;
+	}
+
+	.trust-item span,
+	.trust-item--line {
+		max-width: 20ch;
+		color: var(--ink-300);
+		font: var(--type-small);
+	}
+
+	.trust-item--line {
+		align-self: center;
+		margin: 0;
+		color: var(--paper);
+		font: var(--weight-regular) clamp(17px, 2vw, 21px) / 1.3 var(--font-serif);
+		letter-spacing: -0.01em;
+	}
+
+	.two-column {
+		grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+		align-items: start;
+	}
+
+	.two-column--portrait {
+		grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+	}
+
+	.two-column--faq {
+		grid-template-columns: minmax(0, 270px) minmax(0, 1fr);
+	}
+
+	.sticky-col {
+		position: sticky;
+		top: 92px;
+		display: grid;
+		gap: clamp(var(--space-5), 3.2vw, var(--space-7));
+	}
+
+	h2 {
+		max-width: 21ch;
+		margin: clamp(24px, 3vw, 36px) 0 0;
+		color: var(--ink-900);
+		font: var(--weight-semibold) var(--fluid-h2) / 1.06 var(--font-serif);
+		letter-spacing: -0.028em;
+		text-wrap: balance;
+	}
+
+	h3 {
+		margin: 0;
+		color: var(--ink-900);
+		font: var(--weight-semibold) var(--fluid-h3) / 1.22 var(--font-serif);
+		letter-spacing: -0.018em;
+	}
+
+	.figure-callout,
+	.faq-count,
+	.close-figure {
+		display: flex;
+		align-items: flex-end;
+		gap: var(--space-4);
+	}
+
+	.figure-callout strong,
+	.faq-count strong,
+	.close-figure strong {
+		color: var(--ink-900);
+		font: var(--weight-semibold) var(--fluid-figure) / 0.86 var(--font-mono);
+		letter-spacing: -0.045em;
+	}
+
+	.figure-callout span,
+	.faq-count span,
+	.close-figure span {
+		max-width: 16ch;
+		padding-bottom: 0.6em;
+		color: var(--text-muted);
+		font: var(--type-small);
+	}
+
+	.prose {
+		display: grid;
+		gap: 1.1em;
+		max-width: var(--measure);
+	}
+
+	.prose p {
+		margin: 0;
+		color: var(--text-body);
+		font: var(--weight-regular) var(--fluid-body) / 1.62 var(--font-sans);
+	}
+
+	.prose--large p {
+		font-size: var(--fluid-body);
+	}
+
+	.prose--lead p {
+		font-size: var(--fluid-lead);
+		line-height: 1.5;
+	}
+
+	.prose--small p,
+	.prose--small {
+		font: var(--type-small);
+	}
+
+	.prose--invert p {
+		color: var(--ink-300);
+	}
+
+	.prose--center {
+		justify-items: center;
+		margin-inline: auto;
+		text-align: center;
+	}
+
+	.section-intro {
+		grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+		align-items: start;
+		margin-top: clamp(24px, 3vw, 36px);
+	}
+
+	.section-intro--bottom {
+		align-items: end;
+	}
+
+	.session-grid {
+		display: grid;
+		grid-template-columns: repeat(6, minmax(0, 1fr));
+		gap: clamp(20px, 2.4vw, 32px);
+		margin: clamp(48px, 6vw, 88px) 0 clamp(44px, 5.5vw, 72px);
+		padding: 0;
+		list-style: none;
+	}
+
+	.session-card {
+		position: relative;
+		grid-column: span 2;
+		overflow: hidden;
+		min-height: 100%;
+		border: 1px solid var(--rule);
+		border-radius: var(--radius-lg);
+		background: var(--white);
+		box-shadow: var(--shadow-1);
+		padding: clamp(22px, 2.8vw, 34px);
+		transition:
+			transform var(--dur-3) var(--ease-standard),
+			border-color var(--dur-2) var(--ease-standard),
+			box-shadow var(--dur-3) var(--ease-standard);
+	}
+
+	.session-card--wide {
+		grid-column: span 3;
+	}
+
+	.session-card::before {
+		position: absolute;
+		inset: 0 0 auto;
+		height: 3px;
+		background: var(--ink-900);
+		transform: scaleX(0);
+		transform-origin: left;
+		transition: transform var(--dur-4) var(--ease-out);
+		content: "";
+	}
+
+	.session-card:hover {
+		transform: translateY(-3px);
+		border-color: var(--ink-900);
+		box-shadow: var(--shadow-lift);
+	}
+
+	.session-card:hover::before {
+		transform: scaleX(1);
+	}
+
+	.session-card > span {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 30px;
+		height: 24px;
+		margin-bottom: var(--space-4);
+		border-radius: var(--radius-sm);
+		background: var(--surface-sunken);
+		color: var(--ink-500);
+		font: var(--weight-semibold) var(--size-2xs) / 1 var(--font-mono);
+		letter-spacing: 0.02em;
+	}
+
+	.session-card h3 {
+		margin-bottom: var(--space-4);
+	}
+
+	.level-list {
+		display: grid;
+		margin: clamp(28px, 3.4vw, 44px) 0 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.level-row {
+		display: grid;
+		grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+		gap: clamp(var(--space-6), 5vw, 80px);
+		border-top: 1px solid var(--rule-strong);
+		padding-block: clamp(30px, 4vw, 52px);
+	}
+
+	.level-row:first-child {
+		border-top: 3px solid var(--ink-900);
+	}
+
+	.level-row__heading {
+		position: sticky;
+		top: 92px;
+		align-self: start;
+		display: grid;
+		gap: var(--space-3);
+	}
+
+	.level-row__heading span {
+		color: var(--text-faint);
+		font: var(--weight-medium) var(--size-2xs) / 1 var(--font-mono);
+	}
+
+	.level-row h2 {
+		margin: 0;
+		font-size: clamp(28px, 4vw, 50px);
+		line-height: 0.98;
+		letter-spacing: -0.035em;
+	}
+
+	.level-row__heading a {
+		justify-self: start;
+		color: var(--slate-600);
+		font: var(--weight-medium) var(--size-xs) / 1.2 var(--font-sans);
+	}
+
+	.level-row__body > p {
+		max-width: 38ch;
+		margin: 0;
+		color: var(--ink-900);
+		font: var(--weight-regular) var(--fluid-lead) / 1.34 var(--font-serif);
+	}
+
+	.dash-list {
+		display: grid;
+		gap: var(--space-4);
+		max-width: 58ch;
+		margin: var(--space-5) 0 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.dash-list li {
+		display: grid;
+		grid-template-columns: 18px 1fr;
+		gap: var(--space-3);
+		color: var(--text-body);
+		font: var(--weight-regular) var(--fluid-body) / 1.6 var(--font-sans);
+	}
+
+	.dash-list li::before {
+		width: 18px;
+		height: 1px;
+		margin-top: 0.8em;
+		background: var(--ink-300);
+		content: "";
+	}
+
+	.level-close {
+		margin-top: clamp(36px, 4.5vw, 64px);
+		border-radius: var(--radius-lg);
+		background: var(--surface-sunken);
+		padding: clamp(28px, 4vw, 52px);
+	}
+
+	.level-close p {
+		max-width: 40ch;
+		margin: 0;
+		color: var(--ink-900);
+		font: var(--weight-regular) clamp(20px, 2.9vw, 34px) / 1.32
+			var(--font-serif);
+		letter-spacing: -0.022em;
+	}
+
+	.portrait-fallback {
+		position: sticky;
+		top: 92px;
+		border: 1px solid var(--rule-strong);
+		background: var(--white);
+		aspect-ratio: 4 / 5;
+		padding: clamp(var(--space-5), 4vw, var(--space-7));
+	}
+
+	.portrait-fallback div {
+		display: grid;
+		align-content: end;
+		height: 100%;
+		border-top: 3px solid var(--ink-900);
+	}
+
+	.portrait-fallback span {
+		color: var(--text-muted);
+		font: var(--type-label);
+		letter-spacing: var(--tracking-wide);
+		text-transform: uppercase;
+	}
+
+	.portrait-fallback strong {
+		margin-top: auto;
+		color: var(--ink-900);
+		font: var(--weight-semibold) var(--fluid-figure-mid) / 0.86 var(--font-mono);
+		letter-spacing: -0.045em;
+	}
+
+	.portrait-fallback p {
+		max-width: 18ch;
+		margin: var(--space-3) 0 0;
+		color: var(--text-muted);
+		font: var(--type-small);
+	}
+
+	#about h2 {
+		margin-top: clamp(24px, 3vw, 36px);
+	}
+
+	#about .prose {
+		margin-top: clamp(24px, 3vw, 36px);
+	}
+
+	.ink-panel {
+		position: relative;
+		overflow: hidden;
+		margin-top: clamp(40px, 5vw, 68px);
+		border-radius: var(--radius-lg);
+		background: var(--ink-900);
+		padding: clamp(26px, 3.4vw, 44px);
+	}
+
+	.ink-panel h3 {
+		position: relative;
+		max-width: 30ch;
+		color: var(--paper);
+	}
+
+	.ink-panel__grid {
+		position: relative;
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		gap: clamp(var(--space-6), 4vw, var(--space-7));
+		align-items: start;
+		margin-top: clamp(24px, 3vw, 36px);
+	}
+
+	.ink-panel__figure {
+		display: flex;
+		align-items: flex-end;
+		gap: var(--space-3);
+		border-right: 1px solid rgba(251, 250, 247, 0.2);
+		padding-right: clamp(28px, 3.4vw, 48px);
+	}
+
+	.ink-panel__figure strong {
+		color: var(--paper);
+		font: var(--weight-semibold) var(--fluid-figure-mid) / 0.86 var(--font-mono);
+		letter-spacing: -0.045em;
+	}
+
+	.ink-panel__figure span {
+		max-width: 8ch;
+		padding-bottom: 0.5em;
+		color: var(--ink-300);
+		font: var(--type-small);
+	}
+
+	.table-wrap {
+		margin-top: clamp(32px, 4vw, 52px);
+		overflow-x: auto;
+	}
+
+	table {
+		width: 100%;
+		min-width: 620px;
+		border-collapse: collapse;
+		table-layout: fixed;
+	}
+
+	caption {
+		position: absolute;
+		clip: rect(0 0 0 0);
+		clip-path: inset(50%);
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		white-space: nowrap;
+	}
+
+	.col-level {
+		width: 38%;
+	}
+
+	.col-session {
+		width: 16%;
+	}
+
+	.col-price {
+		width: 23%;
+	}
+
+	th,
+	td {
+		padding: clamp(13px, 1.6vw, 20px) var(--space-2);
+		border-bottom: 1px solid var(--rule);
+		vertical-align: middle;
+	}
+
+	thead th {
+		background: var(--ink-900);
+		color: var(--paper);
+		font: var(--type-label);
+		letter-spacing: 0.1em;
+		text-align: right;
+		text-transform: uppercase;
+	}
+
+	thead th:first-child,
+	tbody th {
+		text-align: left;
+	}
+
+	tbody th {
+		color: var(--ink-900);
+		font: var(--weight-regular) clamp(13px, 1.6vw, 17px) / 1.35 var(--font-sans);
+	}
+
+	tbody td {
+		color: var(--ink-900);
+		font: var(--weight-semibold) clamp(15px, 2.1vw, 25px) / 1 var(--font-mono);
+		letter-spacing: -0.04em;
+		text-align: right;
+		white-space: nowrap;
+	}
+
+	tbody td:first-of-type {
+		color: var(--text-muted);
+		font-size: clamp(12px, 1.5vw, 15px);
+		font-weight: var(--weight-regular);
+	}
+
+	tbody td:last-child {
+		color: var(--ink-500);
+		font-size: clamp(13px, 1.7vw, 19px);
+	}
+
+	.pricing-row--highlight {
+		background: var(--ochre-100);
+	}
+
+	.pricing-row--highlight > * {
+		border-top: 1px solid var(--ochre-500);
+		border-bottom: 1px solid var(--ochre-500);
+	}
+
+	.pricing-row--highlight td:first-of-type {
+		color: var(--ochre-600);
+		font-weight: var(--weight-semibold);
+	}
+
+	.pricing-detail {
+		grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+		margin: clamp(44px, 5.5vw, 80px) 0 clamp(44px, 5.5vw, 72px);
+	}
+
+	.pricing-detail h3 {
+		font-size: clamp(18px, 2vw, 22px);
+	}
+
+	.availability-card {
+		align-self: start;
+		border: 1px solid var(--rule-strong);
+		border-top: 3px solid var(--ink-900);
+		border-radius: var(--radius-lg);
+		background: var(--white);
+		padding: clamp(24px, 3vw, 36px);
+	}
+
+	.time-list {
+		display: grid;
+		gap: var(--space-1);
+		margin-top: var(--space-5);
+	}
+
+	.time-list div {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--space-3);
+		border-bottom: 1px solid var(--rule);
+		padding-block: var(--space-3);
+	}
+
+	.time-list strong {
+		color: var(--ink-900);
+		font: var(--weight-semibold) clamp(21px, 2.9vw, 32px) / 1.1 var(--font-mono);
+		letter-spacing: -0.045em;
+		white-space: nowrap;
+	}
+
+	.time-list span {
+		color: var(--text-muted);
+		font: var(--type-label);
+		text-align: end;
+	}
+
+	.availability-card .prose {
+		margin-top: var(--space-5);
+	}
+
+	.process-list {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: clamp(24px, 2.8vw, 40px);
+		margin: clamp(28px, 3.4vw, 48px) 0 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.process-list li {
+		position: relative;
+		border-top: 3px solid var(--ink-900);
+		padding-top: var(--space-5);
+	}
+
+	.process-list li::before {
+		position: absolute;
+		top: -3px;
+		left: 0;
+		width: 3px;
+		height: 14px;
+		background: var(--ink-900);
+		content: "";
+	}
+
+	.process-list span {
+		color: var(--ink-900);
+		font: var(--weight-semibold) var(--fluid-figure-mid) / 0.86 var(--font-mono);
+		letter-spacing: -0.05em;
+	}
+
+	.process-list h3 {
+		margin-top: var(--space-5);
+		font-size: clamp(17px, 1.9vw, 21px);
+	}
+
+	.process-list p {
+		margin: var(--space-3) 0 0;
+		color: var(--text-body);
+		font: var(--type-small);
+	}
+
+	.faq-count {
+		margin-top: clamp(24px, 3vw, 36px);
+	}
+
+	.faq-count strong {
+		font-size: var(--fluid-figure-mid);
+	}
+
+	.faq-list {
+		margin: 0 0 clamp(36px, 4.5vw, 60px);
+		padding: 0;
+		border-top: 1px solid var(--rule);
+		list-style: none;
+	}
+
+	.faq-list li {
+		border-bottom: 1px solid var(--rule);
+	}
+
+	.faq-list button {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: var(--space-4);
+		width: 100%;
+		min-height: var(--control-h);
+		border: 0;
+		background: transparent;
+		padding: var(--space-5) 0;
+		color: var(--ink-700);
+		cursor: pointer;
+		font: var(--weight-medium) clamp(16px, 1.7vw, 19px) / 1.4 var(--font-sans);
+		text-align: left;
+		transition: color var(--dur-1) var(--ease-standard);
+	}
+
+	.faq-list button:hover,
+	.faq-list button[aria-expanded="true"] {
+		color: var(--ink-900);
+	}
+
+	.faq-list i {
+		position: relative;
+		flex: none;
+		width: 15px;
+		height: 15px;
+		margin-top: 5px;
+	}
+
+	.faq-list i::before,
+	.faq-list i::after {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		background: var(--ink-600);
+		transform: translate(-50%, -50%);
+		transition: transform var(--dur-3) var(--ease-standard);
+		content: "";
+	}
+
+	.faq-list i::before {
+		width: 100%;
+		height: 2px;
+	}
+
+	.faq-list i::after {
+		width: 2px;
+		height: 100%;
+	}
+
+	.faq-list button[aria-expanded="true"] i::after {
+		transform: translate(-50%, -50%) rotate(90deg);
+	}
+
+	.faq-list [role="region"] p {
+		margin: 0 0 var(--space-5);
+		color: var(--text-body);
+		font: var(--weight-regular) var(--fluid-body) / 1.62 var(--font-sans);
+	}
+
+	.close-copy {
+		max-width: 800px;
+		text-align: center;
+	}
+
+	.close-figure {
+		justify-content: center;
+		margin-bottom: clamp(20px, 2.6vw, 32px);
+	}
+
+	.close-figure strong {
+		color: var(--paper);
+		font-size: var(--fluid-figure-mid);
+	}
+
+	.close-figure span {
+		color: var(--ink-300);
+	}
+
+	.section--close h2 {
+		margin-inline: auto;
+		color: var(--paper);
+	}
+
+	.section--close .prose {
+		margin-top: var(--space-5);
+	}
+
+	.section--close :global(.cta-wrap) {
+		margin-top: clamp(32px, 4vw, 48px);
+	}
+
+	.close-note {
+		max-width: 46ch;
+		margin: var(--space-6) auto 0;
+		border-top: 1px solid rgba(251, 250, 247, 0.18);
+		padding-top: var(--space-5);
+		color: var(--ink-300);
+		font: var(--type-small);
+	}
+
+	.visually-hidden {
+		position: absolute;
+		clip: rect(0 0 0 0);
+		clip-path: inset(50%);
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		white-space: nowrap;
+	}
+
+	@media (max-width: 860px) {
+		.hero-grid,
+		.two-column,
+		.two-column--portrait,
+		.two-column--faq,
+		.section-intro,
+		.pricing-detail,
+		.ink-panel__grid {
+			grid-template-columns: 1fr;
+		}
+
+		.sticky-col,
+		.level-row__heading,
+		.portrait-fallback {
+			position: static;
+		}
+
+		.trust-grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			row-gap: var(--space-6);
+		}
+
+		.trust-item {
+			border-left: 0;
+			padding-inline: 0;
+		}
+
+		.trust-item--line {
+			grid-column: span 2;
+		}
+
+		.session-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.session-card,
+		.session-card--wide {
+			grid-column: auto;
+		}
+
+		.level-row {
+			grid-template-columns: 1fr;
+			gap: var(--space-5);
+		}
+
+		.portrait-fallback {
+			max-width: 320px;
+		}
+
+		.ink-panel__figure {
+			border-right: 0;
+			border-bottom: 1px solid rgba(251, 250, 247, 0.2);
+			padding-right: 0;
+			padding-bottom: var(--space-5);
+		}
+
+		.process-list {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	@media (max-width: 520px) {
+		.trust-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.trust-item--line {
+			grid-column: auto;
+		}
+
+		.figure-callout strong {
+			font-size: clamp(68px, 24vw, 110px);
+		}
+	}
+</style>

@@ -1,0 +1,73 @@
+---
+interface Props {
+	invert?: boolean;
+}
+
+const { invert = false } = Astro.props;
+const fill = invert ? "var(--paper)" : "var(--ink-900)";
+const muted = invert ? "var(--ink-300)" : "var(--ink-500)";
+---
+
+<span class="logo-lockup" aria-label="Just Math Malaysia">
+	<svg
+		viewBox="0 0 160 160"
+		width="2.05em"
+		height="2.05em"
+		fill={fill}
+		aria-hidden="true"
+		focusable="false"
+	>
+		<rect x="22" y="40.5" width="44" height="7"></rect>
+		<rect x="40.5" y="22" width="7" height="44"></rect>
+		<rect x="94" y="40.5" width="44" height="7"></rect>
+		<rect x="22" y="112.5" width="44" height="7" transform="rotate(45 44 116)"
+		></rect>
+		<rect x="22" y="112.5" width="44" height="7" transform="rotate(-45 44 116)"
+		></rect>
+		<rect x="94" y="112.5" width="44" height="7"></rect>
+		<circle cx="116" cy="99" r="4.5"></circle>
+		<circle cx="116" cy="133" r="4.5"></circle>
+	</svg>
+	<span class="logo-lockup__type">
+		<span class="logo-lockup__name">Just Math</span>
+		<span class="logo-lockup__country lockup-fill" style={`color:${muted}`}
+			>MALAYSIA</span
+		>
+	</span>
+</span>
+
+<style>
+	.logo-lockup {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6em;
+		font-size: clamp(1rem, 2vw, 1.25rem);
+		color: var(--ink-900);
+		text-decoration: none;
+	}
+
+	.logo-lockup svg {
+		display: block;
+		flex: none;
+	}
+
+	.logo-lockup__type {
+		display: inline-flex;
+		align-items: stretch;
+		flex-direction: column;
+		gap: 0.45em;
+		font-size: 1em;
+	}
+
+	.logo-lockup__name {
+		color: inherit;
+		font: var(--weight-semibold) 1em/1 var(--font-serif);
+		letter-spacing: var(--tracking-tight);
+		white-space: nowrap;
+	}
+
+	.logo-lockup__country {
+		font: var(--weight-semibold) 0.6em/1 var(--font-sans);
+		letter-spacing: 0.24em;
+	}
+</style>

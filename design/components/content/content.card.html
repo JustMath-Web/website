@@ -1,0 +1,29 @@
+<!-- @dsCard group="Components" viewport="700x360" name="Content — Headings, stats, quotes, progress" subtitle="Landing-page and report content blocks" -->
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{padding:24px;background:var(--paper)}</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const { SectionHeading, Stat, Testimonial, ProgressMeter, ScoreTable } = window.JustMathDesignSystem_270e96;
+function Demo(){return (<div style={{display:"grid",gap:26}}>
+<SectionHeading eyebrow="How it works" title="Three steps, no forms to fill in." lead="You message me, we try one lesson, then you decide." />
+<div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:20}}>
+  <Stat value="RM90" label="Per 60-minute lesson" note="Same for every form." />
+  <Stat value="1:1" label="Always" note="No group classes." />
+  <Stat value="11 yrs" label="Teaching SPM maths" />
+</div>
+<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:28,alignItems:"start"}}>
+  <div style={{display:"grid",gap:14}}>
+    <ProgressMeter topic="Quadratic equations" level="secure" />
+    <ProgressMeter topic="Indices and logarithms" level="building" />
+    <ProgressMeter topic="Surds" level="practise" />
+  </div>
+  <Testimonial quote="She stopped saying she was bad at maths. That was the change." name="Mrs Lim" detail="Parent, Form 3 · Ipoh" />
+</div>
+<ScoreTable columns={["Assessment","Score","Out of"]} rows={[["Chapter 3 test",34,40],["Homework returned",7,8]]} caption="March 2026" />
+</div>);}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+</script></body></html>

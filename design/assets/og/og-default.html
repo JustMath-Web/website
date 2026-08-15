@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Just Math Malaysia — share image (1200×630)</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  /* Exact Open Graph canvas. Screenshot this at 1200×630, scale "device" for @2x. */
+  html, body { margin: 0; padding: 0; background: #555; }
+  .og {
+    position: relative; width: 1200px; height: 630px; overflow: hidden;
+    background: var(--paper);
+    display: grid; grid-template-rows: auto 1fr auto;
+    padding: 72px 80px; box-sizing: border-box;
+  }
+  /* The brand's graph ground — the same 48px hairline grid as the site, faded downward. */
+  .ground {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(to right, rgba(20,22,26,.055) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(20,22,26,.055) 1px, transparent 1px);
+    background-size: 48px 48px;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 55%, transparent 100%);
+            mask-image: linear-gradient(to bottom, #000 0%, #000 55%, transparent 100%);
+  }
+  .row { position: relative; display: flex; align-items: baseline; gap: 14px; }
+  .wordmark {
+    font: var(--weight-semibold) 30px/1 var(--font-serif);
+    letter-spacing: -0.02em; color: var(--ink-900);
+  }
+  .market {
+    font: var(--weight-semibold) 13px/1 var(--font-sans);
+    letter-spacing: 0.28em; color: var(--ink-500);
+  }
+  .headline {
+    position: relative; align-self: center;
+    font: var(--weight-semibold) 68px/1.06 var(--font-serif);
+    letter-spacing: -0.022em; color: var(--ink-900);
+    max-width: 17ch; text-wrap: balance; margin: 0;
+  }
+  /* The measurement spine: eleven school years, three of them independently measured.
+     Unlabelled here — at feed size the shape carries the idea, the words would not. */
+  .spine { position: relative; display: flex; align-items: flex-end; gap: 10px; height: 46px; }
+  .tick { width: 34px; background: var(--ink-200); }
+  .tick.on { background: var(--ink-900); }
+  .meta {
+    position: relative; display: flex; justify-content: space-between; align-items: flex-end;
+    gap: 24px; margin-top: 26px;
+  }
+  .claim {
+    font: var(--weight-regular) 19px/1.4 var(--font-sans); color: var(--ink-500);
+    max-width: 46ch; margin: 0;
+  }
+  .domain {
+    font: var(--weight-medium) 19px/1 var(--font-mono);
+    letter-spacing: -0.01em; color: var(--ink-900); white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+  <div class="og">
+    <div class="ground"></div>
+
+    <div class="row">
+      <span class="wordmark">Just Math</span>
+      <span class="market">MALAYSIA</span>
+    </div>
+
+    <!-- Approved copy: the page's own H1. Nothing invented for the share card. -->
+    <h1 class="headline">Know exactly where your child’s maths stands</h1>
+
+    <div>
+      <div class="spine" aria-hidden="true">
+        <span class="tick" style="height:12px"></span>
+        <span class="tick" style="height:12px"></span>
+        <span class="tick" style="height:12px"></span>
+        <span class="tick on" style="height:46px"></span>
+        <span class="tick" style="height:12px"></span>
+        <span class="tick" style="height:12px"></span>
+        <span class="tick" style="height:12px"></span>
+        <span class="tick" style="height:12px"></span>
+        <span class="tick on" style="height:46px"></span>
+        <span class="tick" style="height:12px"></span>
+        <span class="tick on" style="height:46px"></span>
+      </div>
+      <div class="meta">
+        <p class="claim">One tutor, one student, live on Google Meet. Standard 1 to Form 5 and IGCSE.</p>
+        <span class="domain">mathematicsmalaysia.com</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

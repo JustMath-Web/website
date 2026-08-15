@@ -1,0 +1,26 @@
+<!-- @dsCard group="Components" viewport="700x340" name="Forms — Field, Input, Select, Checkbox, Radio" subtitle="Enquiry-form controls, 44px targets" -->
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{padding:24px;background:var(--paper)}</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const { Field, Input, Select, Checkbox, RadioGroup } = window.JustMathDesignSystem_270e96;
+function Demo(){
+  const [slot,setSlot] = React.useState("wk");
+  return (<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:22}}>
+    <div style={{display:"grid",gap:16}}>
+      <Field label="Your child's name and form" hint="e.g. Nurul, Form 3"><Input placeholder="Nurul, Form 3" /></Field>
+      <Field label="Syllabus"><Select placeholder="Choose one" options={["KSSM","IGCSE","SPM revision"]} /></Field>
+      <Field label="Phone number" error="Add a number I can reach on WhatsApp."><Input invalid defaultValue="012" /></Field>
+    </div>
+    <div style={{display:"grid",gap:16}}>
+      <Field label="When suits you?"><RadioGroup name="slot" value={slot} onChange={setSlot} options={[{value:"wk",label:"Weekday evening",note:"After 8pm"},{value:"we",label:"Weekend morning"}]} /></Field>
+      <Field label="Anything I should know?"><Input multiline rows={3} placeholder="She finds algebra hard but likes geometry." /></Field>
+      <Checkbox defaultChecked label="Send the monthly progress report" description="One page, plain language." />
+    </div>
+  </div>);}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+</script></body></html>

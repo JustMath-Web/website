@@ -1,0 +1,85 @@
+---
+import "../styles/global.css";
+
+interface Props {
+	title: string;
+	description: string;
+	canonicalUrl?: string;
+	noindex?: boolean;
+	ogImage?: string;
+	ogImageAlt?: string;
+}
+
+const {
+	title,
+	description,
+	canonicalUrl,
+	noindex = false,
+	ogImage = "/og-default.png",
+	ogImageAlt = "Just Math Malaysia wordmark with a ruled measurement spine.",
+} = Astro.props;
+
+const baseUrl = Astro.site ?? Astro.url;
+const canonical =
+	canonicalUrl ?? new URL(Astro.url.pathname, baseUrl).toString();
+const absoluteOgImage = new URL(ogImage, baseUrl).toString();
+---
+
+<!doctype html>
+<html lang="en-MY">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<link rel="canonical" href={canonical} />
+		{noindex && <meta name="robots" content="noindex,nofollow" />}
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonical} />
+		<meta property="og:image" content={absoluteOgImage} />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta property="og:image:alt" content={ogImageAlt} />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={absoluteOgImage} />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+	</head>
+	<body>
+		<a class="skip-link" href="#main">Skip to content</a>
+		<slot />
+	</body>
+</html>
+
+<style is:global>
+	.skip-link {
+		position: fixed;
+		inset-block-start: var(--space-3);
+		inset-inline-start: var(--space-3);
+		z-index: 100;
+		transform: translateY(calc(-100% - var(--space-5)));
+		background: var(--paper);
+		color: var(--ink-900);
+		border: 2px solid var(--ink-900);
+		border-radius: var(--radius-md);
+		padding: var(--space-3) var(--space-4);
+		font: var(--type-label);
+		text-decoration: none;
+		transition: transform var(--dur-2) var(--ease-out);
+	}
+
+	.skip-link:focus-visible {
+		transform: translateY(0);
+	}
+
+	@media print {
+		.skip-link {
+			display: none;
+		}
+	}
+</style>

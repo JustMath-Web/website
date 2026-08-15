@@ -1,0 +1,19 @@
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--surface-page);color:var(--text-body);font:var(--type-body);-webkit-font-smoothing:antialiased;text-wrap:pretty}
+h1,h2,h3,h4{margin:0;color:var(--text-strong);letter-spacing:var(--tracking-tight)}
+h1{font:var(--type-h1)}h2{font:var(--type-h2)}h3{font:var(--type-h3)}
+p{margin:0 0 var(--space-4)}
+a{color:var(--text-link);text-decoration:underline;text-underline-offset:2px;text-decoration-thickness:1px;transition:var(--transition-control)}
+a:hover{color:var(--text-link-hover);text-decoration-thickness:2px}
+:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+hr{border:0;border-top:var(--rule-hairline);margin:var(--space-6) 0}
+/* Brand lockup — spread one tracked word to the width of the line above it.
+   `text-justify:inter-character` is what actually spreads LETTERS; ordinary justification only
+   stretches the gaps between words, of which a single word has none. Where it is unsupported
+   (Safari) the line falls back to CENTRED, never left: centred reads as a deliberate lockup,
+   left-aligned reads as a bug. Requires the parent to give it a width (align-items:stretch). */
+.lockup-fill{text-align:center}
+@supports (text-justify:inter-character){
+  .lockup-fill{text-align:justify;text-align-last:justify;text-justify:inter-character}
+}
+::selection{background:var(--slate-100)}

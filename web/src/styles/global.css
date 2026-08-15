@@ -1,0 +1,166 @@
+/* fonts.css must be imported first: its only content is itself an @import (Google Fonts CDN,
+   flagged for self-hosting later per docs/DECISIONS.md §13), and CSS requires @import statements
+   to precede all other rules. Tailwind's own `@import "tailwindcss"` expands into real CSS, so
+   anything importing a nested @import must come before it. */
+@import "./tokens/fonts.css";
+@import "tailwindcss";
+
+/* Design authority: /design/tokens/*.css (Bob-reviewed, contrast-verified — see root HANDOFF.md
+   2026-08-10 "Design craft-gate pass"). These files are copied verbatim, not hand-transcribed, so
+   there is one source of truth for every color/type/spacing/shape/motion value. Do not edit copies
+   independently of /design/tokens — regenerate from there if the design package changes. */
+@import "./tokens/colors.css";
+@import "./tokens/typography.css";
+@import "./tokens/spacing.css";
+@import "./tokens/shape.css";
+@import "./tokens/motion.css";
+@import "./tokens/base.css";
+
+@theme inline {
+	/* This brand is monochrome-first with two reserved accents (slate, ochre) and one action-only
+     color (WhatsApp green — reserved, never decorative, only on a control that opens WhatsApp per
+     design/colors.css). Tailwind's full default palette would undermine that discipline, so it is
+     removed and replaced with exactly the brand's palette. */
+	--color-*: initial;
+
+	--color-ink-900: var(--ink-900);
+	--color-ink-800: var(--ink-800);
+	--color-ink-700: var(--ink-700);
+	--color-ink-600: var(--ink-600);
+	--color-ink-500: var(--ink-500);
+	--color-ink-450: var(--ink-450);
+	--color-ink-400: var(--ink-400);
+	--color-ink-300: var(--ink-300);
+	--color-ink-200: var(--ink-200);
+	--color-paper: var(--paper);
+	--color-paper-2: var(--paper-2);
+	--color-paper-3: var(--paper-3);
+	--color-white: var(--white);
+	--color-rule: var(--rule);
+	--color-rule-strong: var(--rule-strong);
+	--color-slate-700: var(--slate-700);
+	--color-slate-600: var(--slate-600);
+	--color-slate-500: var(--slate-500);
+	--color-slate-100: var(--slate-100);
+	--color-ochre-600: var(--ochre-600);
+	--color-ochre-500: var(--ochre-500);
+	--color-ochre-100: var(--ochre-100);
+	--color-wa-green: var(--wa-green);
+	--color-wa-green-btn: var(--wa-green-btn);
+	--color-wa-green-press: var(--wa-green-press);
+	--color-wa-green-100: var(--wa-green-100);
+	--color-danger-600: var(--danger-600);
+	--color-danger-100: var(--danger-100);
+
+	/* Semantic aliases — prefer these over the raw palette above in component markup, they carry
+     intent (e.g. `text-text-body` survives a future retint, `text-ink-700` does not). */
+	--color-text-strong: var(--text-strong);
+	--color-text-body: var(--text-body);
+	--color-text-muted: var(--text-muted);
+	--color-text-faint: var(--text-faint);
+	--color-text-invert: var(--text-invert);
+	--color-text-link: var(--text-link);
+	--color-text-link-hover: var(--text-link-hover);
+	--color-surface-page: var(--surface-page);
+	--color-surface-card: var(--surface-card);
+	--color-surface-sunken: var(--surface-sunken);
+	--color-surface-invert: var(--surface-invert);
+	--color-surface-accent: var(--surface-accent);
+	--color-border-hairline: var(--border-hairline);
+	--color-border-strong: var(--border-strong);
+	--color-focus-ring: var(--focus-ring);
+
+	/* Font families */
+	--font-serif: var(--font-serif);
+	--font-sans: var(--font-sans);
+	--font-mono: var(--font-mono);
+	--font-display: var(--font-display);
+	--font-body: var(--font-body);
+	--font-numeral: var(--font-numeral);
+
+	/* Font size — closed scale (design/typography.css: 1.25 ratio, 14px prose floor, 12px UI floor).
+     --text-3xs (11px) is DATA-VIZ ANNOTATION ONLY per that file — never body copy or a control
+     label. Off-scale type was a fixed craft-gate failure (root HANDOFF.md, finding #4); keeping
+     Tailwind's default scale available would reopen that gap. */
+	--text-*: initial;
+	--text-3xs: var(--size-3xs);
+	--text-2xs: var(--size-2xs);
+	--text-xs: var(--size-xs);
+	--text-sm: var(--size-sm);
+	--text-base: var(--size-base);
+	--text-md: var(--size-md);
+	--text-lg: var(--size-lg);
+	--text-xl: var(--size-xl);
+	--text-2xl: var(--size-2xl);
+	--text-3xl: var(--size-3xl);
+	--text-4xl: var(--size-4xl);
+	--text-5xl: var(--size-5xl);
+
+	/* Font weight — note "regular", not Tailwind's usual "normal", for 400. `font-normal` is not
+     available; use `font-regular`. */
+	--font-weight-*: initial;
+	--font-weight-regular: var(--weight-regular);
+	--font-weight-medium: var(--weight-medium);
+	--font-weight-semibold: var(--weight-semibold);
+	--font-weight-bold: var(--weight-bold);
+
+	--tracking-*: initial;
+	--tracking-tight: var(--tracking-tight);
+	--tracking-normal: var(--tracking-normal);
+	--tracking-wide: var(--tracking-wide);
+	--tracking-wordmark: var(--tracking-wordmark);
+
+	--leading-*: initial;
+	--leading-tight: var(--lh-tight);
+	--leading-snug: var(--lh-snug);
+	--leading-normal: var(--lh-normal);
+	--leading-loose: var(--lh-loose);
+
+	/* Shape — "nothing rounder than 6px except avatars" (design/shape.css). radius-pill is the
+     avatar/circular exception; there is no xl/2xl/3xl/4xl in this brand. */
+	--radius-*: initial;
+	--radius-sm: var(--radius-sm);
+	--radius-md: var(--radius-md);
+	--radius-lg: var(--radius-lg);
+	--radius-pill: var(--radius-pill);
+
+	--shadow-*: initial;
+	--shadow-1: var(--shadow-1);
+	--shadow-2: var(--shadow-2);
+	--shadow-lift: var(--shadow-lift);
+
+	--inset-shadow-*: initial;
+	--inset-shadow-press: var(--shadow-inset-press);
+
+	/* Motion — the brand's complete easing vocabulary (design/motion.css). No ease-in-out; the
+     reveal-motion craft gate (CS-50, root HANDOFF.md) was about deliberate, differentiated motion,
+     not a generic curve. Durations stay as plain custom properties (see tokens/motion.css) and are
+     used directly, e.g. `transition-[var(--transition-control)]` or in component-scoped CSS,
+     because Tailwind v4 has no themeable --duration-* namespace. */
+	--ease-*: initial;
+	--ease-standard: var(--ease-standard);
+	--ease-out: var(--ease-out);
+	--ease-in: var(--ease-in);
+
+	/* Layout containers → max-w-* utilities. page (1120px) is the landing container, inside the
+     project-wide 1200px cap (guideline Section 9); doc (720px) is the report column; measure/
+     measure-narrow are prose line-length caps. */
+	--container-page: var(--page-max);
+	--container-doc: var(--doc-max);
+	--container-measure: var(--measure);
+	--container-measure-narrow: var(--measure-narrow);
+
+	/* Named sizing beyond the plain numeric spacing scale. The numeric scale (default --spacing:
+     0.25rem = 4px) is untouched, and every design/spacing.css --space-N value is already reachable
+     through it: space-1=4px→p-1, space-2=8px→p-2, space-3=12px→p-3, space-4=16px→p-4,
+     space-5=24px→p-6, space-6=32px→p-8, space-7=48px→p-12, space-8=64px→p-16, space-9=96px→p-24,
+     space-10=128px→p-32. control/control-sm/control-lg are named because 44px is an
+     accessibility-load-bearing constant (repeatedly the subject of Bob's tap-target findings) —
+     `h-control` documents intent that `h-11` does not. */
+	--spacing-gutter: var(--gutter);
+	--spacing-section-y: var(--section-y);
+	--spacing-section-y-tight: var(--section-y-tight);
+	--spacing-control: var(--control-h);
+	--spacing-control-sm: var(--control-h-sm);
+	--spacing-control-lg: var(--control-h-lg);
+}

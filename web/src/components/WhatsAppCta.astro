@@ -1,0 +1,105 @@
+---
+interface Props {
+	href: string;
+	label: string;
+	note?: string;
+	align?: "start" | "center";
+	size?: "md" | "lg";
+	full?: boolean;
+}
+
+const {
+	href,
+	label,
+	note,
+	align = "start",
+	size = "lg",
+	full = false,
+} = Astro.props;
+---
+
+<div
+	class:list={["cta-wrap", `cta-wrap--${align}`, { "cta-wrap--full": full }]}
+>
+	<a
+		class:list={["whatsapp-cta", `whatsapp-cta--${size}`]}
+		href={href}
+		rel="noopener"
+	>
+		{label}
+	</a>
+	{note && <p class="cta-note">{note}</p>}
+</div>
+
+<style>
+	.cta-wrap {
+		display: grid;
+		justify-items: start;
+		max-width: 470px;
+	}
+
+	.cta-wrap--center {
+		justify-items: center;
+		margin-inline: auto;
+		text-align: center;
+	}
+
+	.cta-wrap--full {
+		width: 100%;
+	}
+
+	.whatsapp-cta {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-height: var(--control-h);
+		min-width: var(--control-h);
+		border-radius: var(--radius-md);
+		background: var(--wa-green-btn);
+		color: var(--white);
+		box-shadow: var(--shadow-1);
+		font: var(--weight-semibold) var(--size-sm) / 1.15 var(--font-sans);
+		text-align: center;
+		text-decoration: none;
+		transition:
+			transform var(--dur-1) var(--ease-standard),
+			background var(--dur-2) var(--ease-standard),
+			box-shadow var(--dur-2) var(--ease-standard);
+	}
+
+	.whatsapp-cta:hover {
+		background: var(--wa-green-press);
+		color: var(--white);
+		box-shadow: var(--shadow-lift);
+		text-decoration: none;
+	}
+
+	.whatsapp-cta:active {
+		transform: translateY(1px);
+		box-shadow: var(--shadow-inset-press);
+	}
+
+	.whatsapp-cta--md {
+		padding: 0 var(--space-4);
+		white-space: nowrap;
+	}
+
+	.whatsapp-cta--lg {
+		min-height: var(--control-h-lg);
+		width: 100%;
+		padding: var(--space-3) var(--space-5);
+		font-size: var(--size-base);
+	}
+
+	.cta-note {
+		margin: var(--space-3) 0 0;
+		color: var(--text-muted);
+		font: var(--type-small);
+	}
+
+	@media (max-width: 420px) {
+		.whatsapp-cta--lg {
+			font-size: var(--size-sm);
+		}
+	}
+</style>

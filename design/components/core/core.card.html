@@ -1,0 +1,23 @@
+<!-- @dsCard group="Components" viewport="700x330" name="Core — Buttons, cards, badges" subtitle="Ink actions, the reserved-green WhatsApp control, containers" -->
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{padding:24px;background:var(--paper)}.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.lbl{font:var(--type-label);letter-spacing:var(--tracking-wide);text-transform:uppercase;color:var(--text-faint);margin:0 0 10px}</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const { Button, WhatsAppButton, Card, Badge, Callout } = window.JustMathDesignSystem_270e96;
+function Demo(){return (<div style={{display:"grid",gap:22}}>
+<div><p className="lbl">Buttons — primary, secondary, quiet, ghost, disabled</p>
+<div className="row"><Button>Book a first lesson</Button><Button variant="secondary">See fees</Button><Button variant="quiet">Download</Button><Button variant="ghost">More</Button><Button disabled>Unavailable</Button></div></div>
+<div><p className="lbl">Sizes · and the only green control in the system</p>
+<div className="row"><Button size="sm">Small</Button><Button size="md">Medium</Button><Button size="lg">Large</Button><WhatsAppButton size="md" label="Message on WhatsApp" /></div></div>
+<div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12,alignItems:"start"}}>
+  <Card padding={18} rule><div className="row" style={{gap:8}}><Badge tone="slate">Form 3</Badge><Badge tone="ochre" uppercase>Term 2</Badge></div><p style={{margin:"12px 0 0",font:"var(--type-small)",color:"var(--text-muted)"}}>Plain card, top rule.</p></Card>
+  <Card tone="sunken" padding={18}><p style={{margin:0,font:"var(--type-small)"}}>Sunken card — fee summaries and quiet blocks.</p></Card>
+  <Callout tone="ochre" title="Worth a look">Surds still need repetition. Ten minutes, three times.</Callout>
+</div>
+</div>);}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+</script></body></html>

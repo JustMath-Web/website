@@ -1,0 +1,11 @@
+:root{
+  --space-0:0; --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px;
+  --space-5:24px; --space-6:32px; --space-7:48px; --space-8:64px; --space-9:96px; --space-10:128px;
+  --gutter:24px; --section-y:96px; --section-y-tight:64px;
+  --measure:64ch;            /* max body line length */
+  --measure-narrow:46ch;     /* lead paragraphs, report notes */
+  --page-max:1120px;         /* landing page container */
+  --doc-max:720px;           /* progress report column */
+  --control-h:44px;          /* minimum tap target */
+  --control-h-sm:36px; --control-h-lg:52px;
+}

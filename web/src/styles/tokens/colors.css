@@ -1,0 +1,33 @@
+:root{
+  /* Ink — the brand is monochrome first */
+  --ink-900:#14161a; --ink-800:#20242b; --ink-700:#2c3037; --ink-600:#434952;
+  --ink-500:#5b626c; --ink-450:#666d77; --ink-400:#7b828c; --ink-300:#a2a8b1; --ink-200:#c9ccd2;
+  /* ink-450 is the lightest ink that still clears 4.5:1 as text on BOTH paper grounds
+     (5.01:1 on --paper, 4.59:1 on --paper-2). It is the floor for small faint text.
+     ink-400 and lighter are NON-TEXT ONLY — rules, bar fills, dividers, disabled marks. */
+  /* Paper */
+  --paper:#fbfaf7; --paper-2:#f3f0e9; --paper-3:#ebe7dd; --white:#ffffff;
+  --rule:#e3dfd6; --rule-strong:#cfc9bc;
+  /* Slate blue — the only decorative accent */
+  --slate-700:#1d3050; --slate-600:#2b4468; --slate-500:#3d5c86; --slate-100:#e7ecf3;
+  /* Ochre — progress and attention inside reports.
+     ochre-600 is the TEXT value: 5.17:1 on --paper, 4.75:1 on --paper-2, 4.68:1 on its own
+     --ochre-100 tint, so it stays AA on every ground the brand puts it on.
+     ochre-500 is NON-TEXT ONLY — rules, brackets, bar fills, row edges. */
+  --ochre-600:#8f6114; --ochre-500:#b47b22; --ochre-100:#f6eedd;
+  /* RESERVED: WhatsApp green. Only on a control that opens WhatsApp. Never decorative.
+     --wa-green is the brand/tint value; --wa-green-btn is the button fill, deepened until
+     white label text clears 4.5:1 at 17px. */
+  --wa-green:#25d366; --wa-green-btn:#0e7a3e; --wa-green-press:#0a6432; --wa-green-100:#e3f8ea;
+  /* Semantic */
+  --danger-600:#a32a1f; --danger-100:#f8e9e7;
+
+  /* Semantic aliases */
+  --text-strong:var(--ink-900); --text-body:var(--ink-700); --text-muted:var(--ink-500);
+  --text-faint:var(--ink-450); --text-invert:var(--paper); --text-link:var(--slate-600);
+  --text-link-hover:var(--slate-700);
+  --surface-page:var(--paper); --surface-card:var(--white); --surface-sunken:var(--paper-2);
+  --surface-invert:var(--ink-900); --surface-accent:var(--slate-100);
+  --border-hairline:var(--rule); --border-strong:var(--ink-900);
+  --focus-ring:var(--slate-600);
+}

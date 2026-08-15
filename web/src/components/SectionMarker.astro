@@ -1,0 +1,56 @@
+---
+interface Props {
+	number: string;
+	label: string;
+	invert?: boolean;
+	id?: string;
+}
+
+const { number, label, invert = false, id } = Astro.props;
+---
+
+<div class:list={["section-marker", { "section-marker--invert": invert }]}>
+	<span class="section-marker__number">{number}</span>
+	<span class="section-marker__rule" aria-hidden="true"></span>
+	<span id={id} class="section-marker__label">{label}</span>
+</div>
+
+<style>
+	.section-marker {
+		display: flex;
+		align-items: center;
+		gap: var(--space-3);
+		color: var(--text-muted);
+	}
+
+	.section-marker__number {
+		color: var(--text-faint);
+		font: var(--weight-semibold) var(--size-2xs) / 1 var(--font-mono);
+		letter-spacing: 0.04em;
+	}
+
+	.section-marker__rule {
+		width: 28px;
+		height: 1px;
+		background: var(--rule-strong);
+	}
+
+	.section-marker__label {
+		color: var(--text-muted);
+		font: var(--type-label);
+		letter-spacing: var(--tracking-wide);
+		text-transform: uppercase;
+	}
+
+	.section-marker--invert .section-marker__number {
+		color: var(--ink-400);
+	}
+
+	.section-marker--invert .section-marker__rule {
+		background: rgba(251, 250, 247, 0.3);
+	}
+
+	.section-marker--invert .section-marker__label {
+		color: var(--ink-300);
+	}
+</style>

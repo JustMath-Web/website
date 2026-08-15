@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Just Math — mark decision</title>
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; padding: 40px; background: var(--paper); font: var(--type-body); }
+  h1 { font: var(--type-h2); margin: 0 0 6px; }
+  .sub { color: var(--text-muted); margin: 0 0 34px; font-size: var(--size-sm); max-width: 74ch; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; max-width: 1100px; }
+  .cell { border: 1px solid var(--rule); border-radius: var(--radius-lg); overflow: hidden; background: var(--white); }
+  .stage { display: grid; place-items: center; min-height: 150px; padding: 22px; }
+  .stage.ink { background: var(--ink-900); }
+  .cap { border-top: 1px solid var(--rule); padding: 13px 15px; }
+  .name { font: var(--type-small); font-weight: var(--weight-semibold); color: var(--ink-900); }
+  .note { font-size: var(--size-2xs); color: var(--text-muted); margin-top: 5px; line-height: 1.5; }
+  h2 { font: var(--type-h3); margin: 38px 0 14px; }
+  /* Favicon test: the real constraint — a 40px circular WhatsApp avatar. */
+  .avatars { display: flex; gap: 20px; align-items: center; margin-top: 8px; }
+  .av { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; border: 1px solid var(--rule); }
+  .av img { width: 100%; height: 100%; object-fit: cover; }
+  .avlabel { font-size: var(--size-2xs); color: var(--text-muted); }
+</style>
+</head>
+<body>
+  <h1>Mark decision — B, 2026-08-11</h1>
+  <p class="sub">The live site's mark is a 2×2 cluster of operators beside the words. The owner chose <strong>B</strong>:
+  the same cluster redrawn as geometry in brand ink. A does not ship; C was retired and its files deleted.</p>
+
+  <div class="grid">
+    <div class="cell">
+      <div class="stage" style="background:#2c1f9c">
+        <img src="https://mathematicsmalaysia.com/storage/2022/12/site-logo-math-white.png" alt="Current live logo" width="240">
+      </div>
+      <div class="cap"><div class="name">A · Live site, as-is</div>
+        <div class="note">350×100 PNG. Four bright colours — red <code>#ea222a</code>, yellow <code>#f9e105</code>,
+        cyan <code>#6cc3d9</code>, <strong>green <code>#84d063</code></strong>. Raster, so it cannot scale or recolour.</div></div>
+    </div>
+
+    <div class="cell">
+      <div class="stage"><img src="monogram-operators.svg" alt="Operator monogram in ink" width="120"></div>
+      <div class="cap"><div class="name">B · Operator cluster, brand ink</div>
+        <div class="note">The same four operators, redrawn as pure geometry in <code>ink-900</code>. Vector, so it
+        scales and reverses. Keeps the recognition from the live site.</div></div>
+    </div>
+
+    <div class="cell">
+      <div class="stage ink"><img src="monogram-operators-invert.svg" alt="Operator monogram reversed" width="120"></div>
+      <div class="cap"><div class="name">B · reversed</div>
+        <div class="note">For the dark footer and the ink bands.</div></div>
+    </div>
+
+    <div class="cell">
+      <div class="stage" style="background:var(--paper-2)"><span style="font:var(--type-small);color:var(--text-muted);text-align:center;padding:0 18px">Files deleted<br>2026-08-11</span></div>
+      <div class="cap"><div class="name">C · Equals monogram — retired</div>
+        <div class="note">Authored from the brief before the predecessor site was known. Not chosen: no connection to what parents have already seen.</div></div>
+    </div>
+  </div>
+
+  <h2>At 40px — the real test</h2>
+  <p class="sub" style="margin-bottom:10px">A WhatsApp profile picture is a 40px circle. A mark that fails here fails where parents actually see it.</p>
+  <div class="avatars">
+    <div>
+      <div class="av"><img src="https://mathematicsmalaysia.com/storage/2022/12/site-logo-math-white.png" alt=""></div>
+      <div class="avlabel">A · live</div>
+    </div>
+    <div>
+      <div class="av"><img src="monogram-operators-square.svg" alt=""></div>
+      <div class="avlabel">B · operators</div>
+    </div>
+    <div>
+      <div class="av" style="background:var(--paper-2)"></div>
+      <div class="avlabel">C · retired</div>
+    </div>
+  </div>
+</body>
+</html>

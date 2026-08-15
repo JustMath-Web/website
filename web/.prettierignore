@@ -1,0 +1,8 @@
+pnpm-lock.yaml
+dist
+.vercel
+.astro
+
+# Byte-for-byte copies of the design authority (../design/tokens/*.css) — must stay verbatim.
+# Regenerate by re-copying from ../design/tokens/, never by formatting in place.
+src/styles/tokens/

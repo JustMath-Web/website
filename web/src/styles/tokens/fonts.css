@@ -1,0 +1,6 @@
+/* SUBSTITUTION NOTE: no font binaries were supplied with the brief.
+   IBM Plex Serif (wordmark + display) and IBM Plex Sans / Mono (UI, numerals)
+   are the closest Google Fonts match to "serif with real weight, squared or
+   barely rounded terminals". Replace this @import with local @font-face rules
+   if the brand licenses a different serif. */
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
