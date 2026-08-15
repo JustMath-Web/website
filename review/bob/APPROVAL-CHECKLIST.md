@@ -1,6 +1,89 @@
 # Bob Approval Checklist
 
+## Vertical Slice Review — 2026-08-15
+
+Current stage: first vertical slice (landing page renders from the real component tree and local
+fallback content; no blog routes yet), reviewed at commit
+`770965218abcbc048c1261c9ca0ad3f4b6bb832c`.
+
+Current verdict: **Revision required.** This is not launch approval and not a blog-routes approval.
+
+### P1 Blockers
+
+- [ ] VS-01: `GapChart.astro` must consume `homePage.problem.gapChartAnnotations` instead of
+  hardcoding its own values (or the field must be formally removed and the decision recorded); the
+  other hardcoded editorial figures (`24`, `2`, `20`, `30`, the availability time blocks) need either
+  real fields or a recorded hand-sync decision.
+- [ ] VS-02: "Blog notes" level-to-category links (67.6 × 16.8px) must reach ≥44×44.
+- [ ] VS-03: Footer navigation links (~350 × 18.2px) must reach ≥44×44.
+- [ ] VS-04: A Playwright test suite must exist, be wired into `web`'s CI job, and be green — not
+  substituted by an ad hoc reviewer pass.
+
+### P2 Conditions
+
+- [ ] VS-05: Header and footer `<nav>` link groups must be marked up as `<ul>`/`<li>`.
+- [ ] VS-06: FAQ answers 2–13 must remain reachable with JavaScript disabled (native
+  `<details>`/`<summary>` recommended, or the JS dependency recorded as a deliberate tradeoff).
+- [ ] VS-07: `Organization` (or a more specific type) JSON-LD must be added sitewide.
+- [ ] VS-08: Security headers (`X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`/CSP)
+  must be configured via `vercel.json` or middleware.
+- [ ] VS-09: Automated dependency/advisory scanning must run in CI or via Dependabot.
+- [ ] VS-10: Fonts must be self-hosted, replacing the Google Fonts `@import` (previously flagged,
+  still open).
+- [ ] VS-11: The six documented old-site redirects must be implemented as executable config, not
+  only documentation (previously flagged, still open — three of six targets now exist on the real
+  page, so nothing blocks doing this).
+- [ ] VS-12: A vertical-slice-stage FE self-check must be recorded in `docs/DECISIONS.md` (repeat of
+  a gap the scaffold review already caught once as P2-DEV-07).
+- [ ] VS-13: Header brand/logo link (114 × 40.3px) should reach ≥44×44 for consistency with the rest
+  of the header.
+
+### P3 Cleanup
+
+- [ ] VS-14: Skip link (120 × 42.4px) is 1.6px short of the house 44×44 rule — optional polish.
+- [ ] VS-15: Sitemap/robots.txt/RSS still not wired — expected at this stage, revisit once blog
+  routes exist.
+- [ ] VS-16: Consider native `<details>`/`<summary>` for the FAQ accordion (fixes VS-06 as a side
+  effect).
+- [ ] VS-17: `index.astro` is a large single-file component — no defect found, revisit extraction
+  once blog templates might share patterns with it.
+
+### Verified In This Review
+
+- [x] `git log -1` confirms the commit under review and a clean working tree.
+- [x] `web`: `pnpm install --frozen-lockfile`, `pnpm format:check`, `pnpm check` (0 errors/warnings),
+  `pnpm build` all reproduced clean, independently of CI's badge.
+- [x] `studio`: `pnpm install --frozen-lockfile`, `pnpm format:check`, `pnpm typecheck`, `pnpm lint`,
+  `pnpm build` all reproduced clean (only the documented, accepted Sanity auto-update warning).
+- [x] `studio`: `pnpm seed:dry-run` reports 6 categories, 1 author, 3 singletons, no writes.
+- [x] `gh run list` confirms the latest CI run (`31891195182`) is `success` on
+  `headSha 770965218abcbc048c1261c9ca0ad3f4b6bb832c` — the exact commit under review.
+- [x] Real-browser Playwright verification performed at 390, 560, 768, and 1440px: landmark counts,
+  heading order, tap-target measurement (edge-test and dimension measurement, not `scrollWidth`
+  alone), computed-contrast sampling (11 selectors, all pass), keyboard tab order and focus-ring
+  visibility, `prefers-reduced-motion` behavior, FAQ accordion interaction, console/network/response
+  monitoring (zero errors, zero failed requests, zero non-2xx responses), and OG image dimension
+  verification against the actual PNG header.
+- [x] Secret scan of tracked files (targeted grep for common key/credential patterns): none found;
+  both `.env.example` files contain only variable names, no values.
+- [x] Forms: genuinely N/A, confirmed by absence of any form markup, Astro Action, Zod, Resend, or
+  Turnstile package in either `web/` or `studio/`.
+- [x] Analytics: genuinely N/A, confirmed by `rg` across `web/src` and `astro.config.mjs` for
+  `gtag|gtm|google-analytics|dataLayer|analytics` returning no matches.
+- [x] `web/reusable/` remains absent (unchanged from scaffold).
+- [x] Prior design-review launch conditions (portrait, mark sign-off, WhatsApp glyph, disabled-note
+  legibility, richer brand evidence, report strings, Mr Kong-reviewed blog copy) remain open,
+  unchanged, and correctly not re-derived here as implementation findings — they are owner/client
+  decisions per the review brief.
+- [x] Branch protection: confirmed still blocked by GitHub's Free org plan (403 on both APIs per
+  `docs/DECISIONS.md` §18) — this is the owner's explicit, stated-tradeoff decision and is treated
+  as a residual risk, not re-opened as a finding, per the review brief's explicit instruction.
+
+---
+
 ## Development Scaffold Re-Review - 2026-08-14
+
+*(Preserved as history.)*
 
 Current stage: Astro + Sanity scaffold review before first vertical slice.
 
