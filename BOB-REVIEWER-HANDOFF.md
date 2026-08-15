@@ -1,6 +1,118 @@
 # Bob Reviewer Handoff - Just Math Malaysia
 
-Date: 2026-08-15
+Date: 2026-08-16
+
+## 2026-08-16 - Scoped re-review of the P1/P2 fix commit
+
+Role: Bob, independent development reviewer. Claude is the implementer, a separate session with no
+visibility into this one. Bob did not edit application code, `docs/DECISIONS.md`, or root
+`HANDOFF.md`.
+
+Review type: **scoped re-review**, not a full vertical-slice pass. Claude's fix commit `05ab713`
+("fix: resolve the four P1 findings from Bob's vertical-slice review"), merged to `main` at
+`c1186435c7b96b0905f4988f2ca5c497540f9409` (current `HEAD` at review time), claims to resolve VS-01
+through VS-04 (P1) plus VS-05 (P2, rolled in because it shares both files touched for VS-02/VS-03)
+from the 2026-08-15 review below. This session re-inspected only those five findings plus the files
+the fix commit actually touched — not a fresh vertical-slice pass, and VS-06 through VS-17 (the
+other 8 P2s and 4 P3s) were deliberately **not** re-litigated.
+
+Scoped verdict: **Approved with conditions.** All five targeted findings are genuinely resolved.
+Two new minor, non-blocking issues were found during verification (detailed below and in
+`review/bob/CODE-REVIEW.md`'s 2026-08-16 section) — neither reopens any of the five findings.
+
+### Capabilities and fallbacks actually used
+
+| Capability | Status | Notes |
+| --- | --- | --- |
+| Bash / Read / Grep / Glob | Available | Used throughout, including `git diff 05ab713~1 05ab713 -- <file>` per touched file. |
+| Playwright (`mcp__plugin_playwright_playwright__*`) | Available | Used for all real-browser re-measurement of VS-02/VS-03/VS-05 — no manual-checklist fallback needed. |
+| `gh` CLI | Available, authenticated (`charliekhc`) | Used to confirm the CI run for the exact `HEAD` commit, not just trust the badge. |
+| `pnpm exec playwright install --with-deps chromium` / `pnpm test:e2e` | Available, ran clean | 19/19 tests passed on a fresh install, matching the count and pass claim in `docs/DECISIONS.md` §19. |
+
+### Files/evidence reviewed this pass
+
+- `review/bob/CODE-REVIEW.md`'s 2026-08-15 section (the findings being re-checked).
+- `docs/DECISIONS.md` §19, read in full and treated as an unverified claim until independently
+  checked against the diff and live behavior.
+- `git log --oneline -8`, `git show --stat 05ab713`, `git rev-parse HEAD`.
+- `git diff 05ab713~1 05ab713 -- <file>` for every file the fix commit touched, read in full:
+  `web/src/components/GapChart.astro`, `web/src/pages/index.astro`,
+  `studio/schemaTypes/documents/homePage.ts`, `web/src/lib/sanity/queries.ts`,
+  `web/src/lib/sanity/types.ts`, `web/src/lib/content/defaultLandingData.ts`,
+  `studio/scripts/seed.ts`, `web/src/components/SiteHeader.astro`,
+  `web/src/components/SiteFooter.astro`, `web/tests/e2e/landing.spec.ts`,
+  `web/playwright.config.ts`, `web/scripts/serve-dist.mjs`, `.github/workflows/ci.yml`.
+- Current-state reads (not diff) of the same files, plus `web/.prettierignore` and `.gitignore`, to
+  confirm the post-fix state is internally consistent, not just that the diff looks right in
+  isolation.
+
+### Tools and commands actually run this pass
+
+- `cd studio && pnpm install --frozen-lockfile` (already up to date), `pnpm seed:dry-run` (6
+  categories, 1 author, 3 singletons, no writes — matches §19's claim), `pnpm typecheck` (clean),
+  `pnpm lint` (clean), `pnpm format:check` (clean), `pnpm build` (clean, same documented Sanity
+  auto-update warning as before, not a regression).
+- `cd web && pnpm install --frozen-lockfile` (already up to date), `pnpm build` (clean, 1 page),
+  `pnpm check` (0 errors/warnings/hints, 20 files), `pnpm format:check` (clean on a fresh checkout —
+  see the new prettierignore issue noted below, reproduced then cleaned up).
+- `node scripts/serve-dist.mjs 4321` against a freshly built `dist/`, then Playwright MCP navigation
+  + `browser_evaluate` + `browser_resize` at 390×844, 560×900, 768×1024, 1440×900 for real
+  `getBoundingClientRect()` measurement of the exact elements VS-02/VS-03 flagged, real DOM inspection
+  of the VS-05 `<ul>/<li>` structure, and a live read of the `GapChart` flag text + figure-callout
+  text to confirm VS-01 renders real data end-to-end.
+- `cd web && pnpm exec playwright install --with-deps chromium`, then `pnpm test:e2e` (killed my own
+  manually-started dist server first so Playwright's own `webServer` step built and served
+  independently, matching what CI does) → **19 passed (2.8s)**.
+- `gh run list --limit 8`, `gh run view 31894636124 --json headSha,conclusion,displayTitle,headBranch`
+  — confirmed `headSha: c1186435c7b96b0905f4988f2ca5c497540f9409` (exact current `HEAD`),
+  `conclusion: success`.
+- `git status --porcelain` before and after — clean; reviewer-generated `test-results/` and
+  `playwright-report/` directories removed before finishing.
+
+### Viewports/flows actually tested (real browser)
+
+- **Viewports:** 390×844, 560×900, 768×1024, 1440×900 — the same four this project's own reviews and
+  its new Playwright suite standardize on.
+- **VS-02:** `.level-row__heading a` ("Blog notes", 4 instances) measured 67.6×44px at all four
+  widths; per-row overlap check against `.level-row__body` confirmed ~10px clearance, no visual
+  overlap; `scrollWidth === clientWidth` at all four widths.
+- **VS-03:** `.site-footer__link` (5 instances) measured 44px tall and full-column-width at all four
+  widths (350/512/180/244px across the four breakpoints) — specifically re-checked for the
+  `inline-flex`-shrink regression DECISIONS.md §19 admits happened mid-fix, confirmed not present in
+  the shipped state.
+- **VS-05:** confirmed `<ul>` present with the correct `<li>` count inside both `<nav>` elements
+  (1 header, 5 footer), zero `<a>` as direct `<nav>` children, both `aria-label`s unchanged.
+- **VS-01:** confirmed the rendered `GapChart` and figure-callout text reflect the CMS/fallback data
+  (`OCT 2026` / `FROM 2027` / `SPM` at the correct stop positions, `2` independent checks), not
+  hardcoded literals — the full data chain actually executes at render time.
+
+### New issues found this pass (both minor, non-blocking, recorded in `review/bob/CODE-REVIEW.md`'s
+2026-08-16 section and `review/bob/APPROVAL-CHECKLIST.md`)
+
+1. `web/.prettierignore` doesn't exclude `test-results/`/`playwright-report/` even though this
+   commit's `.gitignore` update does — a local `pnpm test:e2e` run leaves an artifact that breaks the
+   next `pnpm format:check` until manually cleaned. Doesn't affect CI (step order avoids it).
+2. `studio/schemaTypes/documents/homePage.ts`'s `gapChartAnnotations[].year` sub-field (unchanged by
+   this commit, pre-existing since scaffold time) still has no validation restricting it to the 11
+   valid stop codes. This was harmless while the field was fetched-and-discarded; this fix commit
+   activates the field, so a Studio typo there now silently drops a chart annotation with zero error
+   anywhere in the pipeline.
+
+### What this verdict does and does not cover
+
+**Covers:** VS-01 through VS-05 only, all confirmed genuinely resolved by direct re-verification
+(diff review + live browser measurement + independent Playwright run + independent CI-status check),
+not by trusting `docs/DECISIONS.md` §19's claims.
+
+**Does not cover:** VS-06 through VS-13 (the other 8 P2s) and VS-14 through VS-17 (the 4 P3s) from
+the 2026-08-15 review below. These remain open, unchanged, and were not re-checked in this pass — the
+fix commit did not touch the areas they concern (JSON-LD, security headers, dependency scanning, font
+self-hosting, redirects, the FE self-check gap, the header brand-link tap target, the skip-link tap
+target, sitemap/robots/RSS, the FAQ no-JS gap, or the `index.astro` file-size preference). A future
+review still needs to clear those before the vertical slice as a whole can be approved. **This is not
+full vertical-slice approval.**
+
+---
 
 ## 2026-08-15 - Vertical slice development review
 
