@@ -1,5 +1,35 @@
 # Bob FE Gate Audit — Vertical Slice Review
 
+## 2026-08-16 — Scoped re-review of the fix commit
+
+Scope: re-check only the two gates the 2026-08-15 audit below failed outright (FE-04, FE-22) plus the
+data-flow half of FE-34 and the P2 isolation-rationale gate FE-32 was recorded against, against fix
+commit `05ab713` (`HEAD c1186435c7b96b0905f4988f2ca5c497540f9409`). Every other gate's 2026-08-15
+result stands unchanged and is **not re-audited here** — the fix commit didn't touch the areas those
+gates cover (forms, hydration, registry, dependency ladder, etc.).
+
+| Gate | 2026-08-15 result | 2026-08-16 result | Evidence |
+| --- | --- | --- | --- |
+| FE-04 Repeated siblings are a list | **Fail** | **Pass** | `web/src/components/SiteHeader.astro` and `web/src/components/SiteFooter.astro` both now wrap their link maps in `<ul>/<li>` inside `<nav>`. Confirmed live in a real browser: header `<nav>` contains a `<ul>` with 1 `<li>`, footer `<nav>` contains a `<ul>` with 5 `<li>`, zero `<a>` elements as direct children of either `<nav>` anymore. Both `aria-label`s (`"Primary navigation"`, `"Footer navigation"`) unchanged. Link counts match the underlying data (1 header, 5 footer) — no duplicate/missing links introduced by the markup change. |
+| FE-22 Content separated from presentation | **Fail** | **Pass** | `web/src/components/GapChart.astro` now takes `annotations?: GapChartAnnotation[]` as a real typed prop and is called as `<GapChart annotations={homePage.problem.gapChartAnnotations} />` in `web/src/pages/index.astro:147` — the field is no longer fetched-and-discarded. Confirmed live: the rendered chart's flag text (`OCT 2026` / `FROM 2027` / `SPM` at the correct stop indices) matches the fallback CMS data exactly, proving the full schema→query→prop→render chain actually executes, not just that the prop type-checks. The five other hardcoded figures Bob's 2026-08-15 pass flagged (`2`, `24`, `20`, `30`, the two time blocks) are now typed CMS fields (`problem.independentChecksCount`, `about.yearsExperience`, `about.studentsPerYear`, `finalCta.freeMinutes`, `pricing.availabilityTimeBlocks`), wired schema→query→types→fallback→seed→render for every one of the five — verified field-by-field, not spot-checked. See `review/bob/CODE-REVIEW.md`'s 2026-08-16 VS-01 section for the full per-field trace. |
+| FE-34 Data flow and fetching discipline (fetch-then-discard half) | Partial (same root cause as FE-22) | Pass | The `gapChartAnnotations` fetch is now consumed, closing the specific "fetched but nothing reads it" defect FE-34 was partially failing on. `getLandingPageData()`'s `Promise.all` parallel-fetch discipline (the other half of FE-34, already passing) is unchanged. |
+| FE-51 No dead weight (gapChartAnnotations-is-dead-weight half) | Partial (same root cause) | Pass | Same fix as FE-22/FE-34 above — the previously-dead GROQ projection is now live. The unrelated `@astrojs/sitemap`-unconfigured half of this gate's 2026-08-15 "Partial" rating is unchanged and unaffected (VS-15, still open, not touched by this commit). |
+| FE-32 No JS for platform behavior (VS-06, the FAQ no-JS gap) | Partial fail, P2 isolation rationale (VS-06) | **Unchanged — still Partial fail** | Not in scope for this fix commit (VS-06 was not one of the five findings addressed) and not re-audited here. The new Playwright suite (VS-04) does add automated coverage of the FAQ's *with-JS* interaction (click + keyboard), but does not test the no-JS case, so it neither closes nor worsens VS-06. Recorded for completeness only — still open, still tracked as VS-06 in `review/bob/CODE-REVIEW.md`. |
+
+### Scoped FE Result (2026-08-16)
+
+**FE-04 and FE-22 now pass** (both were the only two gates failing outright on 2026-08-15); the
+FE-34/FE-51 partial ratings whose root cause was the same discarded-field defect are now full passes
+on that half. No gate that was passing on 2026-08-15 regressed — the fix commit's changes were
+additive/corrective in the areas it touched (`GapChart`, header/footer nav markup, tap-target CSS,
+new test infrastructure) and didn't disturb any other gate's evidence. All other gates keep their
+2026-08-15 rating unchanged, including FE-32 (still Partial fail, VS-06, out of scope for this
+commit) and everything marked N/A (still genuinely N/A — no blog routes, forms, or registry
+components were added). This is a scoped update, not a re-audit of the full gate table; see the
+2026-08-15 table below for every gate's full evidence.
+
+---
+
 Date: 2026-08-15
 
 Scope: first vertical slice. Landing page renders from the real component tree

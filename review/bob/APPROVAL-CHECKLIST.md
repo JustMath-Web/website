@@ -1,5 +1,56 @@
 # Bob Approval Checklist
 
+## Vertical Slice Re-Review (P1/P2 Fix Commit) — 2026-08-16
+
+Scoped re-review of fix commit `05ab713` (`HEAD c1186435c7b96b0905f4988f2ca5c497540f9409`), which
+claims to resolve VS-01 through VS-05 from the 2026-08-15 review below. This is **not** full
+vertical-slice approval — VS-06 through VS-17 remain open, unaffected, and not re-checked here.
+
+Scoped verdict: **Approved with conditions.** All five targeted findings are genuinely resolved; two
+new minor (non-blocking) issues were found during verification.
+
+### VS-01 through VS-05 — Re-Checked
+
+- [x] VS-01: `GapChart.astro` now takes an `annotations` prop, consumes
+  `homePage.problem.gapChartAnnotations`, and matches by `year` code (not array position). All five
+  new CMS fields Bob asked for (`problem.independentChecksCount`, `about.yearsExperience`,
+  `about.studentsPerYear`, `pricing.availabilityTimeBlocks`, `finalCta.freeMinutes`) are wired
+  schema → GROQ query → types → local fallback → seed script → component render, verified layer by
+  layer, not spot-checked. `pnpm seed:dry-run` reproduces the same 6/1/3 counts DECISIONS.md §19
+  claims. Confirmed live in browser: chart renders CMS/fallback data, not hardcoded values.
+- [x] VS-02: "Blog notes" level links measured **67.6 × 44px** at 390/560/768/1440px (was 67.6 ×
+  16.8px). No overlap with adjacent row content, no new horizontal overflow at any width.
+- [x] VS-03: Footer links measured **44px tall at every width**, width equal to their column's full
+  available width at every width tested (350/512/180/244px across 390/560/768/1440px) — confirmed the
+  `inline-flex`-shrink regression DECISIONS.md §19 describes (caught by the implementer's own new
+  Playwright test, not by this review) is genuinely fixed, not still present.
+- [x] VS-04: `web/tests/e2e/landing.spec.ts` (19 tests) read in full and confirmed to cover overflow
+  (4 widths), landmarks, the VS-02/VS-03 tap-target regressions by name, keyboard tab order + focus
+  visibility (skip link), and FAQ accordion interaction (click + keyboard). Ran independently:
+  `pnpm exec playwright install --with-deps chromium` + `pnpm test:e2e` → **19/19 pass**. CI step is
+  real (not commented out) in `.github/workflows/ci.yml`'s `web` job. `gh run view 31894636124` for
+  the exact `HEAD` commit confirms `conclusion: success`, `headSha` matches.
+- [x] VS-05: `SiteHeader.astro` and `SiteFooter.astro` both now wrap their nav links in real
+  `<ul>/<li>`, confirmed live (1 `<li>` header, 5 `<li>` footer). `aria-label`s on both `<nav>`
+  elements unchanged. No duplicate/missing links, keyboard order unaffected.
+
+### New Issues Found This Pass (non-blocking)
+
+- [ ] `web/.prettierignore` should add `test-results/` and `playwright-report/` to match the
+  `.gitignore` entries this commit already added — otherwise a local `pnpm test:e2e` run leaves
+  `test-results/.last-run.json` behind and the next `pnpm format:check` spuriously fails until it's
+  manually deleted. Does not affect CI (format:check runs before test:e2e in `ci.yml`).
+- [ ] `studio/schemaTypes/documents/homePage.ts`'s `gapChartAnnotations[].year` sub-field has no
+  validation restricting it to the 11 valid stop codes (`S1`-`S6`, `F1`-`F5`) — pre-existing gap, but
+  now consequential since this fix commit activates the field: a Studio typo there silently drops a
+  chart annotation with no error anywhere.
+
+### Not Re-Checked (unaffected, still open from 2026-08-15)
+
+- [ ] VS-06 through VS-13 (P2s), VS-14 through VS-17 (P3s) — see the 2026-08-15 section below.
+
+---
+
 ## Vertical Slice Review — 2026-08-15
 
 Current stage: first vertical slice (landing page renders from the real component tree and local

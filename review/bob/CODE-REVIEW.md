@@ -1,6 +1,248 @@
 # Bob Code Review — Just Math Malaysia Vertical Slice Review
 
-Date: 2026-08-15
+Date: 2026-08-16 (scoped re-review)
+
+Reviewer role: Bob, independent reviewer. Claude is the implementer. Bob did not edit application
+code, `docs/DECISIONS.md`, or the project `HANDOFF.md`.
+
+Review type: **scoped re-review**, not a full vertical-slice pass. Claude's fix commit `05ab713`
+("fix: resolve the four P1 findings from Bob's vertical-slice review"), merged to `main` at
+`c1186435c7b96b0905f4988f2ca5c497540f9409` (current `HEAD`), claims to resolve the four P1 findings
+(VS-01 through VS-04) plus one adjacent P2 (VS-05) from the 2026-08-15 review immediately below. This
+section re-inspects only those five findings and the files the fix commit actually touched
+(`.github/workflows/ci.yml`, `.gitignore`, `docs/DECISIONS.md`, `studio/schemaTypes/documents/homePage.ts`,
+`studio/scripts/seed.ts`, `web/package.json`, `web/playwright.config.ts`, `web/scripts/serve-dist.mjs`,
+`web/src/components/GapChart.astro`, `web/src/components/SiteFooter.astro`,
+`web/src/components/SiteHeader.astro`, `web/src/lib/content/defaultLandingData.ts`,
+`web/src/lib/sanity/queries.ts`, `web/src/lib/sanity/types.ts`, `web/src/pages/index.astro`,
+`web/tests/e2e/landing.spec.ts`). The other 8 P2s and 4 P3s from the 2026-08-15 review (VS-06 through
+VS-17) are **not re-litigated here** — they remain open and unaffected, exactly as left below.
+
+## Evidence and commands actually run this pass
+
+- `git log --oneline -8`, `git show --stat 05ab713`, `git rev-parse HEAD` — confirmed the fix commit's
+  file list and that `c118643...` is genuinely current `HEAD`.
+- `git diff 05ab713~1 05ab713 -- <file>` for every touched file, read in full — not the post-fix
+  state alone, the actual diff, to see exactly what changed and confirm nothing outside the claimed
+  scope moved.
+- `docs/DECISIONS.md` §19 read in full and treated as an unverified claim until independently checked
+  against the diffs and live behavior.
+- `cd studio && pnpm install --frozen-lockfile` (already up to date), `pnpm seed:dry-run` (6
+  categories, 1 author, 3 singletons — `siteSettings, navigation, homePage` — no writes, matches the
+  count claimed in §19), `pnpm typecheck` (clean), `pnpm lint` (clean), `pnpm format:check` (clean),
+  `pnpm build` (clean, same documented Sanity auto-update warning as the 2026-08-15 pass, not a
+  regression).
+- `cd web && pnpm install --frozen-lockfile` (already up to date), `pnpm build` (clean, 1 page),
+  `pnpm check` (`astro check` — 0 errors/warnings/hints, 20 files), `pnpm format:check` (clean on a
+  fresh checkout; see the new minor issue noted below re: `test-results/` and `.prettierignore`).
+- `node scripts/serve-dist.mjs 4321` against the freshly built `dist/`, then Playwright MCP
+  (`mcp__plugin_playwright_playwright__*`) navigation/evaluate/resize at 390×844, 560×900, 768×1024,
+  and 1440×900 — real `getBoundingClientRect()` measurement of the specific elements VS-02/VS-03
+  flagged, real DOM inspection of the VS-05 `<nav>`/`<ul>`/`<li>` structure, and a live read of the
+  `GapChart`/figure-callout DOM text to confirm VS-01's data actually renders end-to-end, not just
+  that the prop is wired in source.
+- `cd web && pnpm exec playwright install --with-deps chromium`, then `pnpm test:e2e` (killing my own
+  manually-started dist server first so Playwright's own `webServer` built and served a clean copy) —
+  **19/19 tests pass**, matching the count and pass claim in §19.
+- `gh run list --limit 8` and `gh run view 31894636124 --json headSha,conclusion` — confirmed the CI
+  run for the exact merge commit (`headSha: c1186435c7b96b0905f4988f2ca5c497540f9409`) is `success`.
+- `git status --porcelain` after all of the above — clean; test artifacts (`test-results/`,
+  `playwright-report/`) removed before finishing so no reviewer-generated state was left in the repo.
+
+## Re-Review: VS-01 through VS-05
+
+### VS-01 — RESOLVED
+
+- `web/src/components/GapChart.astro` now declares `interface Props { annotations?:
+  GapChartAnnotation[] }`, defaults to `[]`, and builds its `measured` lookup by
+  `stops.indexOf(annotation.year)` — matching by the CMS-authored `year` code, not array position, so
+  authoring order in Studio genuinely doesn't matter. `web/src/pages/index.astro:147` now passes
+  `<GapChart annotations={homePage.problem.gapChartAnnotations} />` — no longer called with zero
+  props.
+- Confirmed live in a real browser (560px, fallback data path): `.gap-chart__flags span` text content
+  is `["", "", "", "OCT 2026", "", "", "", "", "FROM 2027", "", "SPM"]` — index 3 (`S4`), index 8
+  (`F3`), index 10 (`F5`) — exactly matching `defaultLandingData.ts`'s
+  `{year: "S4", label: "OCT 2026"}` / `{year: "F3", label: "FROM 2027"}` / `{year: "F5", label:
+  "SPM"}` entries and the original hardcoded values Bob's 2026-08-15 review found. This confirms the
+  full chain (schema → query → fallback/CMS → prop → component render) actually works, not just that
+  the prop exists in source.
+- All five new fields Bob asked for are wired end-to-end, verified layer by layer:
+  - `problem.independentChecksCount`, `about.yearsExperience`, `about.studentsPerYear`,
+    `finalCta.freeMinutes`: added to `studio/schemaTypes/documents/homePage.ts` as
+    `Rule.required().integer().min(0)` number fields; added to the GROQ projection in
+    `web/src/lib/sanity/queries.ts`; typed as required (non-optional) `number` in
+    `web/src/lib/sanity/types.ts`, matching the schema's required-ness; present with real values in
+    `web/src/lib/content/defaultLandingData.ts` (`2`, `24`, `20`, `30` — identical to the values they
+    replace); included in `studio/scripts/seed.ts`'s `homePageDocument()` automatically via the
+    existing `{...page.problem}` / `{...page.about}` / `{...page.finalCta}` spreads (no extra
+    per-field wiring needed there since these are plain scalars, unlike the array fields below);
+    rendered directly in `index.astro` at the four call sites Bob's original review cited by line
+    number. Confirmed live: figure-callout renders `2`.
+  - `pricing.availabilityTimeBlocks`: added as an array-of-object field (`Rule.min(1)`, deliberately
+    *not* `Rule.required()` — array presence, not scalar presence), a sibling of `availability` rather
+    than nested inside it (documented rationale in DECISIONS.md §19: `availability`'s `subSection`
+    type is shared with two other sections that don't need time blocks); typed as optional
+    `TimeBlock[]` in `types.ts`, correctly matching the schema's non-required-ness; projected in
+    `queries.ts`; present in `defaultLandingData.ts` with the original two time blocks; explicitly
+    mapped with `_type: 'timeBlock'` tagging in `seed.ts` (needed because it's an array of objects,
+    same pattern already used for `gapChartAnnotations`); consumed in `index.astro` as
+    `{(homePage.pricing.availabilityTimeBlocks ?? []).map(...)}` — defensively guarded against
+    `undefined`, so a genuinely-empty Studio document renders zero time blocks rather than crashing.
+  - `problem.gapChartAnnotations` itself remains correctly optional in both schema (no
+    `Rule.required()`) and `types.ts` (`gapChartAnnotations?:`), and `GapChart.astro`'s own
+    `annotations = []` default handles the empty/undefined case gracefully (chart renders with all
+    bars at baseline, no crash) — this is the one field Bob's review explicitly said didn't need to
+    become required.
+  - Field description on `gapChartAnnotations` corrected from "if/when built" (stale — the chart now
+    exists) to describe the actual `year`/stop-code matching contract.
+- `pnpm seed:dry-run` reproduces the same counts DECISIONS.md §19 claims (6 categories, 1 author, 3
+  singletons, no writes) — no regression in seed behavior from the schema additions.
+- **New minor issue found, not a blocker:** `gapChartAnnotations[].year` (the sub-field, unchanged by
+  this fix commit — pre-existing since scaffold time) still has no validation restricting it to the
+  11 valid stop codes (`S1`–`S6`, `F1`–`F5`); it's a bare `type: 'string'` with no `Rule` at all. This
+  gap was harmless while the field was fetched-and-discarded (Bob's original VS-01 finding), but this
+  fix commit activates the field, so it's now a live, silent-failure path: if an editor types `"Form
+  3"` instead of `"F3"`, `GapChart.astro`'s `stops.indexOf(annotation.year)` returns `-1`, the
+  `measured[index] = annotation.label` assignment is skipped, and that annotation silently vanishes
+  from the chart with **no error in Studio, no build warning, no console error** — the exact kind of
+  silent content/reality mismatch VS-01's original "why it matters" argued the site can't afford.
+  Recommend adding `Rule.custom` (or a `list`/`options` dropdown on `year`) restricting it to the 11
+  stop codes; not required for this verdict since it's a pre-existing gap merely made reachable, not
+  something this commit introduced from scratch, but worth fixing alongside the next touch to this
+  schema.
+
+### VS-02 — RESOLVED
+
+- `web/src/pages/index.astro`'s `.level-row__heading a` now has `display: inline-flex; align-items:
+  center; min-height: var(--control-h); margin-block: -13.6px;` in addition to its prior
+  `justify-self: start`.
+- Measured live (Playwright, real built `dist/` output, not `pnpm dev`) at all four project-standard
+  widths — 390, 560, 768, 1440px: all 4 "Blog notes" links measure **67.6 × 44px** at every width
+  (width unchanged from before, as expected — Bob's original finding already noted width was fine;
+  only height needed fixing).
+- Overlap check (390px, per-row `getBoundingClientRect()` on `.level-row__heading`,
+  `.level-row__heading a`, and the next sibling `.level-row__body`): the enlarged link box extends a
+  few pixels below its heading container's own box (e.g. row 0: link bottom `6060.24` vs. heading
+  container bottom `6046.65`), but `.level-row__body` doesn't start until `6070.65` — roughly 10px of
+  clearance, no visual overlap with the row body in any of the 4 rows checked.
+- No new horizontal overflow: `document.documentElement.scrollWidth === clientWidth` at all four
+  widths (390/560/768/1440), confirmed directly via `browser_evaluate`, not inferred.
+
+### VS-03 — RESOLVED, including the regression documented in DECISIONS.md §19
+
+- `web/src/components/SiteFooter.astro`'s `.site-footer__link` is `display: flex` (not
+  `inline-flex`), with `align-items: center; min-height: var(--control-h); margin-block: -13px;`.
+  DECISIONS.md §19's own account says the first attempt used `inline-flex`, which shrank the links to
+  ~38px wide once VS-05's `<ul>/<li>` wrap moved the `<a>` a level deeper than the grid that used to
+  stretch it, and that this was caught by the new Playwright suite and fixed by switching to `flex`
+  (block-level, stretches to fill its `<li>`). Independently confirmed this account is accurate and
+  the fix holds:
+  - 390px: all 5 footer links measure **350 × 44px** (single-column footer layout at this width).
+  - 560px: **512 × 44px**. 768px: **180 × 44px** (3-column grid, narrower column). 1440px: **244 ×
+    44px**. In every case the link's width equals its column's available width — no shrink-to-fit
+    regression at any tested viewport.
+  - No horizontal overflow at any of the four widths (same `scrollWidth === clientWidth` check as
+    VS-02).
+- This is the one finding of the five where a real regression genuinely occurred mid-fix (per the
+  implementer's own honest account) and was genuinely caught and corrected before this commit landed
+  — the Playwright suite added for VS-04 is what caught it, which is itself evidence VS-04 does real
+  work rather than being pro-forma.
+
+### VS-04 — RESOLVED
+
+- `web/tests/e2e/landing.spec.ts` (157 lines, 19 tests) read in full. Coverage against what the
+  2026-08-15 review required:
+  - **Overflow at multiple widths:** `assertNoHorizontalOverflow` run at all 4 project-standard
+    widths (390/560/768/1440) via a parametrized `test.describe` loop.
+  - **Landmarks:** one `<main>`/`<h1>` and one `<header>`/`<footer>` asserted at all 4 widths. (Does
+    not separately assert the two distinctly-labelled `<nav>` count the 2026-08-15 review's manual
+    pass covered — a minor coverage gap versus the ad hoc pass, not a defect in what exists.)
+  - **VS-02/VS-03 tap targets specifically:** `assertMinTapTarget(page, ".level-row__heading a")` and
+    `assertMinTapTarget(page, ".site-footer__link")` are their own named tests at 390px, plus a third
+    test for the header link (not one of the two P1s, but the same technique, added for symmetry).
+  - **Keyboard tab order + focus visibility:** first-`Tab`-reaches-skip-link with a real
+    `outlineStyle !== 'none'` check, plus skip-link activation moving focus to `#main`. Narrower than
+    the full "first 6 focusable elements" tab-order trace the 2026-08-15 manual pass did, but it does
+    cover the one keyboard interaction this project has had a real regression story about (the skip
+    link) and does check computed focus-ring visibility, not just DOM focus.
+  - **FAQ accordion:** click-based single-open/close-previous test plus a keyboard (`Enter`)
+    open/close test, checking `aria-expanded` and panel visibility on both the clicked and the
+    previously-open item.
+  - Net: genuinely covers all five areas the prior review named, at a real (if not maximal) depth —
+    not a token file that merely exists.
+- Ran it myself, fresh: `pnpm exec playwright install --with-deps chromium` succeeded; `pnpm
+  test:e2e` (after killing a manually-started dist server so Playwright's own `webServer` step built
+  and served independently) reports **19 passed (2.8s)**, zero failures, zero flaked.
+- `web/playwright.config.ts`: `webServer.command` is `pnpm run build && node scripts/serve-dist.mjs
+  4321`, confirming tests genuinely run against the built `dist/` output per guideline Section 19, not
+  `astro dev`. `scripts/serve-dist.mjs` read in full — a plain `node:http`/`node:fs` static file
+  server with a path-traversal guard (`filePath.startsWith(root)`), correctly serving `index.html` for
+  directory requests. No real bug found in it; its blanket `catch { 404 }` doesn't distinguish
+  "file not found" from other I/O errors, which is a minor code-smell (would misreport a permissions
+  error as a 404) but not a defect that affects this project's actual usage (a read-only local `dist/`
+  in CI/dev).
+- `.github/workflows/ci.yml`'s `web` job: `pnpm exec playwright install --with-deps chromium` and
+  `pnpm test:e2e` are real, uncommented steps after the existing `build` step, followed by an
+  `actions/upload-artifact` step for the HTML report (`if: ${{ !cancelled() }}`, 14-day retention) —
+  not commented out, not skipped.
+- `gh run list --limit 8` shows the merge commit's CI run (`31894636124`) as `success`; `gh run view
+  31894636124 --json headSha,conclusion` confirms `headSha: c1186435c7b96b0905f4988f2ca5c497540f9409`
+  — the exact current `HEAD` — with `conclusion: "success"`. Not trusting the badge; independently
+  matched the SHA.
+- **New minor issue found, not a blocker:** `.gitignore` was updated in this fix commit to exclude
+  `web/test-results/` and `web/playwright-report/` (Playwright's local output directories), but
+  `web/.prettierignore` was **not** updated to match. Running `pnpm test:e2e` locally leaves
+  `test-results/.last-run.json` behind (untracked, correctly gitignored), and a subsequent `pnpm
+  format:check` then fails on that file until it's manually deleted (reproduced directly: format:check
+  failed with `test-results/.last-run.json` flagged, passed cleanly again immediately after `rm -rf
+  test-results playwright-report`). This does **not** affect CI — `ci.yml`'s `web` job runs
+  `format:check` before `test:e2e`, so the artifact doesn't exist yet when the check runs — but it is
+  a real rough edge for local dev: running the test suite before checking formatting (a natural order)
+  produces a spurious failure. Cheap fix: add `test-results/` and `playwright-report/` to
+  `.prettierignore` alongside the `.gitignore` entries already added.
+
+### VS-05 — RESOLVED
+
+- `web/src/components/SiteHeader.astro`: `navigation.headerLinks` now maps into `<li><a
+  class="site-header__link">...</a></li>` inside a `<ul class="site-header__list">`, itself inside
+  `<nav class="site-header__nav" aria-label="Primary navigation">`. Confirmed live:
+  `headerNav.querySelector('ul')` truthy, 1 `<li>` (matches the single header link), zero `<a>`
+  elements as direct children of `<nav>` (all now one level deeper, inside `<li>`), `aria-label`
+  unchanged (`"Primary navigation"`).
+- `web/src/components/SiteFooter.astro`: same pattern, `<ul class="site-footer__list">` with 5 `<li>`
+  wrapping the 5 footer links, inside `<nav aria-label="Footer navigation">`. Confirmed live: 5
+  `<li>` present, `aria-label` unchanged.
+- No duplicate or missing links in either group (counts match the underlying `navigation.headerLinks`
+  / `navigation.footerLinks` arrays: 1 and 5 respectively, same as the 2026-08-15 review recorded).
+  Keyboard order is unaffected — wrapping in `<ul>/<li>` doesn't change tab order, and this was also
+  implicitly re-verified by the VS-04 skip-link keyboard test passing.
+
+## Scoped Verdict
+
+**Approved with conditions**, scoped strictly to VS-01 through VS-05. All five are genuinely resolved
+— not just claimed-resolved — verified against the actual diff, the actual rendered DOM at four real
+viewports, a real Playwright run (19/19 green), and a real CI run on the exact `HEAD` commit
+(`31894636124`, `success`, `headSha` matches).
+
+The "with conditions" qualifier reflects two new, minor, non-blocking issues surfaced during this
+re-review (both detailed above, neither reopens VS-01 or VS-04):
+
+1. `web/.prettierignore` should gain `test-results/` and `playwright-report/` entries alongside the
+   `.gitignore` entries this commit already added, so a local `pnpm test:e2e` run doesn't leave
+   `pnpm format:check` spuriously broken until manual cleanup. Does not affect CI.
+2. `studio/schemaTypes/documents/homePage.ts`'s `gapChartAnnotations[].year` sub-field should get a
+   `Rule` restricting it to the 11 valid stop codes (`S1`–`S6`, `F1`–`F5`). This gap predates the fix
+   commit, but the fix commit is what made it consequential — a Studio typo there now silently drops
+   a chart annotation with no error anywhere in the pipeline.
+
+**This verdict covers VS-01 through VS-05 only.** The other 8 P2s (VS-06 through VS-13) and 4 P3s
+(VS-14 through VS-17) from the 2026-08-15 review below remain exactly as they were left — **open, not
+re-litigated, and not affected by this verdict**. This is not full vertical-slice approval; a future
+review still needs to clear those before the vertical slice as a whole can be approved.
+
+---
+
+
 
 Reviewer role: Bob, independent reviewer. Claude is the implementer. Bob did not edit application
 code, `docs/DECISIONS.md`, or the project `HANDOFF.md`.

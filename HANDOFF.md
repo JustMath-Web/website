@@ -1,5 +1,58 @@
 # Just Math Malaysia — Project Handoff
 
+> ## STATUS 2026-08-16: P1 fixes merged · Bob's scoped re-review — Approved with conditions
+>
+> Per Charlie's instruction: fix the four P1s (objective approval blockers, not triage candidates),
+> tight scope, PR → CI green → merge → scoped Bob re-review of just the touched findings. All done.
+> Full detail in `docs/DECISIONS.md` §19; Bob's full evidence in `review/bob/CODE-REVIEW.md`,
+> `review/bob/FE-GATE-AUDIT.md`, `review/bob/APPROVAL-CHECKLIST.md`, `BOB-REVIEWER-HANDOFF.md`
+> (2026-08-16 sections, newest first; the 2026-08-15 findings are preserved below each).
+>
+> **Fixed and merged** (PR #2, `fix/vertical-slice-p1-findings`, commit `05ab713`, CI green, merged
+> to `main` at `c118643`):
+>
+> - **VS-01** — `GapChart.astro` now takes an `annotations` prop and matches by stop code
+>   (`stops.indexOf(annotation.year)`), not array position. Added five new typed Sanity fields for
+>   the other hardcoded figures Bob flagged (`problem.independentChecksCount`,
+>   `about.yearsExperience`, `about.studentsPerYear`, `pricing.availabilityTimeBlocks`,
+>   `finalCta.freeMinutes`), wired schema → GROQ query → types → local fallback → seed script →
+>   render.
+> - **VS-02 / VS-03** — "Blog notes" and footer nav links now meet 44×44, using the same
+>   `--control-h` + negative-margin technique already verified for the header "Blog" link.
+> - **VS-05** (P2, rolled in — shared both touched files) — header/footer nav now `<ul>/<li>`.
+> - **VS-04** — added a 19-test Playwright suite (`web/tests/e2e/landing.spec.ts`), wired into CI.
+>   `astro preview` turned out to daemonize (prints "running" and returns immediately) — incompatible
+>   with Playwright's `webServer`, which needs a trackable foreground process — so
+>   `web/scripts/serve-dist.mjs` is a small zero-dependency static server instead of adding a package
+>   for a one-page site.
+>
+> **Caught by the new tests, not by eyeballing:** wrapping nav links in `<ul>/<li>` for VS-05 broke
+> the footer tap-target fix — moving the `<a>` one level deeper than the grid that used to stretch it
+> meant `inline-flex` shrank it back to content width (~38px). The Playwright suite's own tap-target
+> test failed immediately; fixed with `display: flex` instead.
+>
+> **Bob's scoped re-review** (fresh session, no memory of the fix work — re-verified against the
+> actual merged commit, not the implementer's account of it): **Approved with conditions**, scoped
+> strictly to VS-01 through VS-05. All five confirmed genuinely resolved — live DOM measurement at
+> 390/560/768/1440px for the tap targets, live render of CMS-sourced chart data (not just
+> prop-wired-in-source), an independent 19/19 Playwright run, and the CI run for the exact merge SHA
+> confirmed green via `gh run view`. The other 8 P2s and 4 P3s from the 2026-08-15 review were
+> explicitly **not re-litigated** — still open, unaffected.
+>
+> **Two new minor issues found by the re-review, neither reopening anything:**
+>
+> 1. `web/.prettierignore` wasn't updated alongside `.gitignore` for the Playwright artifacts —
+>    running `pnpm test:e2e` locally leaves `test-results/.last-run.json` behind, and a subsequent
+>    `pnpm format:check` spuriously fails until it's cleaned up. Doesn't affect CI (job order runs
+>    `format:check` before `test:e2e`).
+> 2. `gapChartAnnotations[].year` still has no validation restricting it to the 11 valid stop codes
+>    (S1–S6, F1–F5) — pre-existing gap, now more consequential since the field is genuinely
+>    editor-facing: a Studio typo there would silently drop a chart annotation with no error anywhere
+>    in the pipeline.
+>
+> Neither fixed yet — flagged to Charlie for a decision on fixing now vs. queuing. **Per Charlie's
+> instruction, PRs are opened and confirmed green but not self-merged going forward — he merges.**
+
 > ## STATUS 2026-08-15: Bob's independent dev review of the vertical slice — Revision required
 >
 > Ran as a genuinely separate session (fresh agent, no memory of this project's implementation
