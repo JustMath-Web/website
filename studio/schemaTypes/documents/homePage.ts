@@ -89,10 +89,18 @@ export const homePage = defineType({
           validation: (Rule) => Rule.required(),
         }),
         defineField({
+          name: 'independentChecksCount',
+          title: 'Independent checks count (before SPM)',
+          description:
+            'Drives the large "N independent checks" callout beside the gap chart. Keep in sync with the heading wording ("checks...before SPM").',
+          type: 'number',
+          validation: (Rule) => Rule.required().integer().min(0),
+        }),
+        defineField({
           name: 'gapChartAnnotations',
           title: 'Gap-chart annotations',
           description:
-            'Structured data for the gap chart, if/when built. Optional at scaffold time.',
+            'Structured year/label pairs the gap chart plots directly — "year" must match one of the chart\'s fixed stop codes (S1-S6, F1-F5).',
           type: 'array',
           of: [
             defineArrayMember({
@@ -181,6 +189,20 @@ export const homePage = defineType({
           validation: (Rule) => Rule.required(),
         }),
         defineField({
+          name: 'yearsExperience',
+          title: 'Years of teaching experience',
+          description: "Drives the large figure in the About section's portrait-fallback panel.",
+          type: 'number',
+          validation: (Rule) => Rule.required().integer().min(0),
+        }),
+        defineField({
+          name: 'studentsPerYear',
+          title: 'Students taught per year',
+          description: "Drives the large figure in the About section's stat panel.",
+          type: 'number',
+          validation: (Rule) => Rule.required().integer().min(0),
+        }),
+        defineField({
           name: 'portrait',
           title: 'Portrait',
           type: 'imageWithAlt',
@@ -232,6 +254,36 @@ export const homePage = defineType({
           validation: (Rule) => Rule.required(),
         }),
         defineField({name: 'availability', title: 'Availability', type: 'subSection'}),
+        defineField({
+          name: 'availabilityTimeBlocks',
+          title: 'Availability time blocks',
+          description:
+            'Drives the large time-range figures beside the availability copy, e.g. "3pm to 6pm" / "primary".',
+          type: 'array',
+          of: [
+            defineArrayMember({
+              type: 'object',
+              name: 'timeBlock',
+              fields: [
+                defineField({
+                  name: 'range',
+                  title: 'Time range',
+                  type: 'string',
+                  description: 'e.g. "3pm to 6pm"',
+                  validation: (Rule) => Rule.required(),
+                }),
+                defineField({
+                  name: 'label',
+                  title: 'Label',
+                  type: 'string',
+                  description: 'e.g. "primary"',
+                  validation: (Rule) => Rule.required(),
+                }),
+              ],
+            }),
+          ],
+          validation: (Rule) => Rule.min(1),
+        }),
         defineField({name: 'cta', title: 'CTA', type: 'cta'}),
       ],
     }),
@@ -275,6 +327,13 @@ export const homePage = defineType({
           type: 'text',
           rows: 4,
           validation: (Rule) => Rule.required(),
+        }),
+        defineField({
+          name: 'freeMinutes',
+          title: 'Free assessment length (minutes)',
+          description: 'Drives the large figure in the final CTA section, e.g. "30".',
+          type: 'number',
+          validation: (Rule) => Rule.required().integer().min(0),
         }),
         defineField({
           name: 'cta',

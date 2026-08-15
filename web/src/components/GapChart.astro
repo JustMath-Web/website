@@ -1,4 +1,12 @@
 ---
+import type { GapChartAnnotation } from "../lib/sanity/types";
+
+interface Props {
+	annotations?: GapChartAnnotation[];
+}
+
+const { annotations = [] } = Astro.props;
+
 const stops = [
 	"S1",
 	"S2",
@@ -12,11 +20,19 @@ const stops = [
 	"F4",
 	"F5",
 ];
-const measured: Record<number, string> = {
-	3: "OCT 2026",
-	8: "FROM 2027",
-	10: "SPM",
-};
+
+/**
+ * `annotation.year` names one of the fixed stop codes above; matching is by that code, not by
+ * array position, so CMS-authored annotations in any order still land on the right bar.
+ */
+const measured: Record<number, string> = {};
+for (const annotation of annotations) {
+	if (!annotation.year || !annotation.label) continue;
+	const index = stops.indexOf(annotation.year);
+	if (index !== -1) {
+		measured[index] = annotation.label;
+	}
+}
 ---
 
 <figure class="gap-chart" aria-labelledby="gap-chart-title">

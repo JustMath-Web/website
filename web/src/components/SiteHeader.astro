@@ -22,13 +22,17 @@ const { navigation, siteSettings, ctaHref } = Astro.props;
 			<LogoLockup />
 		</a>
 		<nav class="site-header__nav" aria-label="Primary navigation">
-			{
-				navigation.headerLinks.map((item) => (
-					<a class="site-header__link" href={item.href}>
-						{item.label}
-					</a>
-				))
-			}
+			<ul class="site-header__list">
+				{
+					navigation.headerLinks.map((item) => (
+						<li>
+							<a class="site-header__link" href={item.href}>
+								{item.label}
+							</a>
+						</li>
+					))
+				}
+			</ul>
 		</nav>
 		<WhatsAppCta href={ctaHref} label={siteSettings.headerCtaLabel} size="md" />
 	</div>
@@ -66,10 +70,16 @@ const { navigation, siteSettings, ctaHref } = Astro.props;
 	}
 
 	.site-header__nav {
+		margin-inline-start: auto;
+	}
+
+	.site-header__list {
 		display: inline-flex;
 		align-items: center;
 		gap: var(--space-3);
-		margin-inline-start: auto;
+		margin: 0;
+		padding: 0;
+		list-style: none;
 	}
 
 	.site-header__link {

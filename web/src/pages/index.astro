@@ -141,10 +141,10 @@ function categoryHref(level: LevelBlock) {
 					<SectionMarker number="01" label="The gap" />
 					<h2 id="problem-title">{homePage.problem.heading}</h2>
 					<div class="figure-callout">
-						<strong>2</strong>
+						<strong>{homePage.problem.independentChecksCount}</strong>
 						<span>independent checks in eleven years of schooling</span>
 					</div>
-					<GapChart />
+					<GapChart annotations={homePage.problem.gapChartAnnotations} />
 				</div>
 				<div class="prose prose--large">
 					{
@@ -253,7 +253,7 @@ function categoryHref(level: LevelBlock) {
 				>
 					<div>
 						<span>{homePage.about.byline}</span>
-						<strong>24</strong>
+						<strong>{homePage.about.yearsExperience}</strong>
 						<p>years teaching every level from Standard 1 to Form 5</p>
 					</div>
 				</aside>
@@ -273,7 +273,7 @@ function categoryHref(level: LevelBlock) {
 								<h3>{homePage.about.statPanel.heading}</h3>
 								<div class="ink-panel__grid">
 									<div class="ink-panel__figure">
-										<strong>20</strong>
+										<strong>{homePage.about.studentsPerYear}</strong>
 										<span>students a year</span>
 									</div>
 									<div class="prose prose--invert">
@@ -360,14 +360,14 @@ function categoryHref(level: LevelBlock) {
 									class="time-list"
 									aria-label="Available weekday time blocks"
 								>
-									<div>
-										<strong>3pm to 6pm</strong>
-										<span>primary</span>
-									</div>
-									<div>
-										<strong>8pm to 11pm</strong>
-										<span>upper secondary</span>
-									</div>
+									{(homePage.pricing.availabilityTimeBlocks ?? []).map(
+										(block) => (
+											<div>
+												<strong>{block.range}</strong>
+												<span>{block.label}</span>
+											</div>
+										),
+									)}
 								</div>
 								<div class="prose prose--small">
 									{splitParagraphs(homePage.pricing.availability.body).map(
@@ -471,7 +471,7 @@ function categoryHref(level: LevelBlock) {
 		>
 			<div class="close-copy container">
 				<div class="close-figure">
-					<strong>30</strong>
+					<strong>{homePage.finalCta.freeMinutes}</strong>
 					<span>minutes, free</span>
 				</div>
 				<h2 id="start-title">{homePage.finalCta.heading}</h2>
@@ -953,7 +953,11 @@ function categoryHref(level: LevelBlock) {
 	}
 
 	.level-row__heading a {
+		display: inline-flex;
+		align-items: center;
 		justify-self: start;
+		min-height: var(--control-h);
+		margin-block: -13.6px;
 		color: var(--slate-600);
 		font: var(--weight-medium) var(--size-xs) / 1.2 var(--font-sans);
 	}

@@ -20,13 +20,17 @@ const { navigation, siteSettings } = Astro.props;
 			</p>
 		</div>
 		<nav class="site-footer__nav" aria-label="Footer navigation">
-			{
-				navigation.footerLinks.map((item) => (
-					<a href={item.href} class="site-footer__link">
-						{item.label}
-					</a>
-				))
-			}
+			<ul class="site-footer__list">
+				{
+					navigation.footerLinks.map((item) => (
+						<li>
+							<a href={item.href} class="site-footer__link">
+								{item.label}
+							</a>
+						</li>
+					))
+				}
+			</ul>
 		</nav>
 		<div class="site-footer__contact">
 			<span>WhatsApp {siteSettings.phoneDisplay}</span>
@@ -66,14 +70,26 @@ const { navigation, siteSettings } = Astro.props;
 		font: var(--type-small);
 	}
 
-	.site-footer__nav,
 	.site-footer__contact {
 		display: grid;
 		align-content: start;
 		gap: var(--space-3);
 	}
 
+	.site-footer__list {
+		display: grid;
+		align-content: start;
+		gap: var(--space-3);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
 	.site-footer__link {
+		display: flex;
+		align-items: center;
+		min-height: var(--control-h);
+		margin-block: -13px;
 		color: var(--paper);
 		font: var(--weight-medium) var(--size-xs) / 1.3 var(--font-sans);
 		text-decoration-color: rgba(251, 250, 247, 0.3);

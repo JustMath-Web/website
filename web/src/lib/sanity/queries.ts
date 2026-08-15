@@ -49,7 +49,7 @@ const homePageQuery = defineQuery(`*[_id == "homePage"][0]{
   },
   trustItems[]{_key, text},
   problem{
-    heading, body,
+    heading, body, independentChecksCount,
     gapChartAnnotations[]{_key, year, label}
   },
   sessions{
@@ -60,7 +60,7 @@ const homePageQuery = defineQuery(`*[_id == "homePage"][0]{
   levels[]{_key, title, tagline, bullets, category},
   levelsClosingStatement,
   about{
-    byline, heading, body,
+    byline, heading, body, yearsExperience, studentsPerYear,
     portrait{image, intent, alt, caption},
     statPanel{heading, body}
   },
@@ -70,12 +70,13 @@ const homePageQuery = defineQuery(`*[_id == "homePage"][0]{
     includedList,
     paymentNote,
     availability{heading, body},
+    availabilityTimeBlocks[]{_key, range, label},
     cta${ctaProjection}
   },
   processSteps[]{_key, title, body},
   faqs[]{_key, question, answer},
   finalCta{
-    heading, body,
+    heading, body, freeMinutes,
     cta${ctaProjection},
     smallNote
   },

@@ -167,6 +167,7 @@ export const defaultHomePage: HomePage = {
 			"School reports fill some of that space, and good teachers catch a lot. But a report card gives you a grade. It rarely tells you that your Form 2 student is struggling with algebraic fractions because they never understood a fraction as a division in the first place, six years earlier.",
 			"That is a different question, and it takes someone sitting with the child for half an hour to answer it.",
 		),
+		independentChecksCount: 2,
 		gapChartAnnotations: [
 			{ _key: "gap-year-4", year: "S4", label: "OCT 2026" },
 			{ _key: "gap-form-3", year: "F3", label: "FROM 2027" },
@@ -273,6 +274,8 @@ export const defaultHomePage: HomePage = {
 			"Every concept gets explained with an example a student at that level can actually picture, and every calculation gets written out step by step. Not the shortened version a textbook gives. The full version, including the lines that look too obvious to write down.",
 			"Every session is taught by me. There is no bench of part-time tutors, and your child will not be handed to someone else next month.",
 		),
+		yearsExperience: 24,
+		studentsPerYear: 20,
 		statPanel: {
 			heading: "The 500 number, and why it is small on purpose",
 			body: paragraphs(
@@ -340,6 +343,14 @@ export const defaultHomePage: HomePage = {
 				"Slots go on a first come, first served basis, and once yours is agreed it stays yours every week. WhatsApp me for what is currently open.",
 			),
 		},
+		availabilityTimeBlocks: [
+			{ _key: "time-afternoon", range: "3pm to 6pm", label: "primary" },
+			{
+				_key: "time-evening",
+				range: "8pm to 11pm",
+				label: "upper secondary",
+			},
+		],
 		cta: CTA,
 	},
 	processSteps: [
@@ -452,6 +463,7 @@ export const defaultHomePage: HomePage = {
 			"The assessment is free, takes half an hour, and happens on Google Meet. At the end you will know where your child's maths actually stands and what is causing the problem.",
 			"If the answer is that they are fine, I will tell you that and you will have spent thirty minutes finding out. Nobody will chase you afterwards.",
 		),
+		freeMinutes: 30,
 		cta: CTA,
 		smallNote:
 			"Mr Kong, Just Math Malaysia. WhatsApp 019 472 8768. Taught online across Malaysia, in English and Bahasa Melayu.",
