@@ -589,3 +589,82 @@ than queued.
 existing fallback annotations — `S4`, `F3`, `F5` — are all valid stop codes, so the new required
 validation doesn't break seeding). `web`: unaffected by either change, but full check/build/test
 suite re-run anyway to confirm — all pass.
+
+## 21. Production hardening PR (P2 batch 2 of Charlie's triage split) — 2026-08-16
+
+Fixes VS-07 (JSON-LD), VS-08 (security headers), and VS-11 (executable redirects) — batch 2 of
+Charlie's 4-PR triage split. Batch 1 (accessibility/semantics — VS-06, VS-13, VS-14, VS-16) is a
+separate, still-open PR (#7, branch `fix/accessibility-semantics-p2`) with its own
+`docs/DECISIONS.md` entry, not duplicated here; both PRs append to this file's tail independently,
+so whichever merges second may show a conflict on this file requiring a rebase/renumber at merge
+time, not a content problem. Checked current docs before implementing, per guideline Section 2 rule
+4 (training data may be stale): fetched Astro's routing guide, the `@astrojs/vercel` adapter docs,
+and Vercel's `vercel.json` reference directly rather than relying on memory.
+
+**VS-08 + VS-11 — both land in one new `web/vercel.json`.** Chose a hand-written `vercel.json` over
+Astro's own `redirects` config (`astro.config.mjs`) or the adapter's `staticHeaders` + Astro
+experimental-CSP path: the docs fetch on the adapter's `staticHeaders` option turned up real
+uncertainty (tied to an Astro *experimental* CSP feature, not confirmed to cover the specific header
+set the guideline names) where a plain `vercel.json` `headers`/`redirects` array is the stable,
+directly-documented mechanism for exactly this — matches FE-60's ladder without reaching past what's
+actually needed.
+
+- **Headers** (`X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`,
+  `X-Frame-Options: DENY`, plus a real CSP — not a placeholder) applied via a `source: "/(.*)"`
+  wildcard entry.
+- **CSP is a genuine reflection of what the built site actually loads, checked against the real
+  `dist/` output, not assumed:** `script-src 'self'` — confirmed zero `<script>` tags exist anywhere
+  in the built HTML (`grep -o '<script[^>]*>' dist/index.html` returns nothing; PR #7 deleted the
+  last one). `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com` and
+  `font-src 'self' https://fonts.gstatic.com` — Astro's compiled scoped `<style>` blocks have no
+  CSP hash/nonce support, hence `'unsafe-inline'` for styles specifically (not scripts); the Google
+  Fonts hosts are a real, current dependency (`tokens/fonts.css`'s `@import url(https://fonts.
+  googleapis.com/...)` — confirmed to survive literally into the compiled CSS bundle, not inlined at
+  build time, so the browser really does fetch both hosts at runtime). **This allowance should
+  shrink once VS-10 (font self-hosting) lands** — tracked there, not fixed here. `img-src 'self'`
+  (no `data:` — confirmed no data-URI images anywhere in the built output, so not adding an
+  unneeded allowance). `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`,
+  `frame-ancestors 'none'` — standard hardening, all free given the site's actual shape (no forms,
+  no plugins, no embedding).
+- **Redirects: only the 3 of 6 documented redirects (`docs/CONTENT-MODEL.md` §9) whose targets
+  actually resolve right now** — `/about/`→`/#about`, `/faq/`→`/#faq`, `/pricing/`→`/#pricing`, all
+  `statusCode: 301`. Deliberately **excluded** the other 3 (`/category/algebra/`,
+  `/differentiation-using-the-first-principle/`, `/mastering-algebra/` → `/blog/level/...`) because
+  their destinations don't exist yet — no blog routes are built. A 301 to a route that itself 404s
+  is worse than no redirect for both crawlers and users; shipping those three now would mean this
+  PR's own claim ("redirects implemented") wouldn't be fully true. Deferred to whenever blog routes
+  ship, bundled with VS-15 (sitemap/RSS/robots — same trigger).
+- **Not independently verifiable in this environment.** No Vercel project is linked (confirmed
+  earlier this session) and headers/redirects in `vercel.json` only take effect on Vercel's actual
+  infrastructure — my own `scripts/serve-dist.mjs` (used for local dev and the Playwright suite)
+  does not and cannot apply them. Validated the file is syntactically correct (`JSON.parse` — no
+  throw) and structurally matches Vercel's current documented schema (fetched directly, not
+  remembered). The header/redirect *behavior itself* is unverified until a real deploy exists — not
+  claimed as tested, per guideline Section 2 rule 5.
+
+**VS-07 — sitewide `Organization` JSON-LD.** Added to `BaseLayout.astro`'s `<head>`
+(`<script is:inline type="application/ld+json">`) rather than `Astro check`-flagged Astro script
+processing, since it's an inert data block, not executable script (confirmed: CSP `script-src` does
+not govern `application/ld+json` script tags — they're never executed as JS by the browser, so the
+strict `script-src 'self'` above doesn't need to special-case it). `BaseLayout` now takes a required
+`siteSettings: SiteSettings` prop rather than fetching it itself — keeps the "fetch at the nearest
+boundary that owns the data need" discipline (FE-34): `index.astro` already fetches `siteSettings`
+via `getLandingPageData()`, so BaseLayout consuming it as a prop avoids a second, duplicate Sanity
+read per page. Future page templates (blog routes) will pass it the same way once built.
+
+**Fields included, and why not more:** `name` (`siteSettings.siteName`), `url`
+(`siteSettings.domain`), `telephone` (`+${siteSettings.whatsappNumber}` — E.164, matches the format
+already recorded for that field in `docs/CONTENT-MODEL.md` §7). **No `logo` or `sameAs`**: no image
+asset or social-profile URLs exist in `siteSettings` to source them from truthfully, and inventing
+placeholder values would be exactly the "silently invented business-critical content" the guideline
+prohibits (Section 2 rule 3). Plain `Organization` type, not a narrower one: the finding itself
+named `Organization` as acceptable, and guessing a more specific schema.org business classification
+wasn't clearly signalled by anything in the brief.
+
+**Verified:** `web`: `format:check`, `check`, `build` all pass. Full Playwright suite, 23/23 (added
+one new test: parses the rendered JSON-LD script tag and asserts `@context`/`@type`/`name`/`url`/
+`telephone` shape — this part *is* locally verifiable, unlike the vercel.json headers/redirects,
+since it's page content rather than an HTTP-layer behavior). Confirmed the rendered JSON-LD in the
+actual built `dist/index.html` matches the expected shape exactly (`{"@context":"https://schema.org",
+"@type":"Organization","name":"Just Math Malaysia","url":"https://mathematicsmalaysia.com",
+"telephone":"+60194728768"}`).

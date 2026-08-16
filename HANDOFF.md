@@ -1,5 +1,38 @@
 # Just Math Malaysia — Project Handoff
 
+> ## STATUS 2026-08-16: Production hardening PR (2 of 4) open — VS-07, VS-08, VS-11
+>
+> Second of the 4-PR triage split for the remaining review queue (see PR #7's HANDOFF entry for the
+> first — accessibility/semantics — which may or may not already be merged by the time this lands;
+> both PRs branched from the same point on `main` and append independently to
+> `docs/DECISIONS.md`/`HANDOFF.md`'s tails, so whichever merges second may need a small rebase).
+>
+> **JSON-LD (VS-07):** sitewide `Organization` structured data added to `BaseLayout.astro`'s
+> `<head>`. Only fields with real data (`name`, `url`, `telephone`) — no `logo`/`sameAs`, since
+> nothing in `siteSettings` sources them truthfully and inventing placeholders would be exactly the
+> silently-invented business content the guideline prohibits. `BaseLayout` now takes `siteSettings`
+> as a prop rather than fetching it again itself, keeping one Sanity read per page.
+>
+> **Security headers + redirects (VS-08, VS-11): new `web/vercel.json`.** Checked Astro's routing
+> docs, the `@astrojs/vercel` adapter docs, and Vercel's own `vercel.json` reference directly before
+> choosing this over Astro's built-in `redirects` config or the adapter's `staticHeaders` option —
+> the latter turned out to be tied to an unconfirmed Astro experimental CSP feature, so a
+> hand-written `vercel.json` was the more stable, directly-documented choice. CSP is genuinely
+> checked against the real `dist/` output (zero `<script>` tags exist anywhere in the built HTML;
+> the only external hosts are Google Fonts, confirmed by grepping the actual compiled CSS), not
+> assumed. Only 3 of the 6 documented redirects are included — the other 3 target blog routes that
+> don't exist yet, and a 301 to something that itself 404s is worse than no redirect; those three
+> are deferred to when blog routes ship (same trigger as VS-15).
+>
+> **Honest limitation, not a gap in disguise: none of this is independently verifiable yet.** No
+> Vercel project is linked to this repo, and `vercel.json` headers/redirects only take effect on
+> Vercel's actual infrastructure — `scripts/serve-dist.mjs` (used for local dev and the Playwright
+> suite) can't apply them. Verified the file is valid JSON and matches Vercel's documented schema;
+> the actual served-header/redirect *behavior* stays unverified until a real deploy exists. Full
+> detail in `docs/DECISIONS.md` §21.
+>
+> **Not merged — waiting on Charlie.** PRs 3-4 (ops/docs; fonts) haven't been started yet.
+
 > ## STATUS 2026-08-16: Two re-review follow-ups fixed · merge log backfilled · new no-self-merge rule
 >
 > Charlie confirmed PR #3 merged (fast-forwarded to `5853485`) and made two decisions: fix the two

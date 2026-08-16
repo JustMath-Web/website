@@ -1,9 +1,11 @@
 ---
 import "../styles/global.css";
+import type { SiteSettings } from "../lib/sanity/types";
 
 interface Props {
 	title: string;
 	description: string;
+	siteSettings: SiteSettings;
 	canonicalUrl?: string;
 	noindex?: boolean;
 	ogImage?: string;
@@ -13,6 +15,7 @@ interface Props {
 const {
 	title,
 	description,
+	siteSettings,
 	canonicalUrl,
 	noindex = false,
 	ogImage = "/og-default.png",
@@ -23,6 +26,20 @@ const baseUrl = Astro.site ?? Astro.url;
 const canonical =
 	canonicalUrl ?? new URL(Astro.url.pathname, baseUrl).toString();
 const absoluteOgImage = new URL(ogImage, baseUrl).toString();
+
+/**
+ * Sitewide Organization JSON-LD (guideline §14). Only fields with real, confirmed data —
+ * no `logo`/`sameAs`: no image asset or social profile URLs exist in siteSettings to source them
+ * from, and inventing placeholder values would violate the guideline's "no silently invented
+ * business-critical content" rule.
+ */
+const organizationJsonLd = {
+	"@context": "https://schema.org",
+	"@type": "Organization",
+	name: siteSettings.siteName,
+	url: siteSettings.domain,
+	telephone: `+${siteSettings.whatsappNumber}`,
+};
 ---
 
 <!doctype html>
@@ -49,6 +66,11 @@ const absoluteOgImage = new URL(ogImage, baseUrl).toString();
 		<meta name="twitter:image" content={absoluteOgImage} />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
+		<script
+			is:inline
+			type="application/ld+json"
+			set:html={JSON.stringify(organizationJsonLd)}
+		/>
 	</head>
 	<body>
 		<a class="skip-link" href="#main">Skip to content</a>

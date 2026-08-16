@@ -62,6 +62,26 @@ for (const viewport of VIEWPORTS) {
 	});
 }
 
+test.describe("structured data (VS-07)", () => {
+	test("sitewide Organization JSON-LD is present and valid", async ({
+		page,
+	}) => {
+		await page.goto("/");
+		const raw = await page
+			.locator('script[type="application/ld+json"]')
+			.textContent();
+		expect(raw).not.toBeNull();
+
+		const json = JSON.parse(raw!);
+		expect(json["@context"]).toBe("https://schema.org");
+		expect(json["@type"]).toBe("Organization");
+		expect(typeof json.name).toBe("string");
+		expect(json.name.length).toBeGreaterThan(0);
+		expect(json.url).toMatch(/^https:\/\//);
+		expect(json.telephone).toMatch(/^\+\d+$/);
+	});
+});
+
 // Tap targets are only required to meet the minimum on touch-relevant widths; 390px is this
 // project's primary phone breakpoint and where Bob's review measured the VS-02/VS-03 failures.
 test.describe("tap targets (390px)", () => {
