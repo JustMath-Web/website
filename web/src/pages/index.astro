@@ -424,35 +424,21 @@ function categoryHref(level: LevelBlock) {
 					</div>
 				</div>
 				<div>
-					<ul class="faq-list" data-faq-list>
+					<ul class="faq-list">
 						{
-							homePage.faqs.map((item, index) => {
-								const buttonId = `faq-q-${index}`;
-								const panelId = `faq-a-${index}`;
-								const open = index === 0;
-								return (
-									<li>
-										<button
-											id={buttonId}
-											type="button"
-											aria-expanded={open ? "true" : "false"}
-											aria-controls={panelId}
-										>
+							homePage.faqs.map((item, index) => (
+								<li>
+									<details name="faq" open={index === 0}>
+										<summary>
 											<span>{item.question}</span>
 											<i aria-hidden="true" />
-										</button>
-										<div
-											id={panelId}
-											role="region"
-											aria-labelledby={buttonId}
-											hidden={!open}
-											inert={!open}
-										>
+										</summary>
+										<div class="faq-list__panel">
 											<p>{item.answer}</p>
 										</div>
-									</li>
-								);
-							})
+									</details>
+								</li>
+							))
 						}
 					</ul>
 					<WhatsAppCta
@@ -493,34 +479,6 @@ function categoryHref(level: LevelBlock) {
 	</main>
 	<SiteFooter navigation={navigation} siteSettings={siteSettings} />
 </BaseLayout>
-
-<script>
-	const list = document.querySelector<HTMLElement>("[data-faq-list]");
-	if (list) {
-		const rows = Array.from(list.querySelectorAll<HTMLLIElement>("li"));
-		const setOpen = (row: HTMLLIElement, open: boolean) => {
-			const button = row.querySelector<HTMLButtonElement>("button");
-			const panel = row.querySelector<HTMLElement>("[role='region']");
-			if (!button || !panel) return;
-			button.setAttribute("aria-expanded", String(open));
-			panel.hidden = !open;
-			if (open) {
-				panel.removeAttribute("inert");
-			} else {
-				panel.setAttribute("inert", "");
-			}
-		};
-
-		rows.forEach((row) => {
-			const button = row.querySelector("button");
-			button?.addEventListener("click", () => {
-				const isOpen = button.getAttribute("aria-expanded") === "true";
-				rows.forEach((item) => setOpen(item, false));
-				setOpen(row, !isOpen);
-			});
-		});
-	}
-</script>
 
 <style>
 	:root {
@@ -1304,25 +1262,29 @@ function categoryHref(level: LevelBlock) {
 		border-bottom: 1px solid var(--rule);
 	}
 
-	.faq-list button {
+	.faq-list summary {
 		display: flex;
 		align-items: flex-start;
 		justify-content: space-between;
 		gap: var(--space-4);
 		width: 100%;
 		min-height: var(--control-h);
-		border: 0;
-		background: transparent;
+		list-style: none;
 		padding: var(--space-5) 0;
 		color: var(--ink-700);
 		cursor: pointer;
 		font: var(--weight-medium) clamp(16px, 1.7vw, 19px) / 1.4 var(--font-sans);
-		text-align: left;
 		transition: color var(--dur-1) var(--ease-standard);
 	}
 
-	.faq-list button:hover,
-	.faq-list button[aria-expanded="true"] {
+	/* Suppress the native disclosure triangle (Safari/older WebKit) — `list-style: none` above
+	   already handles it in Chromium/Firefox. The custom `<i>` plus/cross glyph is the indicator. */
+	.faq-list summary::-webkit-details-marker {
+		display: none;
+	}
+
+	.faq-list summary:hover,
+	.faq-list details[open] summary {
 		color: var(--ink-900);
 	}
 
@@ -1355,11 +1317,11 @@ function categoryHref(level: LevelBlock) {
 		height: 100%;
 	}
 
-	.faq-list button[aria-expanded="true"] i::after {
+	.faq-list details[open] i::after {
 		transform: translate(-50%, -50%) rotate(90deg);
 	}
 
-	.faq-list [role="region"] p {
+	.faq-list__panel p {
 		margin: 0 0 var(--space-5);
 		color: var(--text-body);
 		font: var(--weight-regular) var(--fluid-body) / 1.62 var(--font-sans);

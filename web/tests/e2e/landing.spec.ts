@@ -85,6 +85,24 @@ test.describe("tap targets (390px)", () => {
 		await page.goto("/");
 		await assertMinTapTarget(page, ".site-header__link");
 	});
+
+	test("header brand/logo link meets the 44x44 minimum (VS-13)", async ({
+		page,
+	}) => {
+		await page.goto("/");
+		await assertMinTapTarget(page, ".site-header__brand");
+	});
+
+	test("skip link meets the 44x44 minimum when focused (VS-14)", async ({
+		page,
+	}) => {
+		await page.goto("/");
+		await page.keyboard.press("Tab");
+		const box = await page.locator(".skip-link").boundingBox();
+		expect(box, "skip link has no bounding box").not.toBeNull();
+		expect(box!.width).toBeGreaterThanOrEqual(MIN_TAP_TARGET);
+		expect(box!.height).toBeGreaterThanOrEqual(MIN_TAP_TARGET);
+	});
 });
 
 test.describe("keyboard navigation", () => {
@@ -119,27 +137,22 @@ test.describe("FAQ accordion", () => {
 		const faq = page.locator("#faq");
 		await faq.scrollIntoViewIfNeeded();
 
-		const buttons = faq.locator(".faq-list button");
-		const count = await buttons.count();
+		const items = faq.locator(".faq-list details");
+		const count = await items.count();
 		expect(count).toBeGreaterThan(1);
 
-		const firstButton = buttons.nth(0);
-		const secondButton = buttons.nth(1);
+		const first = items.nth(0);
+		const second = items.nth(1);
 
-		// The first FAQ item is open by default (index.astro: `const open = index === 0`).
-		await expect(firstButton).toHaveAttribute("aria-expanded", "true");
+		// The first FAQ item is open by default (index.astro: `open={index === 0}`).
+		await expect(first).toHaveJSProperty("open", true);
+		await expect(second).toHaveJSProperty("open", false);
 
-		await secondButton.click();
-		await expect(secondButton).toHaveAttribute("aria-expanded", "true");
-		await expect(firstButton).toHaveAttribute("aria-expanded", "false");
+		await second.locator("summary").click();
 
-		const firstPanelId = await firstButton.getAttribute("aria-controls");
-		expect(firstPanelId).not.toBeNull();
-		await expect(page.locator(`#${firstPanelId}`)).toBeHidden();
-
-		const secondPanelId = await secondButton.getAttribute("aria-controls");
-		expect(secondPanelId).not.toBeNull();
-		await expect(page.locator(`#${secondPanelId}`)).toBeVisible();
+		// Native <details name="faq"> makes the group exclusive — the browser closes the rest.
+		await expect(second).toHaveJSProperty("open", true);
+		await expect(first).toHaveJSProperty("open", false);
 	});
 
 	test("reachable and operable by keyboard", async ({ page }) => {
@@ -147,11 +160,39 @@ test.describe("FAQ accordion", () => {
 		const faq = page.locator("#faq");
 		await faq.scrollIntoViewIfNeeded();
 
-		const firstButton = faq.locator(".faq-list button").first();
-		await firstButton.focus();
-		await expect(firstButton).toBeFocused();
+		const first = faq.locator(".faq-list details").first();
+		const summary = first.locator("summary");
+		await summary.focus();
+		await expect(summary).toBeFocused();
 
 		await page.keyboard.press("Enter");
-		await expect(firstButton).toHaveAttribute("aria-expanded", "false");
+		await expect(first).toHaveJSProperty("open", false);
+	});
+
+	// VS-06: switched from a scripted show/hide to native <details>/<summary> specifically so
+	// answers stay reachable if JavaScript fails to load or run — verify that claim directly,
+	// in a browser context with JS actually disabled, not just by reading the markup.
+	test("answers remain reachable with JavaScript disabled (VS-06)", async ({
+		browser,
+	}) => {
+		const context = await browser.newContext({ javaScriptEnabled: false });
+		const page = await context.newPage();
+
+		try {
+			await page.goto("/");
+			const faq = page.locator("#faq");
+			await faq.scrollIntoViewIfNeeded();
+
+			const items = faq.locator(".faq-list details");
+			expect(await items.count()).toBeGreaterThan(1);
+
+			const second = items.nth(1);
+			await expect(second.locator(".faq-list__panel")).toBeHidden();
+
+			await second.locator("summary").click();
+			await expect(second.locator(".faq-list__panel")).toBeVisible();
+		} finally {
+			await context.close();
+		}
 	});
 });
