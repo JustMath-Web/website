@@ -590,12 +590,144 @@ existing fallback annotations — `S4`, `F3`, `F5` — are all valid stop codes,
 validation doesn't break seeding). `web`: unaffected by either change, but full check/build/test
 suite re-run anyway to confirm — all pass.
 
-## 21. Ops/docs PR (P2 batch 3 of Charlie's triage split) — 2026-08-16
+## 21. Accessibility/semantics PR (P2 batch 1 of Charlie's triage split) — 2026-08-16
+
+Fixes VS-06 + VS-16 (FAQ keyboard/no-JS reachability) together, and VS-13 + VS-14 (tap-target
+sizing), per Charlie's PR split of the remaining review queue. VS-07/08/11, VS-09/12, and VS-10 are
+separate PRs; VS-15/VS-17 stay queued (blog routes / more templates don't exist yet). Merged as PR
+#7.
+
+**VS-06 + VS-16 — FAQ accordion rebuilt on native `<details>`/`<summary>`.** The prior implementation
+was a `<button>` + `<div role="region">` pair driven entirely by a client `<script>` (`aria-expanded`,
+`hidden`, `inert` all set by hand); with JavaScript disabled or failing to load, every answer stayed
+permanently hidden. Replaced with `<details name="faq">` per `<li>` (`open={index === 0}` for the
+default-open first item) — the browser's own disclosure widget handles toggling, keyboard operation
+(Enter/Space), and the accessible expanded/collapsed state natively, with zero JavaScript. The
+`name="faq"` attribute (Baseline-supported set of exclusive `<details>` groups — ships in all current
+major browsers) reproduces the old "only one open at a time" behavior without a script, so the entire
+client `<script>` block in `index.astro` was deleted, not just shrunk. Visual result is unchanged:
+same plus/cross `<i>` glyph, same chevron rotation on open, native disclosure triangle suppressed via
+`list-style: none` (`::-webkit-details-marker { display: none }` for older WebKit) — confirmed by
+screenshot, not just by reading the CSS. `role="region"`/`aria-labelledby`/generated `buttonId`/
+`panelId` were all removed as dead weight (FE-51): native `<details>`/`<summary>` already expresses
+the disclosure relationship to assistive tech without them.
+
+**Icon animation tweak, per Charlie's request:** the open/close transition now rotates *both* bars
+instead of only the vertical one — `.faq-list details[open] i::before` (the horizontal bar) to
+180deg, `i::after` (the vertical bar) to 270deg, both reversing automatically on close via the
+existing `transition: transform var(--dur-3) var(--ease-standard)` (no new transition code needed).
+End states are pixel-identical to before (a bar at 180deg/270deg looks the same as one at 0deg/90deg
+for a symmetric line) — only the transition motion changes, to a fuller spin. Verified the computed
+`transform` matrices directly (`matrix(-1,0,0,-1,...)` = rotate(180deg),
+`matrix(0,-1,1,0,...)` = rotate(270deg), confirmed via `getComputedStyle`, not assumed from the CSS
+source) and re-ran the full Playwright suite (22/22 still pass — this is a motion-only change, no
+selector/markup touched).
+
+**VS-13 — header brand/logo link.** `.site-header__brand` gets `display: inline-flex; align-items:
+center; min-height: var(--control-h)`. Width was already 114px (over 44); only height needed the
+~3.7px bump, absorbed without layout shift since the header's own `min-height: 62px` already exceeds
+44px.
+
+**VS-14 — skip link.** Same technique on `.skip-link` (`position: fixed`, so no negative-margin
+compensation needed — it isn't in flow with siblings). Was 42.4px tall, 1.6px short.
+
+**Playwright suite:** `web/tests/e2e/landing.spec.ts` updated for the new `<details>` markup
+(`toHaveJSProperty("open", …)` instead of `aria-expanded` attribute checks); added tap-target tests
+for VS-13/VS-14 (skip link measured after `Tab`-focusing it, since it's translated off-screen until
+`:focus-visible`); added a dedicated **JavaScript-disabled** test
+(`browser.newContext({ javaScriptEnabled: false })`) that clicks a `<summary>` and asserts the answer
+becomes visible — this is VS-06's actual claim, verified directly rather than inferred from using a
+native element. 22/22 tests pass (was 19).
+
+**Verified:** `web`: `format:check`, `check`, `build`, and the full Playwright suite (22/22, including
+the new no-JS test) all pass. Manually screenshotted the FAQ section before and after a click
+(`node scripts/serve-dist.mjs` + Playwright MCP) to confirm the native marker is genuinely suppressed
+and the exclusive-group close-on-open behavior looks identical to the old scripted version — not
+just that the assertions pass.
+
+## 22. Production hardening PR (P2 batch 2 of Charlie's triage split) — 2026-08-16
+
+Fixes VS-07 (JSON-LD), VS-08 (security headers), and VS-11 (executable redirects) — batch 2 of
+Charlie's 4-PR triage split. Batch 1 (§21 above) merged first as PR #7; this branch is rebased onto
+that merge, resolving the expected tail-append conflict on this file and `HANDOFF.md`. Checked
+current docs before implementing, per guideline Section 2 rule 4 (training data may be stale):
+fetched Astro's routing guide, the `@astrojs/vercel` adapter docs, and Vercel's `vercel.json`
+reference directly rather than relying on memory.
+
+**VS-08 + VS-11 — both land in one new `web/vercel.json`.** Chose a hand-written `vercel.json` over
+Astro's own `redirects` config (`astro.config.mjs`) or the adapter's `staticHeaders` + Astro
+experimental-CSP path: the docs fetch on the adapter's `staticHeaders` option turned up real
+uncertainty (tied to an Astro *experimental* CSP feature, not confirmed to cover the specific header
+set the guideline names) where a plain `vercel.json` `headers`/`redirects` array is the stable,
+directly-documented mechanism for exactly this — matches FE-60's ladder without reaching past what's
+actually needed.
+
+- **Headers** (`X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`,
+  `X-Frame-Options: DENY`, plus a real CSP — not a placeholder) applied via a `source: "/(.*)"`
+  wildcard entry.
+- **CSP is a genuine reflection of what the built site actually loads, checked against the real
+  `dist/` output, not assumed:** `script-src 'self'` — confirmed zero `<script>` tags exist anywhere
+  in the built HTML (`grep -o '<script[^>]*>' dist/index.html` returns nothing; PR #7 deleted the
+  last one). `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com` and
+  `font-src 'self' https://fonts.gstatic.com` — Astro's compiled scoped `<style>` blocks have no
+  CSP hash/nonce support, hence `'unsafe-inline'` for styles specifically (not scripts); the Google
+  Fonts hosts are a real, current dependency (`tokens/fonts.css`'s `@import url(https://fonts.
+  googleapis.com/...)` — confirmed to survive literally into the compiled CSS bundle, not inlined at
+  build time, so the browser really does fetch both hosts at runtime). **This allowance should
+  shrink once VS-10 (font self-hosting) lands** — tracked there, not fixed here. `img-src 'self'`
+  (no `data:` — confirmed no data-URI images anywhere in the built output, so not adding an
+  unneeded allowance). `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`,
+  `frame-ancestors 'none'` — standard hardening, all free given the site's actual shape (no forms,
+  no plugins, no embedding).
+- **Redirects: only the 3 of 6 documented redirects (`docs/CONTENT-MODEL.md` §9) whose targets
+  actually resolve right now** — `/about/`→`/#about`, `/faq/`→`/#faq`, `/pricing/`→`/#pricing`, all
+  `statusCode: 301`. Deliberately **excluded** the other 3 (`/category/algebra/`,
+  `/differentiation-using-the-first-principle/`, `/mastering-algebra/` → `/blog/level/...`) because
+  their destinations don't exist yet — no blog routes are built. A 301 to a route that itself 404s
+  is worse than no redirect for both crawlers and users; shipping those three now would mean this
+  PR's own claim ("redirects implemented") wouldn't be fully true. Deferred to whenever blog routes
+  ship, bundled with VS-15 (sitemap/RSS/robots — same trigger).
+- **Not independently verifiable in this environment.** No Vercel project is linked (confirmed
+  earlier this session) and headers/redirects in `vercel.json` only take effect on Vercel's actual
+  infrastructure — my own `scripts/serve-dist.mjs` (used for local dev and the Playwright suite)
+  does not and cannot apply them. Validated the file is syntactically correct (`JSON.parse` — no
+  throw) and structurally matches Vercel's current documented schema (fetched directly, not
+  remembered). The header/redirect *behavior itself* is unverified until a real deploy exists — not
+  claimed as tested, per guideline Section 2 rule 5.
+
+**VS-07 — sitewide `Organization` JSON-LD.** Added to `BaseLayout.astro`'s `<head>`
+(`<script is:inline type="application/ld+json">`) rather than `Astro check`-flagged Astro script
+processing, since it's an inert data block, not executable script (confirmed: CSP `script-src` does
+not govern `application/ld+json` script tags — they're never executed as JS by the browser, so the
+strict `script-src 'self'` above doesn't need to special-case it). `BaseLayout` now takes a required
+`siteSettings: SiteSettings` prop rather than fetching it itself — keeps the "fetch at the nearest
+boundary that owns the data need" discipline (FE-34): `index.astro` already fetches `siteSettings`
+via `getLandingPageData()`, so BaseLayout consuming it as a prop avoids a second, duplicate Sanity
+read per page. Future page templates (blog routes) will pass it the same way once built.
+
+**Fields included, and why not more:** `name` (`siteSettings.siteName`), `url`
+(`siteSettings.domain`), `telephone` (`+${siteSettings.whatsappNumber}` — E.164, matches the format
+already recorded for that field in `docs/CONTENT-MODEL.md` §7). **No `logo` or `sameAs`**: no image
+asset or social-profile URLs exist in `siteSettings` to source them from truthfully, and inventing
+placeholder values would be exactly the "silently invented business-critical content" the guideline
+prohibits (Section 2 rule 3). Plain `Organization` type, not a narrower one: the finding itself
+named `Organization` as acceptable, and guessing a more specific schema.org business classification
+wasn't clearly signalled by anything in the brief.
+
+**Verified:** `web`: `format:check`, `check`, `build` all pass. Full Playwright suite, 23/23 (added
+one new test: parses the rendered JSON-LD script tag and asserts `@context`/`@type`/`name`/`url`/
+`telephone` shape — this part *is* locally verifiable, unlike the vercel.json headers/redirects,
+since it's page content rather than an HTTP-layer behavior). Confirmed the rendered JSON-LD in the
+actual built `dist/index.html` matches the expected shape exactly (`{"@context":"https://schema.org",
+"@type":"Organization","name":"Just Math Malaysia","url":"https://mathematicsmalaysia.com",
+"telephone":"+60194728768"}`).
+
+## 23. Ops/docs PR (P2 batch 3 of Charlie's triage split) — 2026-08-16
 
 Fixes VS-09 (dependency/advisory scanning) and VS-12 (vertical-slice FE self-check) — batch 3 of
-Charlie's 4-PR triage split. Batches 1 (#7) and 2 (#8) are separate, possibly-still-open PRs that
-also append to this file's tail independently — see their own entries once merged; whichever of the
-three merges last may need a small rebase/renumber here, not a content problem.
+Charlie's 4-PR triage split. Batches 1 (§21, PR #7) and 2 (§22, PR #8) merged first, in that order;
+this branch is rebased onto that combined state, resolving the expected tail-append conflict on this
+file and `HANDOFF.md`.
 
 ### VS-09 — dependency/advisory scanning
 
@@ -684,3 +816,11 @@ FE-32** (and, as a direct consequence, the decision-ladder note on FE-60) — bo
 still-open VS-06 finding, fixed in already-opened PR #7 but not yet merged as of this table's commit.
 Nothing regressed. N/A gates remain genuinely N/A for the same reasons Bob recorded: no blog routes,
 business logic, or registry components exist yet in this vertical slice.
+
+**Rebase note (resolving this branch's conflict with `main` after PR #7 and #8 merged):** the table
+above is an accurate record of commit `331f8ac`, not rewritten to match current `main`. PR #7 (§21,
+merged) fixes the FE-32/FE-60 findings via native `<details>`/`<summary>` — those two rows are now
+stale, not re-verified fresh as part of this rebase (that would be a real re-audit, not a merge
+conflict resolution). The next FE gate check — whether a fresh self-check or Bob's next review pass —
+should confirm FE-32 reads Pass on current `main` rather than trusting this note.
+

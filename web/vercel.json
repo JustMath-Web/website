@@ -1,0 +1,25 @@
+{
+	"$schema": "https://openapi.vercel.sh/vercel.json",
+	"headers": [
+		{
+			"source": "/(.*)",
+			"headers": [
+				{ "key": "X-Content-Type-Options", "value": "nosniff" },
+				{
+					"key": "Referrer-Policy",
+					"value": "strict-origin-when-cross-origin"
+				},
+				{ "key": "X-Frame-Options", "value": "DENY" },
+				{
+					"key": "Content-Security-Policy",
+					"value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+				}
+			]
+		}
+	],
+	"redirects": [
+		{ "source": "/about/", "destination": "/#about", "statusCode": 301 },
+		{ "source": "/faq/", "destination": "/#faq", "statusCode": 301 },
+		{ "source": "/pricing/", "destination": "/#pricing", "statusCode": 301 }
+	]
+}
