@@ -1,5 +1,26 @@
 # Just Math Malaysia — Project Handoff
 
+> ## STATUS 2026-08-16: PR #7/#8/#9 all merged · merge-log backfill (PR #11) merged · font self-hosting PR (4 of 4) open — VS-10
+>
+> All three of Charlie's 4-PR triage split's first batches are merged, in that order (#7, then #8,
+> then #9 — each confirmed via `gh pr view <n> --json state,mergedAt,mergeCommit`, never assumed).
+> The merge-log entries for all three (`log/2026-08-16_PR{7,8,9}_*.md`) were written afterward and
+> merged as PR #11 (jumped from #10 because Dependabot's own `dependabot.yml` — shipped in PR #9 —
+> claimed #10 first with its own automated update PR, confirming that wiring works).
+>
+> Synced local `main` to PR #11's merge commit before starting the last queued item, per Charlie's
+> explicit instruction not to start VS-10 on an older `main`. **VS-10 (font self-hosting), batch 4 of
+> 4:** self-hosted IBM Plex Serif/Sans/Mono via `@fontsource` (OFL-1.1, latin-only subsets, exact
+> weights/styles the old Google Fonts `@import` requested), replacing the external `@import
+> url(https://fonts.googleapis.com/...)` in `web/src/styles/tokens/fonts.css`. Tightened
+> `web/vercel.json`'s CSP (`style-src`/`font-src`) to drop the Google Fonts allowance now that no
+> external font host is contacted — confirmed via `dist/` grep, zero `googleapis`/`gstatic`
+> references remain. Caught and fixed a pre-existing test-timing race in the VS-14 skip-link tap
+> -target test along the way (see `docs/DECISIONS.md` §24). Full detail in §24.
+>
+> **Not merged — waiting on Charlie**, per the standing no-self-merge rule. CI green, 23/23 Playwright
+> tests passing across two consecutive clean runs.
+
 > ## STATUS 2026-08-16: PR #7 and #8 merged · ops/docs PR (3 of 4) rebased and open — VS-09, VS-12
 >
 > Third of the 4-PR triage split. PR #7 (accessibility/semantics) and PR #8 (production hardening,
@@ -31,7 +52,8 @@
 > as an accurate record of `331f8ac`, not re-verified fresh as part of this rebase. Full table and
 > note in `docs/DECISIONS.md` §23.
 >
-> **Not merged — waiting on Charlie.** PR 4 (fonts) hasn't been started yet.
+> **This entry describes PR #9's state as opened/rebased — PR #9 has since merged, and PR 4 (fonts,
+> VS-10) has since been started.** See the STATUS entry at the top of this file for current state.
 
 > ## STATUS 2026-08-16: PR #7 merged · production hardening PR (2 of 4) merged as PR #8 — VS-07, VS-08, VS-11
 >

@@ -824,3 +824,71 @@ stale, not re-verified fresh as part of this rebase (that would be a real re-aud
 conflict resolution). The next FE gate check — whether a fresh self-check or Bob's next review pass —
 should confirm FE-32 reads Pass on current `main` rather than trusting this note.
 
+## 24. Font self-hosting — VS-10 (guideline Section 7 rule 4) — 2026-08-16
+
+Fixes VS-10, the last item from Bob's 2026-08-15 review's original P2/P3 queue (batch 4 of Charlie's
+4-PR triage split — batches 1–3 are §21/§22/§23, all merged). Branched from `main` after PR #11
+(merge-log backfill for #7/#8/#9) merged, per Charlie's explicit instruction not to start this PR on
+an older `main`.
+
+**License checked first, not assumed** (guideline Section 7 rule 4: "confirm the license first;
+self-host when permitted"): `node_modules/@fontsource/ibm-plex-{serif,sans,mono}/package.json`
+each report `"license": "OFL-1.1"`, and each package ships its own `LICENSE` file — the SIL Open Font
+License explicitly permits embedding, self-hosting, and subsetting.
+
+**Chose `@fontsource` over manually downloading/subsetting binaries.** Fontsource repackages the
+same upstream IBM Plex release under the original OFL terms, already split per-subset per-weight
+per-style (e.g. `latin-600-italic.css`, `latin-ext-600-italic.css`, `cyrillic-600-italic.css`, ...),
+each with `font-display: swap` already set and both `.woff2`/`.woff` provided. That per-subset split
+is exactly what "subset only to glyphs/languages the site actually supports" requires — this site is
+`en-MY`, Latin script only (confirmed: no CJK/Cyrillic/Greek content anywhere in `docs/CONTENT-MODEL.
+md` or the CMS schema), so only the `latin-*` files were imported, never the combined `{weight}.css`
+files (which bundle every script IBM Plex supports — cyrillic, cyrillic-ext, greek, vietnamese, and
+more — into one `@font-face` per subset, wastefully shipped to every visitor regardless of need).
+Hand-rolling subsetting with `pyftsubset` would reproduce the same output with more surface for error
+and no verifiable provenance back to the upstream release.
+
+**Exact weights/styles matched to what the old Google Fonts `@import` requested** — no more, no
+fewer: IBM Plex Serif 400/500/600/700 normal + 400/600 italic (wordmark + display), IBM Plex Sans
+400/500/600/700 normal + 400 italic (UI text), IBM Plex Mono 400/500/600 normal only (numerals — the
+original request had no mono italic). 14 `@import`s total in `web/src/styles/tokens/fonts.css`,
+each a bare npm-package specifier (`@import "@fontsource/ibm-plex-serif/latin-600.css";`) resolved by
+Vite's CSS import pipeline — the same mechanism `global.css` already relies on one line down for
+`@import "tailwindcss"`, so this isn't a new or unproven resolution path.
+
+**Verified directly in the built output, not assumed:**
+
+- `grep -rn "googleapis\|gstatic" dist/` — zero matches (previously present).
+- `find dist -iname "*.woff2"` — 14 files, one per import, all under `dist/_astro/`, hashed filenames
+  (Vite's normal asset pipeline).
+- Parsed the compiled CSS for `@font-face` blocks — 14 total, each with both `.woff2` and `.woff`
+  `src` entries and `font-display:swap` intact.
+
+**CSP tightened in `web/vercel.json`** (the follow-up §22 flagged as pending): removed
+`https://fonts.googleapis.com` from `style-src` and `https://fonts.gstatic.com` from `font-src` — no
+longer real dependencies once every font byte ships from the same origin. New CSP: `default-src
+'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self';
+object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'`. `'unsafe-inline'`
+on `style-src` remains for the same reason recorded in §22 (Astro's compiled scoped `<style>` blocks
+have no CSP hash/nonce support) — unrelated to fonts, not touched here.
+
+**Test fix, caught by the suite itself, not introduced deliberately:** the VS-14 skip-link tap-target
+test (`tests/e2e/landing.spec.ts`) started failing intermittently after this change —
+`box!.height` measuring `43.99999809265137` against a `>= 44` assertion. Root cause isn't a real
+layout regression (manual inspection via `getComputedStyle`/`getBoundingClientRect` outside the test
+runner showed a clean `44px`/`44` every time): the test calls `.boundingBox()` immediately after
+`page.keyboard.press("Tab")`, with no wait for `.skip-link`'s own `transform` CSS transition
+(`transition: transform var(--dur-2) var(--ease-out)`, triggered on focus) to finish — a pre-existing
+race that local vs. CDN font-load timing was apparently close enough to the boundary to expose.
+Fixed by awaiting the element's `transitionend` event (listener attached before the `Tab` press, to
+avoid missing it) before measuring, rather than loosening the `>= 44` threshold — the test should
+assert the final resting size, not a mid-animation frame. Reran the full suite twice clean (23/23
+both times) after the fix to confirm it wasn't a one-off pass.
+
+**Verified:** `web`: `format:check`, `check`, `build`, full Playwright suite (23/23, ×2 consecutive
+clean runs). `pnpm audit --audit-level=critical` still exits `0` — only the pre-existing, already
+-accepted `path-to-regexp` high finding remains (§23's `undici` row no longer appears in a fresh
+audit; not investigated further here, out of this PR's scope). **Not independently verifiable in
+this environment:** real-device font-load performance/FOUT behavior and whether Vercel actually
+serves the new headers/CSP correctly — same caveat as §22, no Vercel project is linked yet.
+

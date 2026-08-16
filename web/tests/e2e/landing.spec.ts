@@ -117,7 +117,20 @@ test.describe("tap targets (390px)", () => {
 		page,
 	}) => {
 		await page.goto("/");
+		// .skip-link animates into view on focus (transform transition). Measuring
+		// mid-transition can report a sub-pixel-short bounding box from the browser's
+		// compositor, not a real layout regression, so wait for the transition to
+		// settle before asserting the final resting size.
+		const transitionSettled = page.locator(".skip-link").evaluate(
+			(el) =>
+				new Promise<void>((resolve) =>
+					el.addEventListener("transitionend", () => resolve(), {
+						once: true,
+					}),
+				),
+		);
 		await page.keyboard.press("Tab");
+		await transitionSettled;
 		const box = await page.locator(".skip-link").boundingBox();
 		expect(box, "skip link has no bounding box").not.toBeNull();
 		expect(box!.width).toBeGreaterThanOrEqual(MIN_TAP_TARGET);
