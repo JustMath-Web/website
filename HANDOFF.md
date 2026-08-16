@@ -1,5 +1,33 @@
 # Just Math Malaysia — Project Handoff
 
+> ## STATUS 2026-08-16: Triage of the remaining 8 P2 / 4 P3 items started — PR 1 of 4 open
+>
+> Charlie confirmed PR #4 and #5 merged, then asked to start triaging the remaining queue (8 P2s / 4
+> P3s from Bob's original 2026-08-15 review), giving a 4-PR split: (1) accessibility/semantics, (2)
+> production hardening (JSON-LD/security headers/redirects), (3) ops/docs (dependency scanning +
+> FE self-check), (4) fonts, separately if it touches assets/config noticeably. VS-15 and VS-17 stay
+> queued (blog routes and more templates don't exist yet). Wrote `log/2026-08-16_PR4_...md` and
+> `log/2026-08-16_PR5_...md` first — the "merge log" rule's chicken-and-egg case Bob flagged: those
+> two PRs carried the merge-log infrastructure itself, so their own entries could only be written
+> after they landed (confirmed via `gh pr view` before writing, not assumed).
+>
+> **PR 1 of 4 (accessibility/semantics) done, opened as PR #7, not yet merged.** Fixes VS-06 + VS-16
+> (FAQ accordion rebuilt on native `<details name="faq">`/`<summary>` — zero JavaScript needed for
+> keyboard operation, disclosure state, or the single-open-at-a-time behavior; the old `<script>`
+> block is gone entirely, not shrunk) and VS-13 + VS-14 (header brand link and skip link now meet
+> 44×44). Full rationale in `docs/DECISIONS.md` §21.
+>
+> Added a genuinely new check, not just a markup swap: a Playwright test that disables JavaScript
+> (`browser.newContext({ javaScriptEnabled: false })`) and confirms an FAQ answer actually becomes
+> visible on click — this is VS-06's real claim, verified directly rather than assumed from "native
+> elements don't need JS." 22/22 tests pass. Also manually screenshotted the FAQ before/after a click
+> to confirm the native disclosure triangle is genuinely suppressed and the visual result matches the
+> old scripted version — not just that assertions pass.
+>
+> **Not merged — waiting on Charlie, per the no-self-merge rule.** PRs 2-4 of the split haven't been
+> started yet; next session (or later this one) picks up with the production-hardening PR (VS-07,
+> VS-08, VS-11).
+
 > ## STATUS 2026-08-16: Two re-review follow-ups fixed · merge log backfilled · new no-self-merge rule
 >
 > Charlie confirmed PR #3 merged (fast-forwarded to `5853485`) and made two decisions: fix the two
