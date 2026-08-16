@@ -1,11 +1,12 @@
 # Just Math Malaysia — Project Handoff
 
-> ## STATUS 2026-08-16: Production hardening PR (2 of 4) open — VS-07, VS-08, VS-11
+> ## STATUS 2026-08-16: PR #7 merged · production hardening PR (2 of 4) rebased and open — VS-07, VS-08, VS-11
 >
-> Second of the 4-PR triage split for the remaining review queue (see PR #7's HANDOFF entry for the
-> first — accessibility/semantics — which may or may not already be merged by the time this lands;
-> both PRs branched from the same point on `main` and append independently to
-> `docs/DECISIONS.md`/`HANDOFF.md`'s tails, so whichever merges second may need a small rebase).
+> Second of the 4-PR triage split for the remaining review queue. PR #7 (accessibility/semantics,
+> entry immediately below) merged first, as Charlie's recommended order specified; this branch was
+> then rebased onto the updated `main` to resolve the expected `docs/DECISIONS.md`/`HANDOFF.md`
+> tail-append conflict (confirmed via `gh pr view 8 --json mergeable` showing `CONFLICTING` before
+> resolving, not assumed), and CI re-confirmed green after the rebase.
 >
 > **JSON-LD (VS-07):** sitewide `Organization` structured data added to `BaseLayout.astro`'s
 > `<head>`. Only fields with real data (`name`, `url`, `telephone`) — no `logo`/`sameAs`, since
@@ -29,9 +30,39 @@
 > Vercel's actual infrastructure — `scripts/serve-dist.mjs` (used for local dev and the Playwright
 > suite) can't apply them. Verified the file is valid JSON and matches Vercel's documented schema;
 > the actual served-header/redirect *behavior* stays unverified until a real deploy exists. Full
-> detail in `docs/DECISIONS.md` §21.
+> detail in `docs/DECISIONS.md` §22.
 >
-> **Not merged — waiting on Charlie.** PRs 3-4 (ops/docs; fonts) haven't been started yet.
+> **Not merged — waiting on Charlie.** PRs 3-4 (ops/docs; fonts) still to come after this one.
+
+> ## STATUS 2026-08-16: Accessibility/semantics PR (1 of 4) merged as PR #7 — VS-06, VS-13, VS-14, VS-16
+>
+> First of the 4-PR triage split for the remaining review queue (8 P2s / 4 P3s from Bob's original
+> 2026-08-15 review): (1) accessibility/semantics, (2) production hardening (JSON-LD/security
+> headers/redirects), (3) ops/docs (dependency scanning + FE self-check), (4) fonts, separately if it
+> touches assets/config noticeably. VS-15 and VS-17 stay queued (blog routes and more templates don't
+> exist yet). Wrote `log/2026-08-16_PR4_...md` and `log/2026-08-16_PR5_...md` first — the "merge log"
+> rule's chicken-and-egg case Bob flagged: those two PRs carried the merge-log infrastructure itself,
+> so their own entries could only be written after they landed (confirmed via `gh pr view` before
+> writing, not assumed).
+>
+> Fixes VS-06 + VS-16 (FAQ accordion rebuilt on native `<details name="faq">`/`<summary>` — zero
+> JavaScript needed for keyboard operation, disclosure state, or the single-open-at-a-time behavior;
+> the old `<script>` block is gone entirely, not shrunk) and VS-13 + VS-14 (header brand link and
+> skip link now meet 44×44). Full rationale in `docs/DECISIONS.md` §21.
+>
+> Added a genuinely new check, not just a markup swap: a Playwright test that disables JavaScript
+> (`browser.newContext({ javaScriptEnabled: false })`) and confirms an FAQ answer actually becomes
+> visible on click — this is VS-06's real claim, verified directly rather than assumed from "native
+> elements don't need JS." Also manually screenshotted the FAQ before/after a click to confirm the
+> native disclosure triangle is genuinely suppressed and the visual result matches the old scripted
+> version — not just that assertions pass.
+>
+> Charlie also requested a small icon-animation tweak (both bars spin on toggle — 180°/270° — instead
+> of just the vertical one) after this PR was opened; pushed as a follow-up commit, verified via
+> computed `transform` matrices plus a full 22/22 Playwright re-run, and CI stayed green.
+>
+> **Merged as PR #7.** Per Charlie's recommended order, this was the first of the three open PRs to
+> land — production hardening (above) was then rebased onto it.
 
 > ## STATUS 2026-08-16: Two re-review follow-ups fixed · merge log backfilled · new no-self-merge rule
 >

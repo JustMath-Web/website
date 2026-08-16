@@ -590,16 +590,69 @@ existing fallback annotations — `S4`, `F3`, `F5` — are all valid stop codes,
 validation doesn't break seeding). `web`: unaffected by either change, but full check/build/test
 suite re-run anyway to confirm — all pass.
 
-## 21. Production hardening PR (P2 batch 2 of Charlie's triage split) — 2026-08-16
+## 21. Accessibility/semantics PR (P2 batch 1 of Charlie's triage split) — 2026-08-16
+
+Fixes VS-06 + VS-16 (FAQ keyboard/no-JS reachability) together, and VS-13 + VS-14 (tap-target
+sizing), per Charlie's PR split of the remaining review queue. VS-07/08/11, VS-09/12, and VS-10 are
+separate PRs; VS-15/VS-17 stay queued (blog routes / more templates don't exist yet). Merged as PR
+#7.
+
+**VS-06 + VS-16 — FAQ accordion rebuilt on native `<details>`/`<summary>`.** The prior implementation
+was a `<button>` + `<div role="region">` pair driven entirely by a client `<script>` (`aria-expanded`,
+`hidden`, `inert` all set by hand); with JavaScript disabled or failing to load, every answer stayed
+permanently hidden. Replaced with `<details name="faq">` per `<li>` (`open={index === 0}` for the
+default-open first item) — the browser's own disclosure widget handles toggling, keyboard operation
+(Enter/Space), and the accessible expanded/collapsed state natively, with zero JavaScript. The
+`name="faq"` attribute (Baseline-supported set of exclusive `<details>` groups — ships in all current
+major browsers) reproduces the old "only one open at a time" behavior without a script, so the entire
+client `<script>` block in `index.astro` was deleted, not just shrunk. Visual result is unchanged:
+same plus/cross `<i>` glyph, same chevron rotation on open, native disclosure triangle suppressed via
+`list-style: none` (`::-webkit-details-marker { display: none }` for older WebKit) — confirmed by
+screenshot, not just by reading the CSS. `role="region"`/`aria-labelledby`/generated `buttonId`/
+`panelId` were all removed as dead weight (FE-51): native `<details>`/`<summary>` already expresses
+the disclosure relationship to assistive tech without them.
+
+**Icon animation tweak, per Charlie's request:** the open/close transition now rotates *both* bars
+instead of only the vertical one — `.faq-list details[open] i::before` (the horizontal bar) to
+180deg, `i::after` (the vertical bar) to 270deg, both reversing automatically on close via the
+existing `transition: transform var(--dur-3) var(--ease-standard)` (no new transition code needed).
+End states are pixel-identical to before (a bar at 180deg/270deg looks the same as one at 0deg/90deg
+for a symmetric line) — only the transition motion changes, to a fuller spin. Verified the computed
+`transform` matrices directly (`matrix(-1,0,0,-1,...)` = rotate(180deg),
+`matrix(0,-1,1,0,...)` = rotate(270deg), confirmed via `getComputedStyle`, not assumed from the CSS
+source) and re-ran the full Playwright suite (22/22 still pass — this is a motion-only change, no
+selector/markup touched).
+
+**VS-13 — header brand/logo link.** `.site-header__brand` gets `display: inline-flex; align-items:
+center; min-height: var(--control-h)`. Width was already 114px (over 44); only height needed the
+~3.7px bump, absorbed without layout shift since the header's own `min-height: 62px` already exceeds
+44px.
+
+**VS-14 — skip link.** Same technique on `.skip-link` (`position: fixed`, so no negative-margin
+compensation needed — it isn't in flow with siblings). Was 42.4px tall, 1.6px short.
+
+**Playwright suite:** `web/tests/e2e/landing.spec.ts` updated for the new `<details>` markup
+(`toHaveJSProperty("open", …)` instead of `aria-expanded` attribute checks); added tap-target tests
+for VS-13/VS-14 (skip link measured after `Tab`-focusing it, since it's translated off-screen until
+`:focus-visible`); added a dedicated **JavaScript-disabled** test
+(`browser.newContext({ javaScriptEnabled: false })`) that clicks a `<summary>` and asserts the answer
+becomes visible — this is VS-06's actual claim, verified directly rather than inferred from using a
+native element. 22/22 tests pass (was 19).
+
+**Verified:** `web`: `format:check`, `check`, `build`, and the full Playwright suite (22/22, including
+the new no-JS test) all pass. Manually screenshotted the FAQ section before and after a click
+(`node scripts/serve-dist.mjs` + Playwright MCP) to confirm the native marker is genuinely suppressed
+and the exclusive-group close-on-open behavior looks identical to the old scripted version — not
+just that the assertions pass.
+
+## 22. Production hardening PR (P2 batch 2 of Charlie's triage split) — 2026-08-16
 
 Fixes VS-07 (JSON-LD), VS-08 (security headers), and VS-11 (executable redirects) — batch 2 of
-Charlie's 4-PR triage split. Batch 1 (accessibility/semantics — VS-06, VS-13, VS-14, VS-16) is a
-separate, still-open PR (#7, branch `fix/accessibility-semantics-p2`) with its own
-`docs/DECISIONS.md` entry, not duplicated here; both PRs append to this file's tail independently,
-so whichever merges second may show a conflict on this file requiring a rebase/renumber at merge
-time, not a content problem. Checked current docs before implementing, per guideline Section 2 rule
-4 (training data may be stale): fetched Astro's routing guide, the `@astrojs/vercel` adapter docs,
-and Vercel's `vercel.json` reference directly rather than relying on memory.
+Charlie's 4-PR triage split. Batch 1 (§21 above) merged first as PR #7; this branch is rebased onto
+that merge, resolving the expected tail-append conflict on this file and `HANDOFF.md`. Checked
+current docs before implementing, per guideline Section 2 rule 4 (training data may be stale):
+fetched Astro's routing guide, the `@astrojs/vercel` adapter docs, and Vercel's `vercel.json`
+reference directly rather than relying on memory.
 
 **VS-08 + VS-11 — both land in one new `web/vercel.json`.** Chose a hand-written `vercel.json` over
 Astro's own `redirects` config (`astro.config.mjs`) or the adapter's `staticHeaders` + Astro
