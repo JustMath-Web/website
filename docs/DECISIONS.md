@@ -611,6 +611,17 @@ screenshot, not just by reading the CSS. `role="region"`/`aria-labelledby`/gener
 `panelId` were all removed as dead weight (FE-51): native `<details>`/`<summary>` already expresses
 the disclosure relationship to assistive tech without them.
 
+**Icon animation tweak, per Charlie's request:** the open/close transition now rotates *both* bars
+instead of only the vertical one — `.faq-list details[open] i::before` (the horizontal bar) to
+180deg, `i::after` (the vertical bar) to 270deg, both reversing automatically on close via the
+existing `transition: transform var(--dur-3) var(--ease-standard)` (no new transition code needed).
+End states are pixel-identical to before (a bar at 180deg/270deg looks the same as one at 0deg/90deg
+for a symmetric line) — only the transition motion changes, to a fuller spin. Verified the computed
+`transform` matrices directly (`matrix(-1,0,0,-1,...)` = rotate(180deg),
+`matrix(0,-1,1,0,...)` = rotate(270deg), confirmed via `getComputedStyle`, not assumed from the CSS
+source) and re-ran the full Playwright suite (22/22 still pass — this is a motion-only change, no
+selector/markup touched).
+
 **VS-13 — header brand/logo link.** `.site-header__brand` gets `display: inline-flex; align-items:
 center; min-height: var(--control-h)`. Width was already 114px (over 44); only height needed the
 ~3.7px bump, absorbed without layout shift since the header's own `min-height: 62px` already exceeds

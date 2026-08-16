@@ -1317,8 +1317,12 @@ function categoryHref(level: LevelBlock) {
 		height: 100%;
 	}
 
+	.faq-list details[open] i::before {
+		transform: translate(-50%, -50%) rotate(180deg);
+	}
+
 	.faq-list details[open] i::after {
-		transform: translate(-50%, -50%) rotate(90deg);
+		transform: translate(-50%, -50%) rotate(270deg);
 	}
 
 	.faq-list__panel p {
