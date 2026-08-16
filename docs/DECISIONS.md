@@ -589,3 +589,98 @@ than queued.
 existing fallback annotations — `S4`, `F3`, `F5` — are all valid stop codes, so the new required
 validation doesn't break seeding). `web`: unaffected by either change, but full check/build/test
 suite re-run anyway to confirm — all pass.
+
+## 21. Ops/docs PR (P2 batch 3 of Charlie's triage split) — 2026-08-16
+
+Fixes VS-09 (dependency/advisory scanning) and VS-12 (vertical-slice FE self-check) — batch 3 of
+Charlie's 4-PR triage split. Batches 1 (#7) and 2 (#8) are separate, possibly-still-open PRs that
+also append to this file's tail independently — see their own entries once merged; whichever of the
+three merges last may need a small rebase/renumber here, not a content problem.
+
+### VS-09 — dependency/advisory scanning
+
+Three parts, not one:
+
+1. **Enabled GitHub's native Dependabot vulnerability alerts and automated security-fix PRs** on the
+   repo (`gh api --method PUT repos/JustMath-Web/website/vulnerability-alerts` and
+   `.../automated-security-fixes`) — both were off by default (confirmed via `gh api
+   repos/.../vulnerability-alerts` returning "disabled" before enabling, not assumed).
+2. **`.github/dependabot.yml`**: weekly version-update PRs for `web/`, `studio/` (separate entries —
+   two `pnpm-workspace.yaml` roots, matching CI's two-job split), and the GitHub Actions workflow
+   files themselves. Astro and Sanity packages are grouped so a routine update doesn't open a dozen
+   single-package PRs.
+3. **`pnpm audit --audit-level=critical`** added as a CI step in both `web` and `studio` jobs
+   (`.github/workflows/ci.yml`), right after `pnpm install`.
+
+**Why `--audit-level=critical` and not the default (any finding fails):** `pnpm audit` run locally
+against the current lockfiles found real findings that are not fixable by simply bumping a direct
+dependency — both a `high` and a `moderate`-and-`high` set of transitive advisories. Recording them
+here as the guideline's own "accepted exception needs an owner, rationale, compensating control, and
+review date" rather than either silently ignoring them or shipping a CI gate that fails on the very
+commit that adds it:
+
+| Package | Severity | Advisory | Path | Owner | Rationale / compensating control | Review by |
+| --- | --- | --- | --- | --- | --- | --- |
+| `path-to-regexp` | High | ReDoS (GHSA-9wv6-86v2-598j) | `web`: `@astrojs/vercel > @vercel/routing-utils > path-to-regexp` | Claude | Build-time-only dependency (Vercel adapter's routing-config generation) — never runs in the browser or on a production request path. No untrusted input reaches it; builds run in CI or local dev only. | Next `@astrojs/vercel` minor/major bump |
+| `undici` | Moderate–High (8 moderate, 3 high, same root advisory chain) | Cookie-attribute injection (GHSA-v3r7-h72x-cjcm) and related | `studio`: `sanity > @sanity/cli > ... > @module-federation/dts-plugin > undici` | Claude | Sanity CLI's own dev/build tooling (TypeScript declaration generation for Studio plugins) — not part of the deployed Studio app or the public website. No network requests from this path touch real user data. | Next `sanity` minor/major bump |
+
+Both are genuinely build-tool-only chains, not runtime/production code — confirmed by reading each
+`pnpm audit` "Paths" output, not assumed from the package name. `--audit-level=critical` means any
+*future* critical-severity advisory (in either package's own direct tree or a new transitive one)
+still fails CI immediately; only these two already-triaged, non-critical findings are let through,
+and they remain visible in every CI run's log rather than silenced. Verified locally before wiring
+in: `pnpm audit --audit-level=critical` exits `0` in both `web` and `studio` as of this commit.
+
+### VS-12 — vertical-slice FE self-check
+
+Never existed before this PR (Bob's own 2026-08-15 review flagged its absence as VS-12, and did its
+own independent gate-by-gate assessment in `review/bob/FE-GATE-AUDIT.md` in its place — this is the
+self-check that should have preceded that review, written retroactively). Scope: the current `main`
+tip (`331f8ac`, includes the merged VS-01/VS-05 fixes from PR #2; does **not** include PRs #7/#8,
+still open as of this table). Re-ran the checkable gates fresh rather than transcribing Bob's table
+wholesale — `format:check`/`check`/`build` (`web`) and `format:check`/`typecheck`/`lint`/`build`
+(`studio`) all reproduced clean just now; `rg "client:" web/src` and `rg 'href="#"' web/src` both
+return zero matches, confirmed directly, not assumed. Live-browser/viewport claims (contrast,
+overflow-at-width, focus-ring visibility) cite Bob's own independently-measured evidence in
+`review/bob/FE-GATE-AUDIT.md` rather than re-deriving them a third time — attributed explicitly
+below, not presented as freshly measured by this pass.
+
+| Gate | Result | Evidence |
+| --- | --- | --- |
+| FE-01 Meaning, not appearance | Pass | Real semantic elements throughout (`header`/`nav`/`main`/`footer`/`section`/`figure`/`table`/`ul`/`ol`/`button type="button"`/real `a href`). No click-handler-on-`div` pattern. |
+| FE-02 `<section>` accessible name | Pass | All 10 `<section>`/labelled-`<aside>` elements in `index.astro` have `aria-labelledby` or `aria-label` — confirmed by grep just now (10 matches), not just recalled. |
+| FE-03 `<article>` for standalone content | N/A | No blog archive/post routes exist yet. Required once `/blog/[slug]/` lands. |
+| FE-04 Repeated siblings are a list | **Pass** (was Fail at scaffold-review time before PR #2) | Header/footer nav both wrap link maps in `<ul>/<li>` since PR #2's VS-05 fix, on `main` now. |
+| FE-05 Links navigate, buttons act (hard gate) | Pass | `rg 'href="#"' web/src` — zero matches, confirmed fresh. FAQ toggle is a real `<button type="button">` with `aria-expanded`/`aria-controls`. |
+| FE-06 Heading hierarchy | Pass | `grep -oE "<h[1-6]" src/pages/index.astro` — exactly one `h1`, seven `h2`, five `h3`, confirmed fresh. Full sequence/nesting correctness (no skipped levels) per Bob's live-browser trace, `review/bob/FE-GATE-AUDIT.md` 2026-08-15. |
+| FE-07 Complete landmarks | Pass | One `<main>`, one `<header>`, one `<footer>`, two distinctly-labelled `<nav>` — confirmed live at 4 viewports per Bob's evidence (same file). |
+| FE-10 Layout method | Pass | Grid for two-dimensional relationships (hero, session-card, level-row, process-step, footer grids), Flexbox for one-axis relationships (header row, trust items, FAQ button row). No flex-faking-grid pattern. |
+| FE-11 Absolute positioning | Pass | Only decorative graph-paper overlays, visually-hidden clipping, and the fixed-position skip link — no primary structure depends on it. |
+| FE-12 Sibling spacing uses gap | Pass | `gap` used throughout grid/flex containers. |
+| FE-13 Values come from tokens | Pass | `diff -rq design/tokens web/src/styles/tokens` clean (unchanged since scaffold). All reviewed color/type/spacing/radius/shadow declarations resolve to `var(--...)`. |
+| FE-14 Mobile-first, no overflow | Pass | Bob's live measurement: `scrollWidth === clientWidth` at 390/560/768/1440px; the pricing `<table>`'s intentional internal scroll is correctly contained in `.table-wrap { overflow-x: auto }`. |
+| FE-20 Extract on reuse | Pass | `SectionMarker`, `WhatsAppCta`, `LogoLockup`, `GapChart` are genuine reused/domain extractions. No premature generic wrappers. |
+| FE-21 No monoliths/duplicates | Pass, with a note | No duplicate/near-identical components. `index.astro` itself is a large single file — tracked as VS-17 (P3 preference, not a rule violation; revisit once blog templates might share patterns). |
+| FE-22 Content separated from presentation | **Pass** (was Fail before PR #2) | `GapChart.astro` now takes a typed `annotations` prop and renders CMS-sourced data; the five other previously-hardcoded figures are now typed CMS fields, wired end-to-end. Fixed by PR #2 (VS-01), independently re-verified by Bob's 2026-08-16 scoped re-review. |
+| FE-23 Explicit typed component APIs | Pass | Every component with dynamic content has a typed `interface Props`. |
+| FE-24 Business-logic components project-owned/tested (hard gate) | N/A | No forms, search, pagination, consent, or preview-gating logic in this slice yet. Required once real business logic lands. |
+| FE-30 One framework | Pass | Astro only in `web/package.json` — no React/Vue/Svelte. |
+| FE-31 Intentional hydration | Pass | `rg "client:" web/src` — zero matches, confirmed fresh. |
+| FE-32 No JS for platform behavior | **Partial fail, still open** | 12 of 13 FAQ answer panels still ship `hidden` in static HTML with no non-JS reveal path on `main` (PR #7 fixes this via native `<details>`/`<summary>` but is not yet merged as of this table). Isolation rationale recorded: `review/bob/CODE-REVIEW.md` VS-06 (P2 — same-origin inline script, zero console/network errors observed, but the guideline's MUST is unmet as written). |
+| FE-33 Astro islands discipline | Pass | No `@astrojs/react`, no island components, no `client:*` directives anywhere. |
+| FE-34 Data flow and fetching discipline | Pass | `getLandingPageData()` issues `Promise.all([...])` — no avoidable waterfall. The previously fetch-then-discarded `gapChartAnnotations` field (the other half of this gate's earlier "Partial" rating) is now consumed, fixed by PR #2. |
+| FE-40 Dependency ladder | Pass | No unjustified new dependencies. `@playwright/test` was earmarked in §4 and is now actually installed and wired (VS-04, PR #7 — not yet merged, but the dependency-ladder answer itself was already recorded correctly). |
+| FE-41 Registry discipline | N/A | No registry components used anywhere in `web/`. |
+| FE-42 Registry provenance | N/A | Same as FE-41. |
+| FE-50 Typed/lint-clean/buildable | Pass | Reproduced fresh, this session: `web`: `format:check`/`check` (0 errors/warnings/hints)/`build` all clean. `studio`: `format:check`/`typecheck`/`lint`/`build` all clean (only the documented, accepted Sanity auto-update warning, §4d). |
+| FE-51 No dead weight | Partial | `@astrojs/sitemap` remains installed but unconfigured (VS-15, correctly still queued — blocked on blog routes existing). The `gapChartAnnotations`-is-dead-weight half of this gate is now fixed (PR #2). |
+| FE-52 Comments explain why | Pass | Comments in `client.ts`/`queries.ts`/`landingData.ts`/`defaultLandingData.ts`/the new `GapChart.astro`/schema files explain intent, constraint, or history — not restating what the code already says. |
+| FE-53 Compiling is not completing | Pass | `HANDOFF.md`'s dated entries distinguish scaffold/vertical-slice/fix-commit states candidly; Bob's independent re-verification of specific claims (byte counts, CI SHAs, measured pixel values) found no over-claim across three separate review passes. |
+| FE-60 Decision ladder | Pass, with a note | Native HTML/CSS preferred throughout. One place the ladder wasn't fully climbed on `main` as of this table: the FAQ accordion uses a custom button+script pattern where native `<details>`/`<summary>` would satisfy FE-32 more simply (VS-16, P3 preference; PR #7 addresses this, not yet merged). |
+| FE-61 Respect existing codebase | Pass | Builds on the approved scaffold's token/query/schema layers without rewriting them; the two-package layout and Sanity client split are preserved unchanged. |
+
+**Summary:** every gate that failed or partially failed at the 2026-08-15 review is now Pass **except
+FE-32** (and, as a direct consequence, the decision-ladder note on FE-60) — both tied to the same
+still-open VS-06 finding, fixed in already-opened PR #7 but not yet merged as of this table's commit.
+Nothing regressed. N/A gates remain genuinely N/A for the same reasons Bob recorded: no blog routes,
+business logic, or registry components exist yet in this vertical slice.

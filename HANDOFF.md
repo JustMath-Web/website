@@ -1,5 +1,34 @@
 # Just Math Malaysia — Project Handoff
 
+> ## STATUS 2026-08-16: Ops/docs PR (3 of 4) open — VS-09, VS-12
+>
+> Third of the 4-PR triage split. Branched from `main` independently, like #7 and #8 — all three may
+> need small rebases against each other's `docs/DECISIONS.md`/`HANDOFF.md` tail-appends depending on
+> merge order.
+>
+> **VS-09 (dependency/advisory scanning), three parts:** enabled GitHub's native Dependabot
+> vulnerability alerts + automated security-fix PRs on the repo (both were off by default — checked,
+> not assumed); added `.github/dependabot.yml` for weekly version-update PRs; added
+> `pnpm audit --audit-level=critical` to both CI jobs. That last part surfaced two real findings —
+> `path-to-regexp` (high, via the Vercel adapter's build-time routing tooling) and `undici`
+> (moderate/high ×11, via Sanity CLI's build-time TS-declaration tooling) — both genuinely
+> build-tool-only, not runtime/production code. Recorded as the guideline's own "accepted exception"
+> pattern (owner, rationale, compensating control, review date) in `docs/DECISIONS.md` §21 rather
+> than either hiding them or shipping a gate that fails on the commit that adds it. Any *future*
+> critical-severity finding still fails CI immediately.
+>
+> **VS-12 (vertical-slice FE self-check):** never existed — Bob's own 2026-08-15 review flagged its
+> absence and did the equivalent independent assessment in its place. Written now, retroactively, on
+> the current `main` tip (`331f8ac`). Re-ran the checkable gates fresh (`format:check`/`check`/
+> `build`/`typecheck`/`lint`, plus source greps for `client:` directives and `href="#"`) rather than
+> transcribing Bob's table; cited Bob's own live-browser evidence explicitly, attributed, for the
+> viewport/contrast/focus claims this pass didn't re-derive a third time. Result: every gate that
+> failed or partially failed at scaffold/first-review time is now Pass on `main`, **except FE-32**
+> (FAQ answers not reachable without JS) — still open because PR #7 (which fixes it) isn't merged
+> yet. Full table in `docs/DECISIONS.md` §21.
+>
+> **Not merged — waiting on Charlie.** PR 4 (fonts) hasn't been started yet.
+
 > ## STATUS 2026-08-16: Two re-review follow-ups fixed · merge log backfilled · new no-self-merge rule
 >
 > Charlie confirmed PR #3 merged (fast-forwarded to `5853485`) and made two decisions: fix the two
