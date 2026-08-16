@@ -1,32 +1,68 @@
 # Just Math Malaysia — Project Handoff
 
-> ## STATUS 2026-08-16: Triage of the remaining 8 P2 / 4 P3 items started — PR 1 of 4 open
+> ## STATUS 2026-08-16: PR #7 merged · production hardening PR (2 of 4) rebased and open — VS-07, VS-08, VS-11
 >
-> Charlie confirmed PR #4 and #5 merged, then asked to start triaging the remaining queue (8 P2s / 4
-> P3s from Bob's original 2026-08-15 review), giving a 4-PR split: (1) accessibility/semantics, (2)
-> production hardening (JSON-LD/security headers/redirects), (3) ops/docs (dependency scanning +
-> FE self-check), (4) fonts, separately if it touches assets/config noticeably. VS-15 and VS-17 stay
-> queued (blog routes and more templates don't exist yet). Wrote `log/2026-08-16_PR4_...md` and
-> `log/2026-08-16_PR5_...md` first — the "merge log" rule's chicken-and-egg case Bob flagged: those
-> two PRs carried the merge-log infrastructure itself, so their own entries could only be written
-> after they landed (confirmed via `gh pr view` before writing, not assumed).
+> Second of the 4-PR triage split for the remaining review queue. PR #7 (accessibility/semantics,
+> entry immediately below) merged first, as Charlie's recommended order specified; this branch was
+> then rebased onto the updated `main` to resolve the expected `docs/DECISIONS.md`/`HANDOFF.md`
+> tail-append conflict (confirmed via `gh pr view 8 --json mergeable` showing `CONFLICTING` before
+> resolving, not assumed), and CI re-confirmed green after the rebase.
 >
-> **PR 1 of 4 (accessibility/semantics) done, opened as PR #7, not yet merged.** Fixes VS-06 + VS-16
-> (FAQ accordion rebuilt on native `<details name="faq">`/`<summary>` — zero JavaScript needed for
-> keyboard operation, disclosure state, or the single-open-at-a-time behavior; the old `<script>`
-> block is gone entirely, not shrunk) and VS-13 + VS-14 (header brand link and skip link now meet
-> 44×44). Full rationale in `docs/DECISIONS.md` §21.
+> **JSON-LD (VS-07):** sitewide `Organization` structured data added to `BaseLayout.astro`'s
+> `<head>`. Only fields with real data (`name`, `url`, `telephone`) — no `logo`/`sameAs`, since
+> nothing in `siteSettings` sources them truthfully and inventing placeholders would be exactly the
+> silently-invented business content the guideline prohibits. `BaseLayout` now takes `siteSettings`
+> as a prop rather than fetching it again itself, keeping one Sanity read per page.
+>
+> **Security headers + redirects (VS-08, VS-11): new `web/vercel.json`.** Checked Astro's routing
+> docs, the `@astrojs/vercel` adapter docs, and Vercel's own `vercel.json` reference directly before
+> choosing this over Astro's built-in `redirects` config or the adapter's `staticHeaders` option —
+> the latter turned out to be tied to an unconfirmed Astro experimental CSP feature, so a
+> hand-written `vercel.json` was the more stable, directly-documented choice. CSP is genuinely
+> checked against the real `dist/` output (zero `<script>` tags exist anywhere in the built HTML;
+> the only external hosts are Google Fonts, confirmed by grepping the actual compiled CSS), not
+> assumed. Only 3 of the 6 documented redirects are included — the other 3 target blog routes that
+> don't exist yet, and a 301 to something that itself 404s is worse than no redirect; those three
+> are deferred to when blog routes ship (same trigger as VS-15).
+>
+> **Honest limitation, not a gap in disguise: none of this is independently verifiable yet.** No
+> Vercel project is linked to this repo, and `vercel.json` headers/redirects only take effect on
+> Vercel's actual infrastructure — `scripts/serve-dist.mjs` (used for local dev and the Playwright
+> suite) can't apply them. Verified the file is valid JSON and matches Vercel's documented schema;
+> the actual served-header/redirect *behavior* stays unverified until a real deploy exists. Full
+> detail in `docs/DECISIONS.md` §22.
+>
+> **Not merged — waiting on Charlie.** PRs 3-4 (ops/docs; fonts) still to come after this one.
+
+> ## STATUS 2026-08-16: Accessibility/semantics PR (1 of 4) merged as PR #7 — VS-06, VS-13, VS-14, VS-16
+>
+> First of the 4-PR triage split for the remaining review queue (8 P2s / 4 P3s from Bob's original
+> 2026-08-15 review): (1) accessibility/semantics, (2) production hardening (JSON-LD/security
+> headers/redirects), (3) ops/docs (dependency scanning + FE self-check), (4) fonts, separately if it
+> touches assets/config noticeably. VS-15 and VS-17 stay queued (blog routes and more templates don't
+> exist yet). Wrote `log/2026-08-16_PR4_...md` and `log/2026-08-16_PR5_...md` first — the "merge log"
+> rule's chicken-and-egg case Bob flagged: those two PRs carried the merge-log infrastructure itself,
+> so their own entries could only be written after they landed (confirmed via `gh pr view` before
+> writing, not assumed).
+>
+> Fixes VS-06 + VS-16 (FAQ accordion rebuilt on native `<details name="faq">`/`<summary>` — zero
+> JavaScript needed for keyboard operation, disclosure state, or the single-open-at-a-time behavior;
+> the old `<script>` block is gone entirely, not shrunk) and VS-13 + VS-14 (header brand link and
+> skip link now meet 44×44). Full rationale in `docs/DECISIONS.md` §21.
 >
 > Added a genuinely new check, not just a markup swap: a Playwright test that disables JavaScript
 > (`browser.newContext({ javaScriptEnabled: false })`) and confirms an FAQ answer actually becomes
 > visible on click — this is VS-06's real claim, verified directly rather than assumed from "native
-> elements don't need JS." 22/22 tests pass. Also manually screenshotted the FAQ before/after a click
-> to confirm the native disclosure triangle is genuinely suppressed and the visual result matches the
-> old scripted version — not just that assertions pass.
+> elements don't need JS." Also manually screenshotted the FAQ before/after a click to confirm the
+> native disclosure triangle is genuinely suppressed and the visual result matches the old scripted
+> version — not just that assertions pass.
 >
-> **Not merged — waiting on Charlie, per the no-self-merge rule.** PRs 2-4 of the split haven't been
-> started yet; next session (or later this one) picks up with the production-hardening PR (VS-07,
-> VS-08, VS-11).
+> Charlie also requested a small icon-animation tweak (both bars spin on toggle — 180°/270° — instead
+> of just the vertical one) after this PR was opened; pushed as a follow-up commit, verified via
+> computed `transform` matrices plus a full 22/22 Playwright re-run, and CI stayed green.
+>
+> **Merged as PR #7.** Per Charlie's recommended order, this was the first of the three open PRs to
+> land — production hardening (above) was then rebased onto it.
 
 > ## STATUS 2026-08-16: Two re-review follow-ups fixed · merge log backfilled · new no-self-merge rule
 >
