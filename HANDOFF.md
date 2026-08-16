@@ -1,6 +1,39 @@
 # Just Math Malaysia — Project Handoff
 
-> ## STATUS 2026-08-16: PR #7 merged · production hardening PR (2 of 4) rebased and open — VS-07, VS-08, VS-11
+> ## STATUS 2026-08-16: PR #7 and #8 merged · ops/docs PR (3 of 4) rebased and open — VS-09, VS-12
+>
+> Third of the 4-PR triage split. PR #7 (accessibility/semantics) and PR #8 (production hardening,
+> entries below) both merged, in that order, per Charlie's recommended sequence. This branch was
+> rebased onto the combined result, resolving the expected `docs/DECISIONS.md`/`HANDOFF.md`
+> tail-append conflict (confirmed via `gh pr view 9 --json mergeable` showing `CONFLICTING` before
+> resolving, not assumed) and re-confirming CI green afterward.
+>
+> **VS-09 (dependency/advisory scanning), three parts:** enabled GitHub's native Dependabot
+> vulnerability alerts + automated security-fix PRs on the repo (both were off by default — checked,
+> not assumed); added `.github/dependabot.yml` for weekly version-update PRs; added
+> `pnpm audit --audit-level=critical` to both CI jobs. That last part surfaced two real findings —
+> `path-to-regexp` (high, via the Vercel adapter's build-time routing tooling) and `undici`
+> (moderate/high ×11, via Sanity CLI's build-time TS-declaration tooling) — both genuinely
+> build-tool-only, not runtime/production code. Recorded as the guideline's own "accepted exception"
+> pattern (owner, rationale, compensating control, review date) in `docs/DECISIONS.md` §23 rather
+> than either hiding them or shipping a gate that fails on the commit that adds it. Any *future*
+> critical-severity finding still fails CI immediately.
+>
+> **VS-12 (vertical-slice FE self-check):** never existed — Bob's own 2026-08-15 review flagged its
+> absence and did the equivalent independent assessment in its place. Written retroactively on commit
+> `331f8ac` (before PR #7/#8 merged). Re-ran the checkable gates fresh (`format:check`/`check`/
+> `build`/`typecheck`/`lint`, plus source greps for `client:` directives and `href="#"`) rather than
+> transcribing Bob's table; cited Bob's own live-browser evidence explicitly, attributed, for the
+> viewport/contrast/focus claims this pass didn't re-derive a third time. Result at the time: every
+> gate that failed or partially failed at scaffold/first-review time was Pass **except FE-32** (FAQ
+> answers not reachable without JS), open because PR #7 wasn't merged yet. **Rebase note, added now
+> rather than silently rewritten:** PR #7 has since merged and fixes FE-32 — the table itself is left
+> as an accurate record of `331f8ac`, not re-verified fresh as part of this rebase. Full table and
+> note in `docs/DECISIONS.md` §23.
+>
+> **Not merged — waiting on Charlie.** PR 4 (fonts) hasn't been started yet.
+
+> ## STATUS 2026-08-16: PR #7 merged · production hardening PR (2 of 4) merged as PR #8 — VS-07, VS-08, VS-11
 >
 > Second of the 4-PR triage split for the remaining review queue. PR #7 (accessibility/semantics,
 > entry immediately below) merged first, as Charlie's recommended order specified; this branch was
@@ -32,7 +65,7 @@
 > the actual served-header/redirect *behavior* stays unverified until a real deploy exists. Full
 > detail in `docs/DECISIONS.md` §22.
 >
-> **Not merged — waiting on Charlie.** PRs 3-4 (ops/docs; fonts) still to come after this one.
+> **Merged as PR #8.** Ops/docs (entry above) was then rebased onto it and PR #7.
 
 > ## STATUS 2026-08-16: Accessibility/semantics PR (1 of 4) merged as PR #7 — VS-06, VS-13, VS-14, VS-16
 >

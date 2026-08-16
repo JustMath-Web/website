@@ -1,0 +1,30 @@
+version: 2
+updates:
+  # web/ and studio/ are separate pnpm-workspace roots (docs/DECISIONS.md §6/§17) — each gets its
+  # own entry, matching the two independent CI jobs in .github/workflows/ci.yml.
+  - package-ecosystem: "npm"
+    directory: "/web"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      astro:
+        patterns:
+          - "astro"
+          - "@astrojs/*"
+
+  - package-ecosystem: "npm"
+    directory: "/studio"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      sanity:
+        patterns:
+          - "sanity"
+          - "@sanity/*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

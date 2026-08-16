@@ -31,6 +31,9 @@ jobs:
           cache-dependency-path: web/pnpm-lock.yaml
 
       - run: pnpm install --frozen-lockfile
+      # Blocks on critical only — see docs/DECISIONS.md §21 for the currently-accepted high/moderate
+      # findings (both in build-time-only tooling, not runtime/production code) and their review date.
+      - run: pnpm audit --audit-level=critical
       - run: pnpm format:check
       - run: pnpm check
       - run: pnpm build
@@ -65,6 +68,9 @@ jobs:
           cache-dependency-path: studio/pnpm-lock.yaml
 
       - run: pnpm install --frozen-lockfile
+      # Blocks on critical only — see docs/DECISIONS.md §21 for the currently-accepted high/moderate
+      # findings (both in build-time-only tooling, not runtime/production code) and their review date.
+      - run: pnpm audit --audit-level=critical
       - run: pnpm format:check
       - run: pnpm typecheck
       - run: pnpm lint
