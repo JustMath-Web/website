@@ -22,6 +22,12 @@ yarn-error.log*
 pnpm-debug.log*
 /logs
 
+# Session continuity / bookkeeping — local-only per Charlie's 2026-08-17 decision (docs/DECISIONS.md
+# §25). Real files, kept on disk across sessions for Charlie's and the AI's own tracking, but never
+# committed or pushed — not `/logs` above, which is unrelated (generic tool log output).
+/HANDOFF.md
+/log/
+
 # Environment variables (never commit real secrets — .env.example files are tracked)
 .env
 .env.local
