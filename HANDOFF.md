@@ -1,5 +1,24 @@
 # Just Math Malaysia — Project Handoff
 
+> ## STATUS 2026-08-17: PR #17 merged — VS-10 done, all 4 batches of the P2/P3 triage split closed
+>
+> PR #17 (font self-hosting, batch 4 of 4) merged, confirmed via `gh pr view 17 --json state,mergedAt,
+> mergeCommit` (`e1bb277`, 2026-08-17T12:35:49Z), not assumed. Included a follow-up commit from Bob's
+> review: the three new `@fontsource` dependencies were caret-ranged (`pnpm add`'s default) rather
+> than exact-pinned per this repo's discipline (`docs/DECISIONS.md` §4d) — fixed before merge, Bob's
+> second pass found no remaining gaps. Merge-log entry: `log/2026-08-17_PR17_font-self-hosting-vs10.
+> md`.
+>
+> This closes every item from Bob's 2026-08-15 review's original P2/P3 queue except VS-15
+> (sitemap/RSS/robots) and VS-17 (`index.astro` extraction), both still deliberately queued — blocked
+> on blog routes / more page templates existing, not started.
+>
+> **Open and unrelated to the triage split:** six Dependabot PRs (#10, #12–#16) bumping `studio/`
+> dependencies + one GitHub Actions version, opened automatically by `.github/dependabot.yml` (shipped
+> in PR #9). Not yet reviewed or actioned — flagged for a future triage pass. #12 (`sanity`/
+> `@sanity/vision`) has a failing `studio` CI check as of this entry; #15 is a TypeScript major bump
+> (5.9.3 → 6.0.3) that warrants review before merging, not a routine patch bump.
+
 > ## STATUS 2026-08-16: PR #7/#8/#9 all merged · merge-log backfill (PR #11) merged · font self-hosting PR (4 of 4) open — VS-10
 >
 > All three of Charlie's 4-PR triage split's first batches are merged, in that order (#7, then #8,
