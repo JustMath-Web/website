@@ -1,7 +1,7 @@
-/* fonts.css must be imported first: its only content is itself an @import (Google Fonts CDN,
-   flagged for self-hosting later per docs/DECISIONS.md §13), and CSS requires @import statements
-   to precede all other rules. Tailwind's own `@import "tailwindcss"` expands into real CSS, so
-   anything importing a nested @import must come before it. */
+/* fonts.css must be imported first: its only content is itself a chain of @font-face @imports
+   (self-hosted via @fontsource as of VS-10, see docs/DECISIONS.md), and CSS requires @import
+   statements to precede all other rules. Tailwind's own `@import "tailwindcss"` expands into real
+   CSS, so anything importing a nested @import must come before it. */
 @import "./tokens/fonts.css";
 @import "tailwindcss";
 
