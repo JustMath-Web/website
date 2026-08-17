@@ -892,3 +892,27 @@ audit; not investigated further here, out of this PR's scope). **Not independent
 this environment:** real-device font-load performance/FOUT behavior and whether Vercel actually
 serves the new headers/CSP correctly — same caveat as §22, no Vercel project is linked yet.
 
+## 25. HANDOFF.md and log/ move to local-only tracking — 2026-08-17
+
+Charlie's call: after PR #17 merged, opening a dedicated docs-only PR (#18) just to add one merge-log
+entry was overhead disproportionate to its value. `HANDOFF.md` and `log/*.md` exist for Charlie's and
+the AI's own session-to-session continuity — "where we left off" — not as documentation for other
+readers, so the PR/CI/review cycle they'd been going through added no real verification value.
+
+**What changed:** both are now git-ignored (`.gitignore`: `/HANDOFF.md`, `/log/`). Previously-tracked
+history is untouched (`git rm --cached`, not deleted from disk) — both remain real files on disk,
+still written to after every merge exactly as before, just never committed or pushed again. No more
+dedicated log-only PRs going forward.
+
+**What didn't change:** this file (`docs/DECISIONS.md`) stays tracked and pushed — it's the durable
+engineering-decision record (license checks, CSP rationale, accepted-exception table, etc.), reused
+by anyone reading the repo, not session-scoped bookkeeping. The merge-log *discipline* itself (write
+an entry per merged PR, only after independently confirming the merge, never as a prediction) is
+unchanged — only where those entries live changed.
+
+**Not yet resolved:** this repo's own `02-INFORMATIVE-BLOG.md` guideline (Section 7) is the source of
+the original log/-per-merged-PR requirement, and that guideline is shared across other client
+projects, not scoped to Math. Whether to update the guideline's own text to reflect local-only
+tracking (as opposed to this being treated as a Math-specific deviation) is Charlie's call, not yet
+made as of this entry.
+
