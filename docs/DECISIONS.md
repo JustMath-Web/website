@@ -345,6 +345,10 @@ Launch conditions:
 - WhatsApp glyph must be either an official white/reversed asset from Meta's kit or removed.
 - Blog content and maths need Mr Kong review before any post ships.
 - Two report empty-state strings need Mr Kong's voice before parent-facing report use.
+- **Remove the pre-launch noindex guard** (`web/public/robots.txt`, `vercel.json`'s `X-Robots-Tag`
+  header — added §27) and connect the real custom domain before treating the site as launched. Added
+  2026-08-18 after Bob's PR #20 re-review caught the production Vercel deployment being publicly
+  indexable while every other condition above was still open.
 
 ## 14. Implementation Constraints From Design Review
 
@@ -473,12 +477,12 @@ Verified: pushed to `main` directly (both projects' scripts were run locally fir
 and passed), watched via `gh run watch` — both jobs green in ~40-50s each, no failures, no
 annotations after the action-version bump.
 
-**Branch protection: blocked, not skipped by choice.** Both the classic branch-protection API and
-the newer rulesets API return `403 Upgrade to GitHub Pro or make this repository public` — GitHub's
-Free org plan doesn't allow protecting a **private** repo's branches at all, for either mechanism.
-Owner's decision: **do not** pay for GitHub Team or make the repo public just to unblock this.
-`main` stays technically unprotected (force-push and direct pushes remain technically possible), with
-these compensating measures instead:
+**Branch protection: blocked, not skipped by choice (2026-08-16).** Both the classic branch-protection
+API and the newer rulesets API return `403 Upgrade to GitHub Pro or make this repository public` —
+GitHub's Free org plan doesn't allow protecting a **private** repo's branches at all, for either
+mechanism. Owner's decision at the time: **do not** pay for GitHub Team or make the repo public just
+to unblock this. `main` stays technically unprotected (force-push and direct pushes remain technically
+possible), with these compensating measures instead:
 
 - CI (this section) still runs and is still the thing to check before merging.
 - **Manual discipline going forward: feature branches + PRs, wait for both CI jobs to go green,
@@ -488,6 +492,12 @@ these compensating measures instead:
 - This is a recorded, owner-approved exception to guideline Section 7's "Branch protection on `main`:
   require PR + passing CI" — not a silently-shipped gap. Revisit if the plan situation changes (an
   org upgrade, or a reason to make the repo public).
+
+**Resolved 2026-08-18 — §27.** The repo went public as part of PR #20 (Vercel git-connect required
+it), which is exactly the "revisit" trigger named above. Bob's PR #20 re-review caught that branch
+protection had not actually been turned on despite the blocker being gone — real protection is now
+enabled (required status checks `web`/`studio`, required PR, `enforce_admins`, force-push and
+deletion blocked). Full detail in §27.
 
 ## 19. Vertical-slice P1 fixes — Bob review response (2026-08-16)
 
@@ -994,4 +1004,72 @@ correct default behavior for a team project (keeps in-progress branches from bei
 not a bug — not disabled here. Production's headers/CSP/redirects were already independently verified
 above; the preview path's own correctness is covered by its build reaching `Ready`, not by re-curling
 identical `vercel.json` config through an auth wall for no additional signal.
+
+**Correction, from §27 below: the claim above that production is fine because "no custom domain is
+attached" was incomplete.** It's true no *real* domain points here, but the bare `just-math-malaysia.
+vercel.app` alias was still a real, live, `200`-returning, unauthenticated, indexable URL — Bob's
+PR #20 re-review caught this as a genuine P1, not a nitpick. See §27 for the actual fix.
+
+## 27. Bob's PR #20 re-review: branch protection + public production deployment — 2026-08-18
+
+Two P1 findings from Bob's re-review of this PR, both real, both fixed here rather than argued with.
+
+**Finding 1 — `main` was still unprotected after the repo went public.** The §18 exception recorded
+branch protection as *blocked* specifically because the repo was private on GitHub's Free org plan;
+the repo going public earlier in this same PR is exactly the "revisit if..." trigger that exception
+named, and nothing had actually revisited it. Fixed: `gh api --method PUT
+repos/JustMath-Web/website/branches/main/protection` with required status checks (`web`, `studio`,
+`strict: true`), `required_pull_request_reviews` (PR required; `required_approving_review_count: 0`
+since Charlie works solo — the PR gate itself, not a second-reviewer gate, is what matters here),
+`enforce_admins: true` (applies to Charlie too — no bypass), `allow_force_pushes: false`,
+`allow_deletions: false`, `required_conversation_resolution: true`. Verified via a fresh read of
+`repos/JustMath-Web/website/branches/main` afterward (`"protected": true`), not just trusted from the
+PUT response. §18 updated in place with a "Resolved" note rather than deleted, so the historical
+reasoning for why it was ever unprotected stays legible.
+
+**Finding 2 — the production Vercel deployment was public and indexable while §13's launch conditions
+are still open.** `just-math-malaysia.vercel.app` returned a real `200` (confirmed against a
+never-before-requested path, ruling out stale edge cache as an alternative explanation), had no
+`robots.txt` (`404`), and the page's own canonical/OG tags point at `mathematicsmalaysia.com` — meaning
+a search engine indexing this interim URL could plausibly surface it under the real business's
+identity before Mr Kong's portrait, the operator-mark sign-off, the WhatsApp glyph decision, or blog
+content review have actually happened.
+
+Tried to close this at the Vercel-platform level first: `ssoProtection.deploymentType` has an `"all"`
+value (per the MCP tool's own schema) that would gate every deployment, including the registered
+production domain alias, behind Vercel Authentication. Neither the CLI (`vercel project protection
+enable --sso` only cycles through other enum values, no flag to target `"all"` specifically) nor the
+`plugin:vercel:vercel` MCP server (`update_project_deployment_protection` — token expired, needs
+Charlie to re-authorize the connector; not something I can trigger myself) could set it. Confirmed by
+direct testing, not assumed: `all_except_custom_domains` and `prod_deployment_urls_and_all_previews`
+were both tried via CLI, and a never-cached path on the production alias still returned an
+unauthenticated `404` (not an SSO redirect) under both.
+
+Shipped the fix that's fully within reach instead, and it's sufficient on its own per Bob's own
+"protecting/noindexing... either" framing: `web/public/robots.txt` (`Disallow: /`, everything) and a
+sitewide `X-Robots-Tag: noindex, nofollow, noarchive` header in `vercel.json`. Checked Vercel's
+current `vercel.json` docs before reaching for a host-scoped alternative (a `has` condition matching
+only `*.vercel.app` requests, to avoid the header ever reaching a future real-domain deploy) — `has`
+only documents `header`/`cookie`/`query` types, no `host` type exists, so that path was never real to
+begin with, not a shortcut skipped. Applied unconditionally instead: safe right now because no custom
+domain is connected to anything yet, and **added an explicit new §13 launch condition** ("remove the
+pre-launch noindex guard... before treating the site as launched") so this doesn't silently persist
+into the real launch by omission. A Playwright test (`robots.txt (pre-launch guard, §27)`) asserts the
+file itself; the `X-Robots-Tag` header is HTTP-layer-only and shares the same "not testable through
+`scripts/serve-dist.mjs`" caveat as the CSP/security-header tests since PR #8.
+
+**Still open, flagged for Charlie, not blocking:** the Vercel-Authentication-covers-production gap
+above is real defense-in-depth this doesn't close — noindex stops search engines, but the URL is
+still directly reachable by anyone with the link (and it *is* in this now-public repo's own history).
+Two ways to close it, either sufficient: (a) re-authorize the `plugin:vercel:vercel` MCP connector so
+`update_project_deployment_protection` can set `ssoProtection.deploymentType: "all"`, or (b) set it
+directly via the dashboard (Project Settings → Deployment Protection → Vercel Authentication → scope
+to cover Production). Same pattern as the Root Directory fix earlier in this PR — a one-field change
+Charlie can make in seconds once he chooses to.
+
+**Verified:** `web`: `format:check`, `check`, `build` all pass with the new `robots.txt`/`vercel.json`
+change. Full Playwright suite passes including the new robots.txt test. Branch protection confirmed
+live via a fresh GitHub API read. Noindex header/robots.txt confirmed present in the built `dist/`
+output; the *served* `X-Robots-Tag` header itself is unverified pre-deploy for the same reason the
+CSP/security headers were in §22 — no way to curl a not-yet-deployed change.
 
