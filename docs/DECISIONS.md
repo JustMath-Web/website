@@ -974,3 +974,24 @@ when Charlie is ready for an actual public launch — separately gated on the la
 unrelated to this infra work). Studio content is incomplete, so the live fetch path currently still
 resolves to fallback data in practice, same as local builds.
 
+**Real bug found and fixed: Root Directory wasn't set, silently breaking every future git-triggered
+deploy.** `vercel link --project just-math-malaysia` (run from inside `web/`) only links the local
+directory to the project for CLI-driven deploys — it does **not** set the project's "Root Directory"
+build setting, which is what git-triggered builds (PR pushes, merges to `main`) actually use to know
+to `cd web/` before building. Without it, the first PR-triggered deploy (opening this very PR)
+cloned the full repo, found no lockfile at repo root, silently fell back from pnpm to npm
+("Skipping build cache since Package Manager changed from 'pnpm' to 'npm'"), never ran `pnpm install`,
+and failed with `astro: command not found`. This setting isn't exposed by `vercel project update`
+(only build/dev/install command and output directory), nor by any available MCP tool for an
+already-created project (`create_git_project`'s `rootDirectory` param only applies at creation time) —
+Charlie set it directly via the dashboard (Project Settings → General → Root Directory → `web`).
+Confirmed fixed: pushed an empty commit to retrigger, the resulting preview deployment built and
+reached `Ready` status (`vercel ls` — `webteam-ck/just-math-malaysia`, target `Preview`).
+
+**Preview deployments are protected by Vercel Authentication (SSO) by default** — `curl`ing a preview
+URL directly redirects to `vercel.com/sso-api` rather than returning the page. This is expected,
+correct default behavior for a team project (keeps in-progress branches from being publicly visible),
+not a bug — not disabled here. Production's headers/CSP/redirects were already independently verified
+above; the preview path's own correctness is covered by its build reaching `Ready`, not by re-curling
+identical `vercel.json` config through an auth wall for no additional signal.
+
