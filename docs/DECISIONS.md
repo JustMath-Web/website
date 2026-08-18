@@ -910,9 +910,67 @@ by anyone reading the repo, not session-scoped bookkeeping. The merge-log *disci
 an entry per merged PR, only after independently confirming the merge, never as a prediction) is
 unchanged — only where those entries live changed.
 
-**Not yet resolved:** this repo's own `02-INFORMATIVE-BLOG.md` guideline (Section 7) is the source of
-the original log/-per-merged-PR requirement, and that guideline is shared across other client
-projects, not scoped to Math. Whether to update the guideline's own text to reflect local-only
-tracking (as opposed to this being treated as a Math-specific deviation) is Charlie's call, not yet
-made as of this entry.
+**Resolved 2026-08-17:** a separate session updated `02-INFORMATIVE-BLOG.md` itself (now v1.8.0,
+CORE-01/CORE-05) to require this pattern generally — `HANDOFF.md` and `log/` MUST be gitignored per
+the guideline text now, not just a Math-specific deviation. Re-read after the update; consistent with
+what Math already shipped, no further changes needed here.
+
+## 26. Real Vercel deployment connected and verified — 2026-08-18
+
+Resolves the "not independently verifiable in this environment" caveat that had been open since §22
+(PR #8) and repeated in §24 (PR #17) — headers, CSP, and redirects were previously only checked
+against source/`dist/` output, never against a real deploy. No Vercel project existed for this repo
+before today.
+
+**Setup:** created project `team-bomy/just-math-malaysia` (Vercel team "Team Charlie Dev", shared
+with other personal projects — the only team available), git-connected to `JustMath-Web/website`,
+root directory `web/`. Two blockers hit and resolved along the way, both Charlie's calls, not mine to
+decide unilaterally:
+
+- The Vercel↔GitHub App wasn't installed on the `JustMath-Web` org yet (a prior install was scoped to
+  a different project) — Charlie installed it.
+- Vercel's Hobby (free) plan cannot git-connect a **private** repo owned by a GitHub **organization**
+  (Pro-only) — Charlie's call was to make `JustMath-Web/website` public rather than upgrade to Pro.
+  Before flipping visibility, checked full git history for ever-committed `.env` files (only
+  `.env.example` templates, no real one) and grepped all tracked files for common secret patterns
+  (API key formats, private key headers) — clean. GitHub's own repo-visibility change is a genuinely
+  consequential action Claude Code's permission layer blocks from automated execution regardless of
+  in-chat confirmation; Charlie ran the `gh repo edit --visibility public` command himself.
+
+**Env vars set** (`PUBLIC_SANITY_PROJECT_ID=v4v0i7gl`, `PUBLIC_SANITY_DATASET=production` — both
+already non-secret per `web/.env.example`'s own comment) across Production/Preview/Development so the
+deploy exercises the real Sanity-backed path (`getLandingPageData()`'s `source: "sanity"` branch)
+rather than always falling back to `defaultLandingData.ts`. `vercel link` also appended `.env*` to
+`web/.gitignore` (it had only `.vercel` before) — kept, since it protects the `VERCEL_OIDC_TOKEN` in
+the `.env.local` it created locally.
+
+**Verified against the real deployment** (`https://just-math-malaysia.vercel.app`), not just
+predicted from source:
+
+- `curl -sI /` — CSP header is byte-for-byte the PR #17 value (`default-src 'self'; script-src
+  'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self'; object-src 'none';
+  base-uri 'self'; form-action 'self'; frame-ancestors 'none'`), plus `x-content-type-options:
+  nosniff`, `referrer-policy: strict-origin-when-cross-origin`, `x-frame-options: DENY` — all three
+  from §22 present exactly as configured. Vercel additionally adds `strict-transport-security`
+  automatically for HTTPS deployments — not something `vercel.json` configured, a platform default.
+- `curl -sI /about/`, `/faq/`, `/pricing/` — all three return real `301`s to `/#about`, `/#faq`,
+  `/#pricing` exactly as configured in `vercel.json`.
+- Build log confirms the Sanity fetch path actually ran (`"Sanity returned incomplete landing data;
+  using local fallback content"` — the CMS itself doesn't have complete content yet, a Studio-content
+  gap, not a config or code problem; `hasSanityEnv()` correctly detected the env vars and attempted
+  the real fetch before falling back).
+
+**One nuance worth recording plainly:** the deploy landed as a Vercel **production** deployment
+(aliased to `just-math-malaysia.vercel.app`), not a preview, because it was run via `vercel deploy`
+locally from the `main` branch — which the git-connect step had just designated this project's
+Production Branch — without an explicit `--target preview` override. This does **not** mean the site
+is publicly launched: no custom domain is attached, `mathematicsmalaysia.com` still points nowhere
+related to this project, and the `vercel.app` URL is not linked or announced anywhere. Going forward,
+the git integration behaves normally for a connected project — pushes to `main` deploy to production
+(this same URL), PRs against `main` get their own preview URLs automatically.
+
+**Not yet done:** no custom domain attached (`mathematicsmalaysia.com` still needs to be pointed here
+when Charlie is ready for an actual public launch — separately gated on the launch conditions in §13,
+unrelated to this infra work). Studio content is incomplete, so the live fetch path currently still
+resolves to fallback data in practice, same as local builds.
 
