@@ -922,10 +922,10 @@ Resolves the "not independently verifiable in this environment" caveat that had 
 against source/`dist/` output, never against a real deploy. No Vercel project existed for this repo
 before today.
 
-**Setup:** created project `team-bomy/just-math-malaysia` (Vercel team "Team Charlie Dev", shared
-with other personal projects — the only team available), git-connected to `JustMath-Web/website`,
-root directory `web/`. Two blockers hit and resolved along the way, both Charlie's calls, not mine to
-decide unilaterally:
+**Setup:** created project `webteam-ck/just-math-malaysia` (Vercel team "Team Charlie Dev", slug
+renamed from `team-bomy` to `webteam-ck` on 2026-08-18 — shared with other personal projects, the
+only team available), git-connected to `JustMath-Web/website`, root directory `web/`. Two blockers
+hit and resolved along the way, both Charlie's calls, not mine to decide unilaterally:
 
 - The Vercel↔GitHub App wasn't installed on the `JustMath-Web` org yet (a prior install was scoped to
   a different project) — Charlie installed it.
