@@ -1069,7 +1069,11 @@ Charlie can make in seconds once he chooses to.
 
 **Verified:** `web`: `format:check`, `check`, `build` all pass with the new `robots.txt`/`vercel.json`
 change. Full Playwright suite passes including the new robots.txt test. Branch protection confirmed
-live via a fresh GitHub API read. Noindex header/robots.txt confirmed present in the built `dist/`
-output; the *served* `X-Robots-Tag` header itself is unverified pre-deploy for the same reason the
-CSP/security headers were in §22 — no way to curl a not-yet-deployed change.
+live via a fresh GitHub API read. `robots.txt` confirmed present in the built `dist/` output;
+`X-Robots-Tag` confirmed only in `vercel.json` source (it does not appear in `dist/` or
+`.vercel/output/config.json` — Vercel applies `vercel.json` headers at its own edge, not by baking
+them into the static build). **The served `X-Robots-Tag` header itself is unverified pre-deploy**, for
+the same reason the CSP/security headers were in §22 — pending post-merge verification: after merge,
+wait for the production deploy and confirm `curl -sI /` includes `X-Robots-Tag` and `/robots.txt`
+returns the disallow-all file. Current production still lacks both, since this PR isn't merged yet.
 
