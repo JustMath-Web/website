@@ -82,6 +82,20 @@ test.describe("structured data (VS-07)", () => {
 	});
 });
 
+// TEMPORARY pre-launch guard (docs/DECISIONS.md §27) — asserts the disallow-all robots.txt exists.
+// vercel.json's matching X-Robots-Tag header is HTTP-layer only, not testable through this suite's
+// local static server (scripts/serve-dist.mjs doesn't apply vercel.json headers — same caveat as
+// the CSP/security-header tests, see docs/DECISIONS.md §22).
+test.describe("robots.txt (pre-launch guard, §27)", () => {
+	test("disallows all crawling", async ({ page }) => {
+		const response = await page.goto("/robots.txt");
+		expect(response?.status()).toBe(200);
+		const body = await response!.text();
+		expect(body).toMatch(/User-agent:\s*\*/i);
+		expect(body).toMatch(/Disallow:\s*\/\s*$/im);
+	});
+});
+
 // Tap targets are only required to meet the minimum on touch-relevant widths; 390px is this
 // project's primary phone breakpoint and where Bob's review measured the VS-02/VS-03 failures.
 test.describe("tap targets (390px)", () => {

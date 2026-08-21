@@ -1,0 +1,5 @@
+# TEMPORARY pre-launch guard — remove this file (and the matching X-Robots-Tag header in
+# vercel.json) as an explicit step of the real launch checklist once the conditions in
+# docs/DECISIONS.md §13 close and the custom domain is connected. See docs/DECISIONS.md §27.
+User-agent: *
+Disallow: /
