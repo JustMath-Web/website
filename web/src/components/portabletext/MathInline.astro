@@ -1,0 +1,24 @@
+---
+import { renderToString } from "katex";
+import "katex/dist/katex.min.css";
+import type { MathInline } from "../../lib/sanity/types";
+
+interface Props {
+	node: MathInline;
+}
+
+const { node } = Astro.props;
+
+// trust: false + strict: "ignore" are the XSS defense for editor-authored LaTeX (design/DESIGN.md) —
+// KaTeX escapes everything else once \htmlClass/\url/\includegraphics etc. are refused. Do not set
+// output: "html" — the default "htmlAndMathml" keeps the accessible MathML tree alongside the visual
+// HTML.
+const html = renderToString(node.latex, {
+	displayMode: false,
+	throwOnError: false,
+	trust: false,
+	strict: "ignore",
+});
+---
+
+<span class="math-inline" set:html={html} />

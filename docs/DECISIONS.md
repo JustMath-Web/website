@@ -1080,3 +1080,75 @@ https://just-math-malaysia.vercel.app/` — `x-robots-tag: noindex, nofollow, no
 `curl -s .../robots.txt` — returns the disallow-all file with its guard comment intact. Both confirmed
 live on the real production deployment, closing the "pending" note above.
 
+## 28. Blog infrastructure PR 1 — KaTeX self-hosting + Portable Text math renderer — 2026-08-24
+
+First of a 4-PR blog infrastructure sequence (VS-15/VS-17 were queued pending blog routes existing;
+the blog itself was already fully scoped — `docs/CONTENT-MODEL.md`, `docs/DECISIONS.md` §8/§9,
+`design/ui_kits/blog/`). This PR is foundation only: no routes exist yet, nothing in `web/src/pages/`
+consumes these components.
+
+**License, self-hosting, build-time rendering — per `design/ASSETS.md` §4 and `design/DESIGN.md`'s
+"Blog templates" section, both explicit requirements, not inferred:** `katex` added exact-pinned
+(`0.18.4`, current stable — checked via `npm view katex version`, not pinned to the design-preview
+kit's older `0.16.11` CDN reference, which was a convenience pin for a static HTML preview, not a
+production decision). License confirmed directly from the installed package's own `LICENSE` file and
+`package.json` (`MIT`), not just quoted from ASSETS.md's claim — same discipline as the VS-10
+`@fontsource` self-hosting.
+
+**CSS self-hosted, but component-scoped, not global.** `katex/dist/katex.min.css` is imported
+directly inside `MathInline.astro`/`MathBlock.astro`/`Working.astro` (the only components that ever
+render KaTeX output), not into `fonts.css`/`global.css` — those are pulled in on every page via
+`BaseLayout.astro`, and the landing page never renders any maths. Astro/Vite's per-page code-splitting
+means this CSS only reaches a page's bundle if that page actually imports one of these components
+(transitively, via a future post page consuming the component map below). Confirmed in the build:
+`grep -rn katex dist/` returns zero matches — expected, since nothing consumes these components yet;
+this is not a self-hosting verification (nothing KaTeX-related is emitted regardless of whether
+self-hosting is wired correctly), just confirmation the scoped import didn't leak anywhere by
+accident. The real self-hosting/scoping verification happens once a real route exists to render
+against.
+
+**Portable Text component map for `astro-portabletext`** (installed since project scaffold, v0.13.0,
+unused until now): `components.type` takes a `Record<string, Component>` keyed by `_type`, confirmed
+directly from `astro-portabletext`'s own type definitions and README, not assumed. New components
+under `web/src/components/portabletext/`, field shapes read directly from
+`studio/schemaTypes/objects/portableTextObjects.ts` (not from `design/ui_kits/blog/Blog.jsx`'s
+React reference — an early draft of this work incorrectly assumed the JSX reference's shape, caught
+and corrected before implementation):
+
+- `MathInline`/`MathBlock` — `{ latex, caption? }`, inline vs. displayed equation.
+- `Working` — `{ title = "Working", steps: string[] }`. **No per-step explanation field** — the
+  design-preview JSX shows one (`step.why`), the real schema doesn't have it. Not added here; a
+  genuine schema change to raise separately if wanted, not something to invent silently.
+- `CommonMistake` — `{ mistake, correction }`, both plain `text` fields, not Portable Text — no
+  nested inline maths is possible here, unlike the design-preview JSX's single nesting-capable body.
+- `Callout` — `{ tone: "note" | "tip", body }`, plain text, same no-nesting constraint.
+- `ImageWithAlt` — reuses the existing `urlFor()` helper (`web/src/lib/sanity/image.ts`), confirmed
+  against `@sanity/image-url`'s actual type definitions (`.width()`, `.auto("format")`, `.url()` are
+  real methods, not assumed).
+
+**Security and accessibility, both verified against KaTeX's actual type definitions, not assumed:**
+every `renderToString` call sets `trust: false, strict: "ignore"` (confirmed real option values from
+`node_modules/katex/types/katex.d.ts`) — the XSS defense once LaTeX is editor-authored content, per
+`design/DESIGN.md`'s explicit instruction. `set:html` is used only for KaTeX's own sanitized render
+output; the plain-text fields (`mistake`, `correction`, `callout.body`, `working.title`) render
+through normal Astro `{expression}` interpolation (auto-escaped), never `set:html`. `output` is left
+at KaTeX's default (`"htmlAndMathml"`, confirmed the actual default from the type definitions) rather
+than narrowed to `"html"` — preserves the accessible MathML tree for screen readers alongside the
+visual HTML; verifying this survives into real rendered output is deferred to the PR that actually
+renders a post (this PR has no consuming route to check it against yet).
+
+**Verified:** `format:check`, `check` (0 errors/warnings/hints), `build` all pass. Full Playwright
+suite, 24/24, no regressions. `dist/` confirmed to contain zero KaTeX-related output — expected for
+this PR, not a self-hosting proof (see above). **Deliberately not claimed here**: self-hosted assets
+actually appearing, zero external CDN/font references, no client-side math JS shipping, MathML
+surviving into real output, and KaTeX rendering correctly with JS disabled — all require a real
+consuming route (the post page, next in this sequence) and are that PR's verification responsibility,
+not this one's.
+
+**Started on a clean branch, discarding an earlier stray attempt.** A prior local branch
+(`blog-katex-portabletext`) had uncommitted work from an earlier, since-corrected approach — notably
+importing KaTeX's CSS globally into `fonts.css`, exactly the approach rejected above. Discarded
+entirely (`git restore`/`rm -rf`, branch deleted) rather than salvaged, per instruction, so no stale
+assumptions carried forward. This PR's branch (`blog-pr1-katex-portabletext`) started from clean,
+synced `main`.
+

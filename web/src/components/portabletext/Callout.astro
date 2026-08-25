@@ -1,0 +1,44 @@
+---
+import type { Callout } from "../../lib/sanity/types";
+
+interface Props {
+	node: Callout;
+}
+
+const { node } = Astro.props;
+const label = node.tone === "tip" ? "Tip" : "Note";
+---
+
+<aside class:list={["callout", `callout--${node.tone}`]}>
+	<p class="callout__label">{label}</p>
+	<p class="callout__body">{node.body}</p>
+</aside>
+
+<style>
+	.callout {
+		margin: var(--space-6) 0;
+		padding: var(--space-4) var(--space-5);
+		border: 1px solid var(--rule);
+		border-radius: var(--radius-lg);
+		background: var(--surface-sunken);
+	}
+
+	.callout--tip {
+		border-color: var(--slate-100);
+		background: var(--slate-100);
+	}
+
+	.callout__label {
+		margin: 0 0 var(--space-2);
+		color: var(--text-muted);
+		font: var(--type-label);
+		letter-spacing: var(--tracking-wide);
+		text-transform: uppercase;
+	}
+
+	.callout__body {
+		max-width: 58ch;
+		margin: 0;
+		font: var(--type-body);
+	}
+</style>

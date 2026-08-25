@@ -1,0 +1,40 @@
+---
+import { urlFor } from "../../lib/sanity/image";
+import type { PortableTextImage } from "../../lib/sanity/types";
+
+interface Props {
+	node: PortableTextImage;
+}
+
+const { node } = Astro.props;
+const src = urlFor(node.image).width(1200).auto("format").url();
+const alt = node.intent === "decorative" ? "" : node.alt;
+---
+
+<figure class="pt-image">
+	<img class="pt-image__img" src={src} alt={alt} loading="lazy" />
+	{
+		node.caption && (
+			<figcaption class="pt-image__caption">{node.caption}</figcaption>
+		)
+	}
+</figure>
+
+<style>
+	.pt-image {
+		margin: var(--space-6) 0;
+	}
+
+	.pt-image__img {
+		display: block;
+		width: 100%;
+		height: auto;
+		border-radius: var(--radius-md);
+	}
+
+	.pt-image__caption {
+		margin: var(--space-2) 0 0;
+		color: var(--text-muted);
+		font: var(--type-small);
+	}
+</style>
