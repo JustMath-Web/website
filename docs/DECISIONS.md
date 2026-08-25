@@ -1080,7 +1080,7 @@ https://just-math-malaysia.vercel.app/` — `x-robots-tag: noindex, nofollow, no
 `curl -s .../robots.txt` — returns the disallow-all file with its guard comment intact. Both confirmed
 live on the real production deployment, closing the "pending" note above.
 
-## 28. Blog infrastructure PR 1 — KaTeX self-hosting + Portable Text math renderer — 2026-08-24
+## 28. Blog infrastructure PR 1 — KaTeX self-hosting + Portable Text math renderer — 2026-08-25
 
 First of a 4-PR blog infrastructure sequence (VS-15/VS-17 were queued pending blog routes existing;
 the blog itself was already fully scoped — `docs/CONTENT-MODEL.md`, `docs/DECISIONS.md` §8/§9,
@@ -1151,4 +1151,13 @@ importing KaTeX's CSS globally into `fonts.css`, exactly the approach rejected a
 entirely (`git restore`/`rm -rf`, branch deleted) rather than salvaged, per instruction, so no stale
 assumptions carried forward. This PR's branch (`blog-pr1-katex-portabletext`) started from clean,
 synced `main`.
+
+**Bob's review of this PR** (approved, no blockers) flagged two non-blocking items explicitly deferred
+to PR 3, not silently dropped:
+
+- `MathBlock.astro` uses a `<div>` + caption `<p>` rather than `<figure>`/`<figcaption>` — re-check
+  semantic caption association once a real post route actually renders one.
+- `ImageWithAlt.astro` is intentionally minimal for now: no `srcset`, explicit width/height, or
+  `decoding="async"`. Revisit under image/performance review once PR 3 has a real route to measure
+  against, rather than optimizing a component nothing renders yet.
 
