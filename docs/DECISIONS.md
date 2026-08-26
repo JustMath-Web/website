@@ -1244,3 +1244,26 @@ detailed above. Deferred to PR 3 per the plan: KaTeX self-hosting/CSS-scoping pr
 exists yet to render Portable Text against), the two Bob-flagged `MathBlock`/`ImageWithAlt` items
 from §28.
 
+**Follow-up commit, same PR: automated CI coverage for the production-fetch-failure branch.** Bob's
+review of this PR found everything else coherent but flagged one real, correctly-scoped-as-non-
+blocking gap: the production-fails-without-Sanity branch above had only ever been verified by
+manually running `pnpm build` locally — CI itself always builds in fixture mode
+(`playwright.config.ts`'s `webServer.env`), so a future regression in `resolveBlogSource()` (e.g.
+someone removing the `throw`, or breaking `VERCEL_ENV` detection) would go unnoticed until a real
+production deploy actually hit it. Charlie's call: close the gap now rather than defer it, since it's
+small and directly testable with existing tooling.
+
+`web/scripts/assert-production-fails-without-sanity.mjs` — spawns a real `astro build` with
+`VERCEL_ENV=production` and Sanity config explicitly cleared (not just unset, in case CI's own
+environment ever gains Sanity secrets for an unrelated reason), and asserts it fails **with the
+specific expected error message**, not just "any" failure — an unrelated build breakage must not be
+misread as this guardrail passing. Wired into `.github/workflows/ci.yml`'s `web` job as
+`pnpm test:blog-production-guardrail`, right after the normal `pnpm build` step.
+
+**The guardrail was tested against a real regression, not just the happy path**: temporarily removed
+the `throw` from `resolveBlogSource()` (simulating exactly the kind of accidental regression this
+exists to catch), ran the script, confirmed it correctly reported `FAIL` with a clear diagnostic and
+exit code 1; reverted, ran it again, confirmed `OK`/exit code 0. A guardrail that can't be shown to
+actually catch the failure it claims to catch isn't verified — this is more than the earlier `pnpm
+build` manual checks and closes Bob's specific observation, not just adds a nominal test.
+
