@@ -1,0 +1,83 @@
+---
+import { renderToString } from "katex";
+import "katex/dist/katex.min.css";
+import type { Working } from "../../lib/sanity/types";
+
+interface Props {
+	node: Working;
+}
+
+const { node } = Astro.props;
+const title = node.title || "Working";
+
+// Same trust/strict XSS defense as MathInline.astro. Steps are plain LaTeX strings (no per-step
+// explanation field in the schema — studio/schemaTypes/objects/portableTextObjects.ts `working.steps`
+// is string[], not {tex, why}[]).
+const steps = node.steps.map((step) =>
+	renderToString(step, {
+		displayMode: true,
+		throwOnError: false,
+		trust: false,
+		strict: "ignore",
+	}),
+);
+---
+
+<figure class="working">
+	<figcaption class="working__title">{title}</figcaption>
+	<ol class="working__list">
+		{
+			steps.map((html, index) => (
+				<li class="working__step">
+					<span class="working__number" aria-hidden="true">
+						{String(index + 1).padStart(2, "0")}
+					</span>
+					<div class="working__tex-scroll" set:html={html} />
+				</li>
+			))
+		}
+	</ol>
+</figure>
+
+<style>
+	.working {
+		margin: var(--space-6) 0;
+		padding: var(--space-5) var(--space-5) var(--space-6);
+		border: 1px solid var(--rule);
+		border-top: 3px solid var(--ink-900);
+		border-radius: var(--radius-lg);
+		background: var(--white);
+	}
+
+	.working__title {
+		margin: 0 0 var(--space-4);
+		color: var(--text-muted);
+		font: var(--type-label);
+		letter-spacing: var(--tracking-wide);
+		text-transform: uppercase;
+	}
+
+	.working__list {
+		display: grid;
+		gap: var(--space-4);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.working__step {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		align-items: baseline;
+		gap: var(--space-3);
+	}
+
+	.working__number {
+		font: var(--type-numeral);
+		color: var(--text-faint);
+	}
+
+	.working__tex-scroll {
+		overflow-x: auto;
+	}
+</style>

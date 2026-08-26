@@ -1,0 +1,44 @@
+---
+import type { CommonMistake } from "../../lib/sanity/types";
+
+interface Props {
+	node: CommonMistake;
+}
+
+const { node } = Astro.props;
+---
+
+<aside class="common-mistake">
+	<p class="common-mistake__label">Where this goes wrong</p>
+	<p class="common-mistake__mistake">{node.mistake}</p>
+	<p class="common-mistake__correction">{node.correction}</p>
+</aside>
+
+<style>
+	.common-mistake {
+		margin: var(--space-6) 0;
+		padding: var(--space-4) var(--space-5);
+		border-top: 1px solid var(--ochre-500);
+		border-bottom: 1px solid var(--ochre-500);
+		background: var(--ochre-100);
+	}
+
+	.common-mistake__label {
+		margin: 0 0 var(--space-2);
+		color: var(--ochre-600);
+		font: var(--type-label);
+		letter-spacing: var(--tracking-wide);
+		text-transform: uppercase;
+	}
+
+	.common-mistake__mistake,
+	.common-mistake__correction {
+		max-width: 58ch;
+		margin: 0;
+		font: var(--type-body);
+	}
+
+	.common-mistake__mistake {
+		margin-bottom: var(--space-2);
+	}
+</style>

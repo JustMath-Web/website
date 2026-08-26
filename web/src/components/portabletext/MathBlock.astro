@@ -1,0 +1,45 @@
+---
+import { renderToString } from "katex";
+import "katex/dist/katex.min.css";
+import type { MathBlock } from "../../lib/sanity/types";
+
+interface Props {
+	node: MathBlock;
+}
+
+const { node } = Astro.props;
+
+// Same trust/strict XSS defense as MathInline.astro — see that file's comment.
+const html = renderToString(node.latex, {
+	displayMode: true,
+	throwOnError: false,
+	trust: false,
+	strict: "ignore",
+});
+---
+
+<div class="math-block">
+	<div class="math-block__scroll" set:html={html} />
+	{node.caption && <p class="math-block__caption">{node.caption}</p>}
+</div>
+
+<style>
+	.math-block {
+		margin: var(--space-6) 0;
+		padding: var(--space-4) 0;
+		border-top: 1px solid var(--rule);
+		border-bottom: 1px solid var(--rule);
+		text-align: center;
+	}
+
+	.math-block__scroll {
+		overflow-x: auto;
+		font-size: clamp(var(--size-base), 2.2vw, var(--size-md));
+	}
+
+	.math-block__caption {
+		margin: var(--space-2) 0 0;
+		color: var(--text-muted);
+		font: var(--type-small);
+	}
+</style>
