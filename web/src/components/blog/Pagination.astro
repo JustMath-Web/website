@@ -1,0 +1,104 @@
+---
+import type { Page } from "astro";
+
+interface Props {
+	page: Page<unknown>;
+	/** e.g. "/blog/" or "/blog/level/form-1-3/" — page 1 lives here, page N at `${basePath}N/`. */
+	basePath: string;
+}
+
+const { page, basePath } = Astro.props;
+
+// No point rendering pagination controls for a single page of results.
+const shouldRender = page.lastPage > 1;
+
+const pageNumbers = Array.from({ length: page.lastPage }, (_, i) => i + 1);
+const hrefFor = (number: number) =>
+	number === 1 ? basePath : `${basePath}${number}/`;
+---
+
+{
+	shouldRender && (
+		<nav class="pagination" aria-label="Pagination">
+			<a
+				class="pagination__link"
+				href={page.url.prev}
+				aria-disabled={page.url.prev ? undefined : "true"}
+			>
+				Previous
+			</a>
+			<ul class="pagination__list">
+				{pageNumbers.map((number) => (
+					<li>
+						<a
+							class="pagination__link pagination__link--number"
+							href={hrefFor(number)}
+							aria-current={number === page.currentPage ? "page" : undefined}
+						>
+							{number}
+						</a>
+					</li>
+				))}
+			</ul>
+			<a
+				class="pagination__link"
+				href={page.url.next}
+				aria-disabled={page.url.next ? undefined : "true"}
+			>
+				Next
+			</a>
+		</nav>
+	)
+}
+
+<style>
+	.pagination {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-3);
+		padding-top: var(--space-6);
+		margin-top: var(--space-6);
+		border-top: 1px solid var(--rule);
+	}
+
+	.pagination__list {
+		display: flex;
+		gap: var(--space-2);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.pagination__link {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-height: var(--control-h);
+		min-width: var(--control-h);
+		padding: 0 var(--space-3);
+		border: 1px solid var(--rule-strong);
+		border-radius: var(--radius-md);
+		color: var(--text-body);
+		font: var(--type-small);
+		text-decoration: none;
+	}
+
+	.pagination__link:hover {
+		border-color: var(--ink-900);
+		text-decoration: none;
+	}
+
+	.pagination__link[aria-current="page"] {
+		border-color: var(--ink-900);
+		background: var(--ink-900);
+		color: var(--paper);
+	}
+
+	.pagination__link[aria-disabled="true"] {
+		pointer-events: none;
+		color: var(--text-faint);
+		opacity: 0.5;
+	}
+</style>

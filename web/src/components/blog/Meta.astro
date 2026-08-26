@@ -1,0 +1,71 @@
+---
+interface Props {
+	category: string;
+	publishedAt: string;
+	readingTimeMinutes?: number;
+	stack?: boolean;
+}
+
+const {
+	category,
+	publishedAt,
+	readingTimeMinutes,
+	stack = false,
+} = Astro.props;
+
+const date = new Date(publishedAt);
+const formattedDate = new Intl.DateTimeFormat("en-GB", {
+	day: "numeric",
+	month: "long",
+	year: "numeric",
+}).format(date);
+---
+
+<div class:list={["post-meta", { "post-meta--stack": stack }]}>
+	<span class="post-meta__category">{category}</span>
+	<span class="post-meta__sep" aria-hidden="true">·</span>
+	<time class="post-meta__date" datetime={publishedAt}>{formattedDate}</time>
+	{
+		readingTimeMinutes && (
+			<>
+				<span class="post-meta__sep" aria-hidden="true">
+					·
+				</span>
+				<span class="post-meta__reading-time">
+					{readingTimeMinutes} min read
+				</span>
+			</>
+		)
+	}
+</div>
+
+<style>
+	.post-meta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-2);
+		color: var(--text-muted);
+		font: var(--type-small);
+	}
+
+	.post-meta--stack {
+		display: grid;
+		gap: var(--space-1);
+	}
+
+	.post-meta--stack .post-meta__sep {
+		display: none;
+	}
+
+	.post-meta__category {
+		color: var(--ochre-600);
+		font-weight: var(--weight-semibold);
+		letter-spacing: var(--tracking-wide);
+		text-transform: uppercase;
+	}
+
+	.post-meta__sep {
+		color: var(--text-faint);
+	}
+</style>

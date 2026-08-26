@@ -1,0 +1,77 @@
+---
+import type { CategoryWithCount } from "../../lib/sanity/types";
+
+interface Props {
+	categories: CategoryWithCount[];
+	activeSlug?: string;
+	totalPosts: number;
+}
+
+const { categories, activeSlug, totalPosts } = Astro.props;
+---
+
+<nav class="category-rail" aria-label="Filter by syllabus level">
+	<a
+		class="category-rail__pill"
+		href="/blog/"
+		aria-current={activeSlug ? undefined : "page"}
+	>
+		<span>Everything</span>
+		<span class="category-rail__count">{totalPosts}</span>
+	</a>
+	{
+		categories.map((category) => (
+			<a
+				class="category-rail__pill"
+				href={`/blog/level/${category.slug.current}/`}
+				aria-current={activeSlug === category.slug.current ? "page" : undefined}
+			>
+				<span>{category.shortLabel ?? category.title}</span>
+				<span class="category-rail__count">{category.postCount}</span>
+			</a>
+		))
+	}
+</nav>
+
+<style>
+	.category-rail {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-3);
+		margin-top: clamp(var(--space-5), 3vw, var(--space-7));
+	}
+
+	.category-rail__pill {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2);
+		min-height: var(--control-h);
+		padding: 0 var(--space-4);
+		border: 1px solid var(--rule-strong);
+		border-radius: var(--radius-pill);
+		color: var(--text-body);
+		font: var(--type-small);
+		text-decoration: none;
+		transition: background var(--dur-1) var(--ease-standard);
+	}
+
+	.category-rail__pill[aria-current="page"] {
+		border-color: var(--ink-900);
+		background: var(--ink-900);
+		color: var(--paper);
+	}
+
+	.category-rail__pill:hover {
+		border-color: var(--ink-900);
+		text-decoration: none;
+	}
+
+	.category-rail__count {
+		color: var(--text-faint);
+		font: var(--type-numeral);
+	}
+
+	.category-rail__pill[aria-current="page"] .category-rail__count {
+		color: var(--paper);
+	}
+</style>

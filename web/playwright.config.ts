@@ -24,5 +24,11 @@ export default defineConfig({
 		url: "http://127.0.0.1:4321",
 		reuseExistingServer: !process.env.CI,
 		timeout: 120_000,
+		// USE_BLOG_FIXTURES: real fixture content to test the blog routes against, matching how the
+		// homepage's own fixture fallback already lets every other test here exercise real content
+		// without a live Sanity connection. Never set VERCEL_ENV here — production build behavior
+		// (fail on missing Sanity, reject this flag) is what web/src/lib/content/blogData.ts is
+		// supposed to do in that case, and this suite must not accidentally mask that.
+		env: { USE_BLOG_FIXTURES: "true" },
 	},
 });

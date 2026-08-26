@@ -1161,3 +1161,86 @@ to PR 3, not silently dropped:
   `decoding="async"`. Revisit under image/performance review once PR 3 has a real route to measure
   against, rather than optimizing a component nothing renders yet.
 
+## 29. Blog infrastructure PR 2 — archive + category routes, fixture-safe data layer — 2026-08-26
+
+Second of the 4-PR blog sequence. Ships `web/src/pages/blog/[...page].astro` and
+`web/src/pages/blog/level/[slug]/[...page].astro`, their components
+(`CategoryRail`/`PostRow`/`Meta`/`Pagination`/`EmptyState` under `web/src/components/blog/`), and the
+`blogData.ts` fixture-safe wrapper layer the whole plan's fixture-safety policy depends on.
+
+**Route file shape, confirmed against live Astro docs before writing anything (required checkpoint
+from the plan, not skipped):** `paginate()` requires `[...page].astro` (not a separate `index.astro`)
+to put page 1 at the base path and numbered pages after — confirmed from
+`https://docs.astro.build/en/guides/routing/`. The category route additionally needed the nested-
+pagination pattern (`paginate(posts, { params: { slug }, pageSize })` called once per category) —
+also confirmed from the same docs page, not assumed. One real implementation bug caught by an actual
+build, not by reasoning about it: a module-scope `const PAGE_SIZE = 10` above `getStaticPaths()`
+triggered `PAGE_SIZE is not defined` at build time (Astro/Vite splits `getStaticPaths()` into its own
+build-time chunk, which didn't carry the constant with it) — fixed by inlining `pageSize: 10` directly
+in each `paginate()` call, matching the official docs example's own pattern.
+
+**`paginate([])` behavior verified from Astro's actual source**
+(`node_modules/astro/dist/core/render/paginate.js`), not the docs (which don't cover this edge case):
+`lastPage = Math.max(1, Math.ceil(data.length / pageSize))` — always at least 1, so an empty-array
+category still gets a real page 1 to render the empty state on, never a missing route. Confirmed
+directly in a real build too: all 6 category routes generated, including the 4 with zero fixture
+posts.
+
+**`blogData.ts` — the fixture-safety layer**, gating every blog data function
+(`getBlogArchiveData`/`getBlogPostData`/`getBlogPostSlugs`/`getCategoryArchiveData`/
+`getBlogCategorySlugs`) through one shared `resolveBlogSource()` check, per the plan's tightened
+policy (docs/DECISIONS.md's plan history — nine rounds of review before implementation, see PR 1's
+§28 for the earlier corrections):
+
+- Fixture content (`web/src/lib/content/defaultBlogData.ts`, 2 posts exercising every PR 1 custom
+  Portable Text object at least once) renders **only** when `USE_BLOG_FIXTURES === "true"` **and**
+  the build is confirmed non-production.
+- Production detection uses Vercel's real `VERCEL_ENV` system variable (`"production"` /
+  `"preview"` / `"development"`), not `NODE_ENV`. Confirmed three ways, not assumed: (1) fetched
+  Vercel's current system-environment-variables docs directly — available at both build and
+  runtime; (2) confirmed it's actually populated on this project via `vercel env pull --environment
+  production` (`VERCEL_ENV="production"` in the downloaded file — system env var access is an
+  opt-in project setting per Vercel's docs, so this was a real risk worth checking, not a formality);
+  (3) `USE_BLOG_FIXTURES` and `VERCEL_ENV` both added to `web/src/env.d.ts`'s typed
+  `ImportMetaEnv`, matching the existing convention for `PUBLIC_SANITY_PROJECT_ID` etc.
+- Production build + can't get real Sanity data (missing config **or** a fetch throwing) → **the
+  build fails**, verified for real, not just by reading the code: ran `VERCEL_ENV=production pnpm
+  build` locally with no Sanity env configured — build failed with exit code 1 and a clear error
+  message. Ran it again with `USE_BLOG_FIXTURES=true` also set — still failed the same way,
+  confirming production genuinely rejects fixture mode rather than silently honoring the flag.
+- Non-production + can't get real Sanity data → real empty state (`pnpm build` with no env at all,
+  no fixture flag → rendered "No notes published yet", zero fixture content in the output).
+- Fixture mode active → fixture posts render (`USE_BLOG_FIXTURES=true pnpm build` → both fixture
+  posts appear, correctly filtered per category, correct dynamically-computed category counts).
+- **Real Sanity connection, non-production** → also verified against the actual live project
+  (`PUBLIC_SANITY_PROJECT_ID=v4v0i7gl PUBLIC_SANITY_DATASET=production pnpm build`, no fixture flag):
+  real GROQ queries executed (build took ~11s vs. ~200ms, confirming real network calls, not a
+  no-op), returned zero approved posts (Studio content genuinely incomplete, a content gap not a
+  bug — same situation already known from VS-10), and rendered the real empty state, not fixture
+  content and not an error. All four policy branches now verified against real builds, not just
+  reasoned about.
+
+**Playwright suite build now runs in fixture mode** (`playwright.config.ts`'s `webServer.env:
+{ USE_BLOG_FIXTURES: "true" }`), matching how the rest of this suite already exercises the homepage's
+own fixture fallback — never sets `VERCEL_ENV`, so the production-rejection path is never
+accidentally exercised by CI. Extracted `assertMinTapTarget`/`assertNoHorizontalOverflow` from
+`landing.spec.ts` into a shared `tests/e2e/helpers.ts` (reused by the new `tests/e2e/blog.spec.ts` —
+a genuine second call site, not premature extraction). New suite: archive/category rendering,
+category-rail link count and active-state, the empty-state branch against a real zero-post fixture
+category, pagination correctly absent with the current 2-post fixture volume (multi-page navigation
+mechanics themselves verified against Astro's source/docs above, not manufactured with extra fixture
+posts just to force a second page), and 44×44 tap targets on the category rail.
+
+**A small bug caught while wiring the header CTA**: initially passed `siteSettings.whatsappMessage`
+(the prefilled text) as `SiteHeader`'s `ctaHref` prop — wrong, that's not a URL. The homepage sources
+its header CTA from a Sanity-authored `cta.href`; blog pages have no equivalent per-page CTA object,
+so a small shared `buildWhatsAppUrl()` helper (`web/src/lib/content/whatsappUrl.ts`) derives the real
+`wa.me` URL from `siteSettings.whatsappNumber`/`whatsappMessage` instead — used by all blog pages
+needing header chrome (archive, category, and PR 3's post page).
+
+**Verified:** `format:check`, `check` (0 errors/warnings/hints), full Playwright suite 39/39 (31 +
+the 8 new blog tests), all four `blogData.ts` policy branches verified against real builds as
+detailed above. Deferred to PR 3 per the plan: KaTeX self-hosting/CSS-scoping proof (no post route
+exists yet to render Portable Text against), the two Bob-flagged `MathBlock`/`ImageWithAlt` items
+from §28.
+
