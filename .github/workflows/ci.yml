@@ -42,6 +42,10 @@ jobs:
       # blog state. Runs its own real `astro build` internally (VERCEL_ENV=production, no Sanity
       # config) and asserts it fails with the expected error — was previously only verified manually.
       - run: pnpm test:blog-production-guardrail
+      # Proves the "slug list and individual post fetch disagree" branch blog/[slug].astro's
+      # getStaticPaths() filters out at build time (docs/DECISIONS.md §30) — a genuinely non-existent
+      # slug 404ing on its own doesn't exercise this code, since that's true without the filter too.
+      - run: pnpm test:blog-null-post-filter
 
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
