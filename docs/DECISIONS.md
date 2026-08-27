@@ -1366,3 +1366,86 @@ regressions before being trusted. Nothing deferred to PR 4 from this PR's own sc
 outstanding Bob items from §28 are closed, and every claim from §28's original "deferred to PR 3"
 list has now been checked against a real build rather than assumed.
 
+## 31. Blog infrastructure PR 4 — RSS + sitemap + old-post redirects — 2026-08-27
+
+Last of the 4-PR blog sequence (closes VS-15). Charlie's explicit call on scope: RSS, sitemap, the 3
+old-post redirects, and the docs note for the unused Sanity `redirect` scaffold — nothing else. No
+cleanup, no launch-indexing changes, no further blog polish; the existing pre-launch noindex guard
+(§27) stays exactly as-is until the real launch conditions in §13 close.
+
+**`web/src/pages/rss.xml.ts`.** `@astrojs/rss` added exact-pinned (4.0.19, MIT, confirmed from the
+installed package's own `LICENSE`/`package.json`, matching this project's pinning discipline). API
+confirmed against Astro's current docs before writing anything (same "verify, don't assume"
+checkpoint discipline as PR 2's `paginate()`/`VERCEL_ENV` checks) — `rss()` exported from
+`@astrojs/rss`, called from a `GET(context: APIContext)` handler, `site` sourced from
+`context.site`. Items sourced from PR 2's `getBlogArchiveData()` wrapper, not a raw query — title,
+excerpt-as-description, `publishedAt`-as-`pubDate`, and a `/blog/{slug}/` link per post.
+
+**Sourced from approved production content only, verified directly, not assumed:** `getBlogArchiveData()`
+is the same fixture-safe wrapper every blog page already goes through (§29/§30's `resolveBlogSource()`
+policy) — fixture mode is structurally impossible in a production build, and a production build that
+can't reach real Sanity data fails outright rather than ever reaching this file's `rss()` call. Checked
+directly across all three real build paths, not just reasoned about: `USE_BLOG_FIXTURES=true` build →
+`dist/rss.xml` contains both fixture posts; a plain build with no env at all → `dist/rss.xml` is a
+valid, empty `<channel>` (real empty state, zero fixture leakage); a real Sanity connection
+(`PUBLIC_SANITY_PROJECT_ID=v4v0i7gl PUBLIC_SANITY_DATASET=production`, non-production) → build took
+~14s (real network calls, not a no-op) and produced the same valid empty feed, since the live dataset
+still has zero approved posts — a known, already-documented content gap (§29), not a bug. `VERCEL_ENV=
+production` with no Sanity config → build still fails outright, exit code 1, confirming this PR didn't
+weaken that guarantee.
+
+**Sitemap.** `@astrojs/sitemap` (already an installed-but-unconfigured dependency, the FE-51 "dead
+weight" finding from the original review) wired into `astro.config.mjs`'s `integrations: [sitemap()]`
+with no extra options — no `filter`/`serialize` customization, matching the narrow scope. Verified
+against real build output, not assumed: `dist/sitemap-index.xml` + `dist/sitemap-0.xml` generated on
+every build; in fixture mode, includes both post pages plus all archive/category routes; in the
+default (non-fixture) build, includes every archive/category route but correctly omits post pages
+(there are none to include — `getStaticPaths()` for `blog/[slug].astro` generates zero paths without
+real or fixture posts).
+
+**The pre-launch noindex guard is untouched, deliberately.** `robots.txt` (disallow-all) and
+`vercel.json`'s sitewide `X-Robots-Tag: noindex, nofollow, noarchive` header (§13/§27) both still
+apply after this PR — a sitemap existing doesn't grant search engines permission to crawl it while
+those are in place. This was already the plan's own documented expectation ("robots.txt's pre-launch
+noindex guard still blocks real indexing regardless of the new sitemap existing — expected, not a
+conflict"), reconfirmed as an explicit scope boundary for this PR rather than something to revisit
+here.
+
+**Redirects.** Added the 3 remaining old-post redirects to `web/vercel.json`, all `statusCode: 301`,
+targets re-verified directly against `docs/CONTENT-MODEL.md` (line 260ish) and this file's own §21
+table just now, not retyped from memory or the plan document:
+
+- `/category/algebra/` → `/blog/level/form-1-3/`
+- `/differentiation-using-the-first-principle/` → `/blog/level/add-maths/`
+- `/mastering-algebra/` → `/blog/level/form-1-3/`
+
+These were deliberately excluded from the original PR #8 redirect batch (§22) because their
+destinations didn't exist yet — they do now that PR 2 shipped the category routes. Matches the
+existing `vercel.json` hand-written pattern (§22/§24 precedent) rather than Astro's `redirects` config
+or the adapter's `staticHeaders` option, for the same reasons already recorded in §22. Same honest
+limitation as every prior `vercel.json` change: the file is valid JSON matching Vercel's schema, and
+`getStaticPaths()` confirms `/blog/level/form-1-3/` and `/blog/level/add-maths/` are real, generated
+routes — but the redirect *behavior* itself (a real `301` at these paths) is unverified until checked
+against the live Vercel deployment post-merge, via the same `curl -sI` pattern used for VS-08/VS-10/
+VS-11.
+
+**Unused Sanity `redirect` type — documented as intentional scaffolding, per Charlie's explicit call
+during plan review, not dead code.** `studio/schemaTypes/documents/redirect.ts` and
+`web/src/lib/sanity/queries.ts`'s `getRedirects()` remain unused by any route — this PR's 3 redirects
+are hand-written in `vercel.json`, matching the existing pattern for the first 3 (§22). The Sanity
+`redirect` document type stays in place for future editorial use (e.g. Mr Kong retiring an old post
+URL post-launch without needing a code change), not removed as unreachable code.
+
+**Verified:** `format:check`, `check` (0 errors/warnings/hints), `build` clean across all four env
+combinations tested above, full Playwright suite unchanged at 39/39 (this PR adds no new browser-
+testable surface — RSS/sitemap are XML endpoints verified by direct build-output inspection, and
+`vercel.json` redirects were never locally verifiable in this project, per the established §22
+limitation), both existing CI guardrail scripts (`test:blog-production-guardrail`,
+`test:blog-null-post-filter`) rerun clean, confirming this PR didn't regress either. Real redirect/
+sitemap/RSS behavior on the live deployment: pending post-merge verification, same as every prior
+`vercel.json` change.
+
+This closes VS-15 and the full 4-PR blog infrastructure sequence. VS-17 (`index.astro` extraction),
+deliberately queued since the original 2026-08-15 review, is now unblocked — real blog templates
+exist to compare against, per Charlie's own stated preference during plan review.
+
