@@ -1,4 +1,9 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
+import {
+	MIN_TAP_TARGET,
+	assertMinTapTarget,
+	assertNoHorizontalOverflow,
+} from "./helpers";
 
 /**
  * Viewports matched to this project's own breakpoints (SiteHeader's 560px, index.astro's 860/520px)
@@ -10,34 +15,6 @@ const VIEWPORTS = [
 	{ name: "tablet-768", width: 768, height: 1024 },
 	{ name: "desktop-1440", width: 1440, height: 900 },
 ];
-
-const MIN_TAP_TARGET = 44;
-
-async function assertNoHorizontalOverflow(page: Page) {
-	const overflow = await page.evaluate(
-		() =>
-			document.documentElement.scrollWidth -
-			document.documentElement.clientWidth,
-	);
-	expect(overflow).toBeLessThanOrEqual(0);
-}
-
-async function assertMinTapTarget(page: Page, selector: string) {
-	const targets = page.locator(selector);
-	const count = await targets.count();
-	expect(count).toBeGreaterThan(0);
-
-	for (let index = 0; index < count; index += 1) {
-		const box = await targets.nth(index).boundingBox();
-		expect(box, `${selector} [${index}] has no bounding box`).not.toBeNull();
-		expect(box!.width, `${selector} [${index}] width`).toBeGreaterThanOrEqual(
-			MIN_TAP_TARGET,
-		);
-		expect(box!.height, `${selector} [${index}] height`).toBeGreaterThanOrEqual(
-			MIN_TAP_TARGET,
-		);
-	}
-}
 
 for (const viewport of VIEWPORTS) {
 	test.describe(`landing page @ ${viewport.name}`, () => {

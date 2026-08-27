@@ -1,0 +1,27 @@
+---
+interface Props {
+	/** Present when scoped to a single category (e.g. "Form 4 to 5"); omitted on the full archive. */
+	categoryTitle?: string;
+}
+
+const { categoryTitle } = Astro.props;
+---
+
+<p class="empty-state">
+	{
+		categoryTitle
+			? `No notes for ${categoryTitle} yet. New posts are added as they're ready — try Everything for what's published so far.`
+			: "No notes published yet. New posts are added as they're ready — check back soon."
+	}
+</p>
+
+<style>
+	.empty-state {
+		max-width: 44ch;
+		margin: clamp(var(--space-6), 4vw, var(--space-8)) 0;
+		padding-top: var(--space-6);
+		border-top: 1px solid var(--rule);
+		color: var(--text-muted);
+		font: var(--type-body);
+	}
+</style>

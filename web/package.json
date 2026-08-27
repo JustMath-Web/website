@@ -13,7 +13,8 @@
 		"check": "astro check",
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
-		"test:e2e": "playwright test"
+		"test:e2e": "playwright test",
+		"test:blog-production-guardrail": "node scripts/assert-production-fails-without-sanity.mjs"
 	},
 	"dependencies": {
 		"@astrojs/sitemap": "3.7.3",

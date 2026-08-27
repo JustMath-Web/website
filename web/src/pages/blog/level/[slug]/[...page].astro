@@ -1,0 +1,146 @@
+---
+import type { GetStaticPathsOptions, Page } from "astro";
+import BaseLayout from "../../../../layouts/BaseLayout.astro";
+import SiteFooter from "../../../../components/SiteFooter.astro";
+import SiteHeader from "../../../../components/SiteHeader.astro";
+import CategoryRail from "../../../../components/blog/CategoryRail.astro";
+import EmptyState from "../../../../components/blog/EmptyState.astro";
+import Pagination from "../../../../components/blog/Pagination.astro";
+import PostRow from "../../../../components/blog/PostRow.astro";
+import {
+	getBlogArchiveData,
+	getBlogCategorySlugs,
+	getCategoryArchiveData,
+} from "../../../../lib/content/blogData";
+import { getLandingPageData } from "../../../../lib/content/landingData";
+import { buildWhatsAppUrl } from "../../../../lib/content/whatsappUrl";
+import type { PostSummary } from "../../../../lib/sanity/types";
+
+export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
+	const slugs = await getBlogCategorySlugs();
+	const results = await Promise.all(
+		slugs.map(async ({ slug }) => {
+			const { posts } = await getCategoryArchiveData(slug);
+			return paginate(posts, { pageSize: 10, params: { slug } });
+		}),
+	);
+	return results.flat();
+}
+
+interface Props {
+	page: Page<PostSummary>;
+}
+
+const { slug } = Astro.params;
+const { page } = Astro.props;
+const { category } = await getCategoryArchiveData(slug!);
+const { categories } = await getBlogArchiveData();
+const { siteSettings, navigation } = await getLandingPageData();
+
+const categoryTitle = category?.title ?? slug!;
+---
+
+<BaseLayout
+	title={`${categoryTitle} — Notes — ${siteSettings.siteName}`}
+	description={category?.description ??
+		`Notes for ${categoryTitle}, filed by syllabus level.`}
+	siteSettings={siteSettings}
+>
+	<SiteHeader
+		navigation={navigation}
+		siteSettings={siteSettings}
+		ctaHref={buildWhatsAppUrl(siteSettings)}
+	/>
+	<main id="main">
+		<section
+			class="section section--hero graph-ground"
+			aria-labelledby="notes-title"
+		>
+			<div class="container">
+				<p class="eyebrow">Notes</p>
+				<h1 id="notes-title">{categoryTitle}</h1>
+				{category?.description && <p class="lead">{category.description}</p>}
+				<CategoryRail
+					categories={categories}
+					activeSlug={slug}
+					totalPosts={categories.reduce((sum, c) => sum + c.postCount, 0)}
+				/>
+			</div>
+		</section>
+
+		<section class="section section--ruled" aria-label="Notes list">
+			<div class="container">
+				{
+					page.data.length === 0 ? (
+						<EmptyState categoryTitle={categoryTitle} />
+					) : (
+						<div class="post-list">
+							{page.data.map((post) => (
+								<PostRow post={post} />
+							))}
+						</div>
+					)
+				}
+				<Pagination page={page} basePath={`/blog/level/${slug}/`} />
+			</div>
+		</section>
+	</main>
+	<SiteFooter navigation={navigation} siteSettings={siteSettings} />
+</BaseLayout>
+
+<style>
+	.container {
+		max-width: var(--page-max);
+		margin: 0 auto;
+		padding-inline: clamp(20px, 5vw, var(--gutter));
+	}
+
+	.section {
+		position: relative;
+		overflow: hidden;
+		padding-block: clamp(64px, 9vw, 132px);
+		background: var(--paper);
+	}
+
+	.section--hero {
+		padding-block: clamp(44px, 7vw, 104px);
+	}
+
+	.section--ruled {
+		border-top: 1px solid var(--rule);
+	}
+
+	.graph-ground::before {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background-image:
+			linear-gradient(rgba(20, 22, 26, 0.055) 1px, transparent 1px),
+			linear-gradient(90deg, rgba(20, 22, 26, 0.055) 1px, transparent 1px);
+		background-size: 48px 48px;
+		mask-image: linear-gradient(180deg, #000 0%, #000 62%, transparent 100%);
+		content: "";
+	}
+
+	.eyebrow {
+		margin: 0 0 clamp(20px, 2.6vw, 30px);
+		color: var(--text-muted);
+		font: var(--type-label);
+		letter-spacing: var(--tracking-wide);
+		text-transform: uppercase;
+	}
+
+	h1 {
+		max-width: 20ch;
+		margin: 0;
+		color: var(--ink-900);
+		font: var(--weight-semibold) clamp(32px, 5vw, 52px) / 1.1 var(--font-serif);
+	}
+
+	.lead {
+		max-width: 44ch;
+		margin: clamp(16px, 2vw, 22px) 0 0;
+		color: var(--text-muted);
+		font: var(--weight-regular) clamp(17px, 2vw, 22px) / 1.5 var(--font-sans);
+	}
+</style>
