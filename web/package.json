@@ -14,7 +14,8 @@
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
 		"test:e2e": "playwright test",
-		"test:blog-production-guardrail": "node scripts/assert-production-fails-without-sanity.mjs"
+		"test:blog-production-guardrail": "node scripts/assert-production-fails-without-sanity.mjs",
+		"test:blog-null-post-filter": "node --experimental-strip-types scripts/assert-post-static-paths-filter-nulls.mjs"
 	},
 	"dependencies": {
 		"@astrojs/sitemap": "3.7.3",

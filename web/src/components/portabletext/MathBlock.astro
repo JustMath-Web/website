@@ -18,10 +18,14 @@ const html = renderToString(node.latex, {
 });
 ---
 
-<div class="math-block">
+<figure class="math-block">
 	<div class="math-block__scroll" set:html={html} />
-	{node.caption && <p class="math-block__caption">{node.caption}</p>}
-</div>
+	{
+		node.caption && (
+			<figcaption class="math-block__caption">{node.caption}</figcaption>
+		)
+	}
+</figure>
 
 <style>
 	.math-block {

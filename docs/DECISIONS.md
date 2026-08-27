@@ -1267,3 +1267,102 @@ exit code 1; reverted, ran it again, confirmed `OK`/exit code 0. A guardrail tha
 actually catch the failure it claims to catch isn't verified — this is more than the earlier `pnpm
 build` manual checks and closes Bob's specific observation, not just adds a nominal test.
 
+## 30. Blog infrastructure PR 3 — post route + structured data — 2026-08-27
+
+Third of the 4-PR blog sequence. Ships `web/src/pages/blog/[slug].astro` — the actual post page —
+plus the two Bob-flagged deferrals from §28 (`MathBlock` figure/figcaption, `ImageWithAlt`
+srcset/dimensions/decoding) and PR 1's remaining unverified claims (KaTeX self-hosting/CSS-scoping,
+MathML survival, no client-side maths JS), which had no consuming route to check against until now.
+
+**Post route.** `getStaticPaths()` sources slugs from PR 2's `getBlogPostSlugs()` (the fallback-aware
+wrapper, not the raw query), then fetches each post individually via `getBlogPostData(slug)` and
+passes the resolved post through as a static-props value rather than re-fetching per page. This is
+the idiomatic Astro pattern for a fully static site (`output: "static"`, confirmed from
+`astro.config.mjs`) — there is no server at request time to evaluate a runtime 404 against, so the
+correct place to handle "slug list and individual fetch disagree" is at build time, before the page
+is ever generated, not inside the page.
+
+**`resolveValidPosts()` (`web/src/lib/content/resolveValidPosts.ts`) is the null-post filter the plan
+called for**, extracted as its own pure function (only type-only imports, no runtime dependencies) so
+it can be verified directly rather than only through the route that consumes it. The plan's own
+verification note was explicit that a genuinely non-existent slug 404ing on its own doesn't exercise
+this code — it only proves Astro's ordinary routing, which would 404 the same way with or without
+this filter. Proven instead with a standalone script,
+`web/scripts/assert-post-static-paths-filter-nulls.mjs`, run via `node --experimental-strip-types`
+(Node 22+, this project runs 26.3.0; works here specifically because the file's only import is
+type-only and erased at compile time, so no runtime module resolution is needed) — constructs a
+synthetic slug list where the middle entry's fetch came back `null` (the exact "list and fetch
+disagree" scenario, which fixture data can't produce on its own since it's internally consistent by
+construction) and asserts the filter drops exactly that entry, in order, keeping the others. Verified
+against a real regression, matching this project's established discipline: temporarily removed the
+`.filter()` call, confirmed the script failed with a clear diagnostic, reverted, confirmed it passed.
+Wired into CI as `pnpm test:blog-null-post-filter`, right after the production guardrail from §29. The
+route itself also keeps a defensive `if (!post) throw` even though `resolveValidPosts` should make it
+unreachable — matches this project's "don't assume it can't happen" pattern already used elsewhere,
+not a contradiction of the filter's correctness.
+
+**A real bug, found only once the route actually rendered `ImageWithAlt` for the first time**:
+`web/src/lib/sanity/image.ts`'s `urlFor()` was building its image-URL builder from the authenticated
+`sanityClient` export (`./client.ts`), whose `createClient({ projectId: undefined, ... })` call throws
+immediately in fixture mode (no `PUBLIC_SANITY_PROJECT_ID` set) — PR 1 never caught this because
+nothing consumed `ImageWithAlt` yet. Fixed by building the `@sanity/image-url` builder from a plain
+`{ projectId, dataset }` object instead of the client — confirmed directly against `@sanity/image-url`'s
+own type definitions that this shape (`SanityProjectDetails`) is accepted on its own, with no
+authentication needed to build an image URL. This fully decouples image-URL-building from the
+data-fetching client, which is the correct dependency direction regardless of fixture mode.
+
+**Bob's two deferred items from §28, closed:**
+- `MathBlock.astro`: `<div class="math-block">` / `<p class="math-block__caption">` →
+  `<figure class="math-block">` / `<figcaption class="math-block__caption">`, for a real semantic
+  caption association instead of an unrelated paragraph that happens to sit underneath.
+- `ImageWithAlt.astro`: added `srcset` (600/900/1200w, matched to the post body's 64ch prose measure
+  — roughly 700–900px on screen at typical body sizes, so this covers standard/2x density without
+  generating widths nothing will ever request) and `sizes="(min-width: 768px) 700px, 100vw"`; real
+  `width`/`height` via a new `getImageDimensions(ref)` in `image.ts`, parsing Sanity's own
+  `image-{assetId}-{width}x{height}-{format}` asset-ref convention directly with a regex (the same
+  pattern `@sanity/asset-utils`'s own `getImageDimensions` parses — not adding that whole package for
+  one regex); `decoding="async"`.
+
+**Structured data.** `BlogPosting` JSON-LD follows `BaseLayout.astro`'s existing `organizationJsonLd`
+pattern exactly — its own `<script type="application/ld+json" is:inline set:html={...}>` tag,
+only real-data fields (`headline`, `author.name`, `datePublished`, `dateModified` only when
+`post.updatedAt` actually exists, canonical `url`), no invented fields.
+
+**Verification — this is where PR 1's deferred checks and the plan's full checklist actually happen**,
+against the fixture build (`playwright.config.ts`'s `USE_BLOG_FIXTURES: "true"`, same as PR 2):
+
+- Breadcrumb, H1, and `Meta` render correctly, and the breadcrumb links to both `/blog/` and the
+  post's category archive.
+- Every custom Portable Text object from PR 1 renders on a real post (`CommonMistake`, `Working`,
+  `ImageWithAlt`, plus maths — the fixture post exercises all of them, per §28/§29's fixture design).
+- `BlogPosting` JSON-LD parses and has the right shape, **alongside** `BaseLayout`'s Organization
+  JSON-LD — both legitimately coexist on the same page. A first draft of this test used a single
+  `script[type="application/ld+json"]` locator and hit a real Playwright strict-mode violation (two
+  matches, not one) — fixed by reading all blocks via `.allTextContents()`, parsing each, and
+  asserting on the one whose `@type` is `BlogPosting` specifically, while separately asserting the
+  Organization block is still present. Caught by the test actually running, not by inspection.
+- **Maths renders with accessible MathML with JavaScript disabled** (`browser.newContext({
+  javaScriptEnabled: false })`, matching the existing FAQ no-JS pattern, VS-06) — proves KaTeX's
+  output is genuine build-time-rendered static HTML, not something a client script assembles, and
+  that a real `<math>` element is present, confirming `output: "htmlAndMathml"` was never narrowed to
+  `"html"` per §28's original accessibility requirement.
+- **No external CDN/font-host requests for stylesheets, fonts, or scripts on the post page** — proves
+  KaTeX is genuinely self-hosted, not pulled from a CDN. Scoped to `request.resourceType()` of
+  `stylesheet`/`font`/`script` only; the fixture post's own `cdn.sanity.io` image URL (a real,
+  legitimate Sanity image CDN reference, §28) would otherwise be a false positive if images weren't
+  excluded from the check.
+- **The post page's own CSS bundle includes `.katex` styles, and the landing page's CSS bundles do
+  not** — the two-sided check the plan required (present where expected, absent everywhere else),
+  confirming KaTeX's CSS import stayed component-scoped rather than leaking into the global
+  stylesheet every page ships.
+- **A real tap-target bug, caught by the test actually running**: `.breadcrumb__link` measured
+  37.109375px wide (need ≥44px) — it had `min-height` but no `min-width`, so short link text like
+  "Notes" shrank below the minimum. Fixed with `min-width: var(--control-h)`, `justify-content:
+  center`, and inline padding/negative-margin compensation so the visible text doesn't shift.
+
+**Verified:** `format:check`, `check` (0 errors/warnings/hints), full Playwright suite 39/39 (all
+previous plus 8 new post-page/KaTeX-scoping tests), both new CI guardrail scripts tested against real
+regressions before being trusted. Nothing deferred to PR 4 from this PR's own scope — the two
+outstanding Bob items from §28 are closed, and every claim from §28's original "deferred to PR 3"
+list has now been checked against a real build rather than assumed.
+

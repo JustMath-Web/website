@@ -1,5 +1,5 @@
 ---
-import { urlFor } from "../../lib/sanity/image";
+import { getImageDimensions, urlFor } from "../../lib/sanity/image";
 import type { PortableTextImage } from "../../lib/sanity/types";
 
 interface Props {
@@ -7,12 +7,32 @@ interface Props {
 }
 
 const { node } = Astro.props;
+
+// Widths matched to the post body's 64ch prose measure — at typical body font sizes that's roughly
+// 700-900px on screen, so 600/900/1200 covers standard/2x density without generating sizes nothing
+// will ever request.
+const SRCSET_WIDTHS = [600, 900, 1200];
 const src = urlFor(node.image).width(1200).auto("format").url();
+const srcset = SRCSET_WIDTHS.map(
+	(width) =>
+		`${urlFor(node.image).width(width).auto("format").url()} ${width}w`,
+).join(", ");
 const alt = node.intent === "decorative" ? "" : node.alt;
+const dimensions = getImageDimensions(node.image.asset._ref);
 ---
 
 <figure class="pt-image">
-	<img class="pt-image__img" src={src} alt={alt} loading="lazy" />
+	<img
+		class="pt-image__img"
+		src={src}
+		srcset={srcset}
+		sizes="(min-width: 768px) 700px, 100vw"
+		width={dimensions?.width}
+		height={dimensions?.height}
+		alt={alt}
+		loading="lazy"
+		decoding="async"
+	/>
 	{
 		node.caption && (
 			<figcaption class="pt-image__caption">{node.caption}</figcaption>
