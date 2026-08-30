@@ -21,15 +21,15 @@
     "sanity"
   ],
   "dependencies": {
-    "@sanity/client": "8.2.0",
-    "@sanity/vision": "6.10.1",
+    "@sanity/client": "8.3.0",
+    "@sanity/vision": "6.11.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "sanity": "6.9.1",
+    "sanity": "6.11.0",
     "styled-components": "6.5.3"
   },
   "devDependencies": {
-    "@sanity/eslint-config-studio": "6.0.0",
+    "@sanity/eslint-config-studio": "7.0.0",
     "@types/node": "26.2.0",
     "@types/react": "19.2.18",
     "eslint": "9.39.5",
