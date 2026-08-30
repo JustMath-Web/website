@@ -8,9 +8,9 @@ They are not a pnpm workspace; each has its own lockfile and is installed/run in
 
 ## Stack
 
-Astro 7 (TypeScript strict) · Tailwind CSS v4 · `@sanity/client` · Vercel adapter. No React/UI
-framework island exists yet — see `docs/DECISIONS.md` at the project root for the full stack
-decision record and every pinned version.
+Astro 7 (TypeScript strict) · Tailwind CSS v4 · `@sanity/client` · static Cloudflare Pages
+deployment. No React/UI framework island exists yet — see `docs/DECISIONS.md` at the project root
+for the full stack decision record and every pinned version.
 
 ## Local setup
 
@@ -75,6 +75,7 @@ session-by-session status and `docs/DECISIONS.md` for every recorded scaffold de
 
 ## Deploy
 
-Target is Vercel (guideline Section 20) — connect this `web/` directory as the project root, set the
-environment variables above per environment (Development/Preview/Production), and wire the Sanity
-publish webhook to a Vercel deploy hook once content exists. Not yet configured in this repo.
+Target is Cloudflare Pages — connect this `web/` directory as the project root, set the
+environment variables above per environment (especially `DEPLOY_ENV=production` only in the
+production environment), and wire the Sanity publish webhook to a Cloudflare Pages deploy hook once
+content exists. Not yet configured in this repo.

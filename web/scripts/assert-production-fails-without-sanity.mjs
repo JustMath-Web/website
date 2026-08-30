@@ -4,9 +4,9 @@
 // state. Bob's PR #28 review flagged that this branch (web/src/lib/content/blogData.ts's
 // resolveBlogSource()) was only ever verified by manually running the build locally -- this script
 // makes that verification automatic and repeatable in CI, so a future regression (e.g. someone
-// removing the throw, or breaking VERCEL_ENV detection) fails the build instead of going unnoticed.
+// removing the throw, or breaking DEPLOY_ENV detection) fails the build instead of going unnoticed.
 //
-// Runs a real `astro build` with VERCEL_ENV=production and no Sanity config (explicitly cleared, not
+// Runs a real `astro build` with DEPLOY_ENV=production and no Sanity config (explicitly cleared, not
 // just unset, in case CI's own environment ever gains Sanity secrets for an unrelated reason) and
 // asserts it fails with the expected error -- not just "any" failure, so an unrelated build breakage
 // doesn't get misread as this guardrail passing.
@@ -19,7 +19,7 @@ const result = spawnSync("pnpm", ["exec", "astro", "build"], {
 	encoding: "utf8",
 	env: {
 		...process.env,
-		VERCEL_ENV: "production",
+		DEPLOY_ENV: "production",
 		PUBLIC_SANITY_PROJECT_ID: "",
 		PUBLIC_SANITY_DATASET: "",
 		USE_BLOG_FIXTURES: "",

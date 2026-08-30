@@ -23,13 +23,12 @@ import type {
  */
 
 // One concrete check, used everywhere production/fixture-mode logic needs it, so there is never a
-// second copy of this condition to drift out of sync with this one. VERCEL_ENV is a real Vercel
-// system environment variable (confirmed against Vercel's current docs, and confirmed populated on
-// this project via `vercel env pull --environment production`, not assumed) — NODE_ENV/
-// import.meta.env.PROD alone cannot distinguish a real production deploy from a preview build, since
-// preview builds also commonly run in production mode.
+// second copy of this condition to drift out of sync with this one. DEPLOY_ENV is a host-set
+// production sentinel, configured explicitly in the Cloudflare Pages production environment for
+// this migration. NODE_ENV/import.meta.env.PROD alone cannot distinguish a real production deploy
+// from a preview build, since preview builds also commonly run in production mode.
 function isProductionBuild(): boolean {
-	return import.meta.env.VERCEL_ENV === "production";
+	return import.meta.env.DEPLOY_ENV === "production";
 }
 
 function isFixtureMode(): boolean {

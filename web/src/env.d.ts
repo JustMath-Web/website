@@ -13,11 +13,12 @@ interface ImportMetaEnv {
 	 */
 	readonly USE_BLOG_FIXTURES?: string;
 	/**
-	 * Vercel's own system environment variable — "production" | "preview" | "development". Not set
-	 * outside a Vercel build/runtime (e.g. local dev), which is intentional: lib/content/blogData.ts
-	 * treats an unset value as "not production" for the fixture-mode gate.
+	 * Deployment environment flag set by the host. This project uses a deliberate
+	 * "production" sentinel for blog fixture gating; when unset, local/dev/preview builds are
+	 * treated as non-production. Set this to "production" only in the Cloudflare Pages
+	 * production environment.
 	 */
-	readonly VERCEL_ENV?: string;
+	readonly DEPLOY_ENV?: string;
 }
 
 interface ImportMeta {

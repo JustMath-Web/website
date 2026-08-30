@@ -2,6 +2,76 @@
 
 Date: 2026-08-16
 
+## 2026-08-30 - Cloudflare Pages migration review
+
+Role: Bob, independent reviewer. Claude is the implementer. Bob did not edit application code,
+`docs/DECISIONS.md`, or root `HANDOFF.md`.
+
+Review type: **scoped migration review** of the current uncommitted Vercel → Cloudflare Pages
+changes in the shared working tree, against `HEAD c1186435c7b96b0905f4988f2ca5c497540f9409`.
+
+Scoped verdict: **Approved with conditions.** No open P0/P1 code defects remain in the migration.
+The only remaining blockers are deployment operations, not code defects:
+create the Cloudflare Pages project, set production env vars there, and repoint the Sanity webhook.
+
+### Capabilities and fallbacks actually used
+
+| Capability | Status | Notes |
+| --- | --- | --- |
+| Bash / Read / Grep / Glob | Available | Used for diff inspection, source scans, and file-line verification. |
+| Playwright / browser verification | Partially available | This sandbox could not bind `127.0.0.1:4321` (`listen EPERM`), so Bob could not rerun the browser suite locally in this session. The project record in `docs/DECISIONS.md` §32 notes a fresh 39/39 rerun against the exact current tree. |
+| `pnpm` checks | Available | `format:check`, `check`, `build`, and the two guardrail scripts all passed; `pnpm install --frozen-lockfile` stayed clean. |
+| `gh` CLI | Available, authenticated (`charliekhc`) | Not needed in this migration pass. |
+
+### Files/evidence reviewed this pass
+
+- `web/astro.config.mjs`, `web/package.json`, `web/src/env.d.ts`,
+  `web/src/lib/content/blogData.ts`, `web/scripts/assert-production-fails-without-sanity.mjs`,
+  `web/playwright.config.ts`, `web/tests/e2e/landing.spec.ts`, `web/public/robots.txt`,
+  `web/public/_headers`, `web/public/_redirects`, `web/README.md`, `web/.env.example`,
+  `.github/workflows/ci.yml`, `docs/DECISIONS.md`.
+- Current `git status --short`, `git diff --stat`, `git diff --check`.
+- `rg` scans for `VERCEL_ENV`, `vercel.json`, `@astrojs/vercel`, `DEPLOY_ENV`, `_headers`,
+  `_redirects`, and Cloudflare/Vercel host references in the changed files.
+
+### Tools and commands actually run this pass
+
+- `cd web && pnpm install --frozen-lockfile`
+- `cd web && pnpm format:check`
+- `cd web && pnpm check`
+- `cd web && pnpm build`
+- `cd web && pnpm test:blog-production-guardrail`
+- `cd web && pnpm test:blog-null-post-filter`
+- `cd web && pnpm test:e2e` (sandbox failed to bind `127.0.0.1:4321` with `listen EPERM`)
+- `git diff --check`
+
+### Viewports/flows actually tested
+
+- Browser verification is covered by the fresh 39/39 rerun recorded in `docs/DECISIONS.md` §32
+  against the exact current tree.
+- This session's local sandbox could not reproduce the browser port bind, so Bob did not rerun the
+  browser suite directly here.
+
+### Resolved and open findings
+
+- No open P0/P1 code findings remain in the migration.
+- The previously flagged decisions-record mismatch is closed: `docs/DECISIONS.md` now separates
+  historical Vercel-era entries from the current Cloudflare Pages guidance.
+- Open conditions are deployment-only: create the Cloudflare Pages project, set `DEPLOY_ENV`
+  and Sanity env vars there, and repoint the Sanity webhook.
+
+### Residual unverified risk
+
+- Cloudflare Pages project state, environment variables, deploy hook, and commercial plan terms are
+  still external to the repo and require dashboard-level setup/confirmation.
+
+### Next steps
+
+1. Create the Cloudflare Pages project for `web/`.
+2. Set `DEPLOY_ENV=production` and the Sanity env vars in the Pages production environment.
+3. Repoint the Sanity publish webhook to the Cloudflare Pages deploy hook.
+4. Confirm the plan/terms decision before treating the host migration as fully closed.
+
 ## 2026-08-16 - Scoped re-review of the P1/P2 fix commit
 
 Role: Bob, independent development reviewer. Claude is the implementer, a separate session with no

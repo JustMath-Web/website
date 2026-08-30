@@ -1,5 +1,65 @@
 # Bob Code Review — Just Math Malaysia Vertical Slice Review
 
+## 2026-08-30 - Cloudflare Pages migration review
+
+Review type: scoped migration review of the current uncommitted Vercel → Cloudflare Pages changes
+in the shared working tree, against `HEAD c1186435c7b96b0905f4988f2ca5c497540f9409`.
+
+Scoped verdict: **Approved with conditions.** No open P0/P1 code defects remain in the migration.
+The remaining items are deployment ops, not code defects: create the Cloudflare Pages project,
+set production env vars there, and repoint the Sanity webhook.
+
+### Evidence and commands actually run this pass
+
+- `git status --short`, `git diff --stat`, `git diff --check`.
+- `git diff` / `nl -ba` reads for the touched migration files, including:
+  `web/astro.config.mjs`, `web/package.json`, `web/src/env.d.ts`,
+  `web/src/lib/content/blogData.ts`, `web/scripts/assert-production-fails-without-sanity.mjs`,
+  `web/playwright.config.ts`, `web/tests/e2e/landing.spec.ts`, `web/public/robots.txt`,
+  `web/public/_headers`, `web/public/_redirects`, `web/README.md`, `web/.env.example`,
+  `.github/workflows/ci.yml`, and `docs/DECISIONS.md`.
+- `rg -n "VERCEL_ENV|vercel\\.json|@astrojs/vercel|Vercel deploy hook|Cloudflare Pages|DEPLOY_ENV|_headers|_redirects"`
+  across the changed app/docs files.
+- `cd web && pnpm install --frozen-lockfile`
+- `cd web && pnpm format:check`
+- `cd web && pnpm check`
+- `cd web && pnpm build`
+- `cd web && pnpm test:blog-production-guardrail`
+- `cd web && pnpm test:blog-null-post-filter`
+- `cd web && pnpm test:e2e` in this sandbox, which failed to bind `127.0.0.1:4321` with `listen EPERM`
+  before browser execution; the browser gap is closed in the project record by the fresh 39/39 rerun
+  against the exact current tree noted in `docs/DECISIONS.md` §32.
+
+### Review result
+
+- `@astrojs/vercel` was removed and no SSR adapter replacement was added.
+- `DEPLOY_ENV` now gates production behavior consistently in code, env typing, CI guardrail, and
+  docs.
+- `web/vercel.json` was replaced by `web/public/_headers` and `web/public/_redirects`.
+- `web/pnpm-lock.yaml` is synchronized with `package.json` and `pnpm install --frozen-lockfile`
+  stays clean.
+- Build output is static and emits the host files from `public/`.
+- The production guardrail still fails for the intended reason under `DEPLOY_ENV=production`.
+- No stale Vercel references remain in the active code path.
+
+### Conditions still open
+
+- Cloudflare Pages project not created yet.
+- `DEPLOY_ENV=production` and Sanity env vars still need to be set in the Pages production
+  environment.
+- Sanity publish webhook still needs to be repointed to a Cloudflare Pages deploy hook.
+- Cloudflare Pages commercial/free-plan terms still need confirmation before treating the host
+  choice as finalized.
+
+### Findings
+
+No open P0/P1 findings in the migration. No additional code defects found beyond the deployment
+conditions above.
+
+### Scoped verdict
+
+**Approved with conditions.**
+
 Date: 2026-08-16 (scoped re-review)
 
 Reviewer role: Bob, independent reviewer. Claude is the implementer. Bob did not edit application

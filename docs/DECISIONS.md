@@ -31,7 +31,7 @@ Astro scaffold:
 | --- | --- | --- |
 | Current library docs | Available via web search and `pnpm view` | Official docs/pricing were checked before recording versions |
 | Design authority | Local `design/` package | No Figma dependency |
-| Vercel management | Vercel CLI available: `56.4.1` | Dashboard/GitHub integration remains acceptable for account setup |
+| Cloudflare Pages management | Cloudflare dashboard available in browser | Dashboard/GitHub integration remains acceptable for account setup |
 | Browser verification | Local Chrome available; Playwright will be pinned in the web app | Manual checklist only if Playwright install fails |
 | GitHub | `gh` CLI available: `2.94.0` | Git remote/user dashboard if no auth is available later |
 | Google Drive/Docs/Sheets | Not required for current content inventory | User exports if client content later lives there |
@@ -60,7 +60,7 @@ Stack:
 | Styling | Tailwind CSS v4 plus project CSS tokens derived from `design/` |
 | Package manager | pnpm |
 | Language | TypeScript strict |
-| Hosting target | Vercel |
+| Hosting target | Cloudflare Pages |
 | Search | None at launch; Pagefind later if required |
 | Forms | None at launch |
 | Email | None at launch; Resend only if forms/newsletter are added |
@@ -83,7 +83,7 @@ Checked on 2026-08-14.
 | `create-astro` (scaffold CLI only, not a runtime dep) | `5.2.3` |
 | `@sanity/client` | `8.0.0` |
 | `sanity` (studio/) | `6.9.1` installed (`^6.9.1`, patch `6.9.2` available) |
-| `@astrojs/vercel` | `11.0.5` |
+| Astro adapter | none (static Cloudflare Pages deploy) |
 | Tailwind CSS | `4.3.3` |
 | `@tailwindcss/vite` | `4.3.3` |
 | `astro-portabletext` | `0.13.0` |
@@ -132,9 +132,9 @@ deprecated in favor of `'drafts'` — most existing tutorials/training data stil
 `web/src/lib/sanity/types.ts` is hand-authored to match `docs/CONTENT-MODEL.md`, not generated.
 `web/` and `studio/` are separate package roots (no shared pnpm workspace), so Sanity TypeGen needs
 a config in one of them with a relative schema-glob into the other (e.g. a `sanity-typegen.json` in
-`web/` with `schema: '../studio/schemaTypes/**/*.ts'`, output kept inside `web/` so Vercel's
-build — which only checks out `web/` — stays self-contained). Deferred until real page queries
-exist to scan; do not treat `types.ts` as generated until this is wired and re-run.
+`web/` with `schema: '../studio/schemaTypes/**/*.ts'`, output kept inside `web/` so the build
+stays self-contained). Deferred until real page queries exist to scan; do not treat `types.ts` as
+generated until this is wired and re-run.
 
 ## 4c. pnpm Supply-Chain Build Approvals
 
@@ -174,7 +174,9 @@ Version/reference sources:
 - `@sanity/client` + `groq` docs: `https://www.sanity.io/docs/apis-and-sdks/js-client-querying`,
   `https://www.sanity.io/docs/apis-and-sdks/sanity-typegen`
 - Sanity Content Lake perspectives: `https://www.sanity.io/docs/content-lake/perspectives`
-- Astro on Vercel docs: `https://vercel.com/docs/frameworks/frontend/astro`
+- Astro on Cloudflare Pages docs: `https://developers.cloudflare.com/pages/framework-guides/deploy-an-astro-site/`
+  (superseded `https://vercel.com/docs/frameworks/frontend/astro`, consulted at scaffold time when
+  hosting was still Vercel — see §32)
 - Package versions: `pnpm view`
 
 ## 5. Recurring Cost Assumptions
@@ -183,13 +185,18 @@ Checked on 2026-08-14.
 
 | Service | Assumption | Source |
 | --- | --- | --- |
-| Vercel | Use Pro for commercial hosting; current listed entry price is USD 20/month | `https://vercel.com/pricing` |
+| Cloudflare Pages | Free plan: unlimited static-asset requests/bandwidth, 500 builds/month, 1 concurrent build, 20-minute build timeout — comfortably covers this project's traffic and deploy cadence; re-check if build volume or a Functions/SSR need ever appears | `https://developers.cloudflare.com/pages/functions/pricing/`, `https://developers.cloudflare.com/pages/platform/limits/` (checked 2026-08-30, replaces the Vercel row below — see §32) |
 | Sanity | Existing project can be used; Free may work technically, Growth is USD 15/seat/month when Editor/Developer roles or collaboration features are required | `https://www.sanity.io/pricing` |
 | Resend | Not used at launch. If forms/email are added, Free is 3,000 emails/month with 100/day cap; Pro starts at USD 20/month | `https://resend.com/docs/knowledge-base/what-is-resend-pricing` |
 | Cloudflare Turnstile | Not used at launch. If forms are added, Free plan is sufficient for most production applications | `https://developers.cloudflare.com/turnstile/plans/` |
+| ~~Vercel~~ (superseded 2026-08-30, §32) | Use Pro for commercial hosting; current listed entry price is USD 20/month | `https://vercel.com/pricing` |
 
 Client-facing services should be client-owned or explicitly documented as developer-managed during
-maintenance. Vercel Hobby must not be used for this commercial site.
+maintenance. The build/request limits above were confirmed against Cloudflare's own docs
+(2026-08-30); whether Cloudflare's free plan carries any commercial-use restriction was **not**
+confirmed from an authoritative source during this check — verify against Cloudflare's actual Terms
+of Service before treating the free plan as settled for this commercial site, same standard the
+guideline already applies to Vercel Hobby.
 
 ## 6. Sanity Project
 
@@ -283,7 +290,8 @@ should be reviewed before Mr Kong writes fresh blog content. They get concrete f
 fallbacks now, and may later become one-to-one redirects to refreshed posts.
 
 Implementation note: create explicit 301 rules for the page URLs during the first vertical slice.
-If Vercel config is used, keep the redirect map small and test each route in preview.
+Redirects are implemented in `web/public/_redirects` (Cloudflare Pages, since §32) — keep the
+redirect map small and test each route against a preview deployment before merging.
 
 Known limitation: this is not a full continuity audit. Missing: indexed URL export, Search Console
 data, backlink inventory, analytics history, complete WordPress content export, plugin/integration
@@ -345,10 +353,11 @@ Launch conditions:
 - WhatsApp glyph must be either an official white/reversed asset from Meta's kit or removed.
 - Blog content and maths need Mr Kong review before any post ships.
 - Two report empty-state strings need Mr Kong's voice before parent-facing report use.
-- **Remove the pre-launch noindex guard** (`web/public/robots.txt`, `vercel.json`'s `X-Robots-Tag`
-  header — added §27) and connect the real custom domain before treating the site as launched. Added
-  2026-08-18 after Bob's PR #20 re-review caught the production Vercel deployment being publicly
-  indexable while every other condition above was still open.
+- **Remove the pre-launch noindex guard** (`web/public/robots.txt`, `web/public/_headers`'s
+  `X-Robots-Tag` header — added §27, moved from `vercel.json` to `_headers` in §32) and connect the
+  real custom domain before treating the site as launched. Added 2026-08-18 after Bob's PR #20
+  re-review caught the production Vercel deployment being publicly indexable while every other
+  condition above was still open.
 
 ## 14. Implementation Constraints From Design Review
 
@@ -1449,3 +1458,100 @@ This closes VS-15 and the full 4-PR blog infrastructure sequence. VS-17 (`index.
 deliberately queued since the original 2026-08-15 review, is now unblocked — real blog templates
 exist to compare against, per Charlie's own stated preference during plan review.
 
+## 32. Migration: Vercel → Cloudflare Pages — 2026-08-30
+
+**Historical note, read this first.** Sections 5, 17, 18, 22–24, and 26–31 above describe the
+project's Vercel-era deployment — real decisions, real verification, accurate at the time each was
+written. They are **retained unmodified as historical record**, per this project's own convention for
+dated log entries (matching how `HANDOFF.md` preserves prior dated sections as history). From this
+entry forward, they are **superseded for current deployment/production-detection guidance** — do not
+follow `VERCEL_ENV`, `vercel.json`, or "wire the Sanity webhook to a Vercel deploy hook" instructions
+found in those sections as if they describe today's setup. Section 13's Launch Conditions and
+Section 10's redirect implementation note were updated in place (not left as history) since they are
+living checklists, not point-in-time PR records.
+
+**Decision, not yet executed as a deploy.** Charlie asked whether the site could move from Vercel to
+Cloudflare Pages; both an initial review pass and an independent one (Bob) confirmed it can, since the
+site has no SSR/adapter-dependent surface — `astro build` already runs in Astro's default `static`
+output (no `output` set in `astro.config.mjs`), confirmed again in this migration's own build log
+(`[build] output: "static"`). Andy's recommendation, confirmed by Bob's independent review, was to
+migrate as a **static** Cloudflare Pages deploy, not an SSR one:
+
+- **No `@astrojs/cloudflare` adapter added.** Cloudflare's own Astro guide reserves that adapter for
+  SSR / Pages Functions; this project needs neither. `@astrojs/vercel` was removed from
+  `astro.config.mjs` and `web/package.json` outright, not swapped for a different platform adapter —
+  the correct application of FE-40 (don't add a dependency the project has no use for).
+- **`web/vercel.json` deleted**, replaced by `web/public/_headers` and `web/public/_redirects`
+  (Cloudflare Pages' own convention — Astro's `public/` copies both into `dist/` root untouched,
+  confirmed present in a real build). Same header set (CSP, `X-Content-Type-Options`,
+  `Referrer-Policy`, `X-Frame-Options`, and the pre-launch `X-Robots-Tag: noindex, nofollow,
+  noarchive` guard, kept deliberately per §13) and the same six redirects, translated to
+  `_redirects`' plain-text format.
+- **`VERCEL_ENV` → `DEPLOY_ENV`, a deliberate host-neutral sentinel, not `CF_PAGES_BRANCH`.** Keying
+  the blog's production-never-fixtures guardrail (`web/src/lib/content/blogData.ts`'s
+  `isProductionBuild()`, §28/§29) off a branch name would tie a business-level "is this production"
+  question to a deployment detail — a branch rename or a future non-`main` production setup would
+  silently break it. `DEPLOY_ENV=production` is set only in Cloudflare Pages' production environment;
+  local/preview/dev leave it unset, same fallback behavior the old `VERCEL_ENV` check had. Updated
+  everywhere the old variable was read or documented: `web/src/lib/content/blogData.ts`,
+  `web/src/env.d.ts`, `web/scripts/assert-production-fails-without-sanity.mjs` (including the env var
+  the script's spawned build sets to force the production path — the one place a missed rename would
+  have silently stopped the guardrail from testing anything), `web/.env.example`,
+  `web/playwright.config.ts`'s comment, `.github/workflows/ci.yml`'s comment, `web/README.md`, and
+  this file's §2–4 capability/stack/version tables (updated in place, not appended, since those
+  sections are the project's living current-stack reference, not a dated PR log).
+
+**Verified, not assumed — two independent passes.** First pass (Claude, this session): after
+resyncing `web/pnpm-lock.yaml` (`pnpm install` — the lockfile still listed `@astrojs/vercel` after the
+`package.json` edit landed, which would have broken `pnpm install --frozen-lockfile` in CI; resync
+dropped 44 packages), ran `format:check` (clean), `check` (0 errors/warnings/hints, 44 files), `build`
+(static output confirmed, `dist/_headers` and `dist/_redirects` present with the expected content),
+both guardrail scripts (`test:blog-production-guardrail` — the actual test of the `DEPLOY_ENV` rename,
+confirms the production-fails-without-Sanity path still fires for the right reason;
+`test:blog-null-post-filter`), and the full Playwright suite (39/39, no regression from the
+pre-migration count). Second pass (Bob, independent): reran `pnpm install --frozen-lockfile`,
+`format:check`, `check`, `build`, and both guardrail scripts — all reproduced clean — plus `git diff
+--check`, and confirmed the §32 documentation fix itself closed the "mixes Vercel/Cloudflare current
+guidance" finding. Bob's own browser pass was blocked by a local sandbox restriction (`listen EPERM`
+on `127.0.0.1:4321`, an environment limitation, not a finding about the code), so Bob could not
+independently clear that one check. **Closed by a third run** (Claude, after Bob's re-review and
+this section's own doc edits): `pnpm test:e2e` rerun against the exact current tree — `git status`
+confirms no file under `web/` changed since the first pass's 39/39 run, only this file
+(`docs/DECISIONS.md`, outside `web/`) — reproduced **39/39** again. Browser verification for this
+migration is not resting on a stale run; it is a fresh pass against the tree as it stands right now.
+
+**Bob's one finding from this review, addressed above:** this section itself, plus the four
+in-place fixes to §§4d/5/10/13, close the "decisions record mixes new Cloudflare flow with old
+Vercel-era current-policy text" finding — the historical PR entries (§§26–31) are left as accurate
+history per the note at the top of this section, and every section that presents itself as *current*
+guidance (reference-sources bibliography, recurring-cost table, redirect implementation note, launch
+conditions) now names Cloudflare Pages terms instead.
+
+**Bob's verdict: Approved with conditions (code).** Zero open P0/P1 code issues; the migration is
+implemented and verified. The conditions are deployment-ops items (below), not code defects — review
+is closed on the code diff, not on live deployment readiness. **Caveat, recorded plainly:** this
+verdict reached this entry only as reported chat text from Bob's session, not yet as a written entry
+in `review/bob/CODE-REVIEW.md`, `review/bob/APPROVAL-CHECKLIST.md`, or `BOB-REVIEWER-HANDOFF.md` —
+checked directly, none of the three mention this review round yet. Per Section 3's independence rule,
+Claude/Andy MUST NOT write Bob's verdict into Bob's own review files on Bob's behalf; that record
+still needs to come from Bob's session before the Definition of Done's "`review/bob/CODE-REVIEW.md`
+... current for the reviewed commit" line can be checked off.
+
+**Not yet done — still open:**
+
+- Working tree is still uncommitted. Bob's code-side approval clears the gate that was blocking a
+  commit, but nothing has been staged, committed, branched, or opened as a PR — that action needs
+  Charlie's explicit go-ahead per the standing rule (never commit without being asked), independent of
+  whether the review verdict permits it.
+- Bob's own review-record files (above) don't yet reflect this round.
+- No Cloudflare Pages project exists yet. Still needed: create the project (root directory `web`,
+  build command `pnpm build`, output directory `dist`, Node ≥ `22.12.0` per `web/package.json`'s
+  `engines`), set `DEPLOY_ENV=production` plus the Sanity env vars in the Pages production
+  environment only, and connect the `mathematicsmalaysia.com` custom domain (still not connected —
+  §13).
+- The Sanity publish webhook still points at nothing real (the old Vercel deploy hook was never
+  documented as created in §26–31, and would need repointing regardless) — create a Cloudflare Pages
+  deploy hook and wire it once the Pages project exists.
+- Commercial-use terms for Cloudflare Pages' free plan were not confirmed against Cloudflare's actual
+  Terms of Service during this pass (§5) — verify before relying on the free plan for this commercial
+  site, the same bar the guideline already sets for Vercel Hobby.
