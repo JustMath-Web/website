@@ -72,6 +72,23 @@ create the Cloudflare Pages project, set production env vars there, and repoint 
 3. Repoint the Sanity publish webhook to the Cloudflare Pages deploy hook.
 4. Confirm the plan/terms decision before treating the host migration as fully closed.
 
+### 2026-08-30 Wrangler assets-only delta re-review
+
+Bob re-reviewed the follow-up PR #31 commit adding `web/wrangler.jsonc` for Cloudflare Workers
+static assets deployment.
+
+- PR #31 head SHA: `20274648424a4d7f6ea0b8d3e40abcd96ff4faac`.
+- PR state: open, not draft, mergeable.
+- CI: `web` success and `studio` success on the PR head.
+- `web/wrangler.jsonc`: assets-only config, no `main`, `assets.directory` is `./dist`.
+- `web/.gitignore`: `.wrangler/` ignored.
+- `web/public/_headers` and `web/public/_redirects`: still present and emitted to `dist/` by a real
+  `pnpm build`.
+- Local checks rerun by Bob: `pnpm format:check`, `pnpm build`, and `git diff --check
+  origin/main..HEAD` all passed.
+
+Result: no new finding. The scoped verdict remains **Approved with conditions**.
+
 ## 2026-08-16 - Scoped re-review of the P1/P2 fix commit
 
 Role: Bob, independent development reviewer. Claude is the implementer, a separate session with no

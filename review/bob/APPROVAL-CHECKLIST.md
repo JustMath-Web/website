@@ -26,6 +26,18 @@ conditions**.
 - [ ] Sanity publish webhook still needs to be repointed to a Cloudflare Pages deploy hook.
 - [ ] Cloudflare Pages commercial/free-plan terms still need confirmation.
 
+### Wrangler Assets-Only Delta - 2026-08-30
+
+- [x] `web/wrangler.jsonc` exists on PR #31 head SHA
+  `20274648424a4d7f6ea0b8d3e40abcd96ff4faac`.
+- [x] `web/wrangler.jsonc` has no `main` key.
+- [x] `assets.directory` is `./dist`.
+- [x] `web/public/_headers` and `web/public/_redirects` remain in place and are emitted to `dist/`
+  by `pnpm build`.
+- [x] `web/.gitignore` ignores `.wrangler/`.
+- [x] PR #31 remains open, not draft, mergeable, and CI-green (`web` and `studio`).
+- [x] `pnpm format:check`, `pnpm build`, and `git diff --check origin/main..HEAD` pass locally.
+
 ## Vertical Slice Re-Review (P1/P2 Fix Commit) — 2026-08-16
 
 Scoped re-review of fix commit `05ab713` (`HEAD c1186435c7b96b0905f4988f2ca5c497540f9409`), which
