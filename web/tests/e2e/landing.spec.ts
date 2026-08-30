@@ -60,9 +60,9 @@ test.describe("structured data (VS-07)", () => {
 });
 
 // TEMPORARY pre-launch guard (docs/DECISIONS.md §27) — asserts the disallow-all robots.txt exists.
-// vercel.json's matching X-Robots-Tag header is HTTP-layer only, not testable through this suite's
-// local static server (scripts/serve-dist.mjs doesn't apply vercel.json headers — same caveat as
-// the CSP/security-header tests, see docs/DECISIONS.md §22).
+// _headers' matching X-Robots-Tag header is HTTP-layer only, not testable through this suite's
+// local static server (scripts/serve-dist.mjs doesn't apply Pages headers — same caveat as the
+// CSP/security-header tests, see docs/DECISIONS.md §22).
 test.describe("robots.txt (pre-launch guard, §27)", () => {
 	test("disallows all crawling", async ({ page }) => {
 		const response = await page.goto("/robots.txt");

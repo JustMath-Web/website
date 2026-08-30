@@ -1,5 +1,31 @@
 # Bob Approval Checklist
 
+## Cloudflare Pages Migration Review - 2026-08-30
+
+Scoped review of the current uncommitted migration diff. Scoped verdict: **Approved with
+conditions**.
+
+- [x] `@astrojs/vercel` removed from `web/astro.config.mjs` and `web/package.json`; no SSR adapter
+  replacement added.
+- [x] `DEPLOY_ENV` now gates production behavior in `web/src/lib/content/blogData.ts`,
+  `web/src/env.d.ts`, `web/scripts/assert-production-fails-without-sanity.mjs`,
+  `.github/workflows/ci.yml`, `web/playwright.config.ts`, `web/.env.example`, and the updated
+  documentation.
+- [x] `web/vercel.json` was replaced by `web/public/_headers` and `web/public/_redirects`.
+- [x] `web/pnpm-lock.yaml` was resynchronized and `pnpm install --frozen-lockfile` stays clean.
+- [x] `pnpm format:check`, `pnpm check`, `pnpm build`, `pnpm test:blog-production-guardrail`, and
+  `pnpm test:blog-null-post-filter` all pass.
+- [x] `pnpm test:e2e` is recorded as a fresh 39/39 rerun against the exact current tree in
+  `docs/DECISIONS.md` §32.
+
+### Conditions Still Open
+
+- [ ] Cloudflare Pages project does not exist yet.
+- [ ] Production env vars still need to be set in the Pages dashboard (`DEPLOY_ENV=production` plus
+  the Sanity vars).
+- [ ] Sanity publish webhook still needs to be repointed to a Cloudflare Pages deploy hook.
+- [ ] Cloudflare Pages commercial/free-plan terms still need confirmation.
+
 ## Vertical Slice Re-Review (P1/P2 Fix Commit) — 2026-08-16
 
 Scoped re-review of fix commit `05ab713` (`HEAD c1186435c7b96b0905f4988f2ca5c497540f9409`), which

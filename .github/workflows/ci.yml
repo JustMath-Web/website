@@ -39,7 +39,7 @@ jobs:
       - run: pnpm build
       # Guardrail for docs/DECISIONS.md §29's blog fetch-failure policy: a production build must
       # fail outright if it can't get real Sanity data, never silently render an empty/placeholder
-      # blog state. Runs its own real `astro build` internally (VERCEL_ENV=production, no Sanity
+      # blog state. Runs its own real `astro build` internally (DEPLOY_ENV=production, no Sanity
       # config) and asserts it fails with the expected error — was previously only verified manually.
       - run: pnpm test:blog-production-guardrail
       # Proves the "slug list and individual post fetch disagree" branch blog/[slug].astro's
