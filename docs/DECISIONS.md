@@ -1703,6 +1703,33 @@ resolution mechanism than either `engines.node` or the variable, per Cloudflare'
 Wrangler/Workers Build project settings for anything else that could govern the build-image Node
 version, or treating it as a Cloudflare platform bug worth a support ticket.
 
+**Further observed pattern, still not a proven root cause — record this precisely so the next
+review doesn't re-discover it from scratch.** Cross-referencing every `Workers Builds: justmathwebsite`
+result seen so far: **every failure has coincided with a cold build-tool cache, and every success
+with a warm one** (a warm cache shows `Success: Build output restored from build cache.` immediately
+before a correct `nodejs@22.12.0` detection; a cold one skips that line and shows the mangled
+`22.12.0 or newer`). This is **not** a preview-vs-production distinction, even though it can look
+like one: `main` has mostly stayed warm because it gets rebuilt far more often, while every PR in
+this workflow uses a brand-new branch, which is cold on its first (often only) build by definition.
+Confirmed reproduced again on PR #44's own first build (`ae73770e...`, `08:13:04Z`–`08:13:21Z`),
+identical signature to every prior failure.
+
+Practical consequence, until Cloudflare's behavior changes or the actual mechanism is found: **expect
+the non-required `Workers Builds` check to fail on most or all new PR branches going forward** — this
+is not a new regression each time it happens, it is the same already-diagnosed pattern. It does
+**not** change how a PR's merge readiness is judged: the **required** GitHub checks (`web`, `studio`)
+remain the sole authoritative signal for that, exactly as `main`'s branch protection already
+enforces. Separately, and independently of any PR, `main`'s actual live-deploy health should still be
+checked directly (a real deployment on `wrangler deployments list --name justmathwebsite`, and/or a
+live `curl`) rather than inferred from a PR's `Workers Builds` status one way or the other — the two
+are not the same signal.
+
+**Still not fully proven beyond the observed logs above**: this is a strong, consistent correlation
+across every instance seen so far, not a confirmed mechanism. It remains an open, Cloudflare-side
+tool-detection/build-cache question — see the next-candidates list above (`.nvmrc`, other Wrangler/
+Workers Build settings, a Cloudflare support ticket) for how to actually root-cause it, whenever that
+becomes worth the time.
+
 ## 35. §33's verification step: webhook → build → deploy confirmed end-to-end — 2026-08-31
 
 **Closes §33's open verification item.** Found the actual root cause of the webhook silence noted
