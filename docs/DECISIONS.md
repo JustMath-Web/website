@@ -1678,3 +1678,29 @@ ambiguity that let the range-parsing bug surface).
 in the first place, whether Cloudflare's range-parsing fallback is itself a platform bug worth a
 support ticket, and the standing `Workers Builds` preview-check investigation — all remain open,
 tracked in §32/§33.
+
+**Correction, same day, tested and disproven — this section's root-cause theory was wrong.** This
+PR's own `Workers Builds: justmathwebsite` check ran against the exact-pinned commit (build
+`68af2a71-ebc7-4730-a4c6-4fcde3c02218`, `2026-08-31T07:29:01Z`–`07:29:11Z`) and failed with the
+**identical** `nodejs@22.12.0 or newer` / `Failed: error occurred while installing tools or
+dependencies` error as before the pin. The range-in-`engines.node` hypothesis above is therefore
+disproven, not merely unconfirmed — an exact pin removes the range entirely, and the exact same
+failure still occurs. Also checked and ruled out: no `.nvmrc` or `.node-version` file exists anywhere
+in the repo (these would take priority over both `engines.node` and the `NODE_VERSION` dashboard
+variable per Cloudflare's own docs), and `studio/package.json` has no conflicting `engines` field.
+
+The actual mechanism remains unknown. What is still confirmed, from comparing successful vs. failing
+build logs: a successful build shows `Success: Build output restored from build cache.` immediately
+before correctly detecting `nodejs@22.12.0` (exact); a failing one skips that confirmation line
+(a cache miss) and shows the mangled `22.12.0 or newer` instead — regardless of what `engines.node`
+or `NODE_VERSION` say. This strongly suggests a genuine Cloudflare-side bug in Workers Builds' cold
+build-tool-cache resolution path, not something fixable through this repo's own configuration.
+
+**This PR was merged anyway** (`babdd50`), retitled and relabeled before merging to state plainly
+that it is a cleanup/determinism improvement, not a fix for this issue — exact pinning is still a
+better project contract than a range for this deployment setup on its own merits, independent of
+whether it touches the Cloudflare bug. The bug itself is tracked as its own open investigation, not
+closed by this entry; next candidates, in no particular order: a `.nvmrc` file (a different
+resolution mechanism than either `engines.node` or the variable, per Cloudflare's docs), inspecting
+Wrangler/Workers Build project settings for anything else that could govern the build-image Node
+version, or treating it as a Cloudflare platform bug worth a support ticket.
