@@ -1637,3 +1637,44 @@ pushed it live, re-confirmed via a direct `curl` of the real deployment URL.
 webhook → Cloudflare build → deploy chain completes on its own, with no manual `wrangler deploy` step.
 That is the actual proof this is self-sufficient going forward, not just patched by hand this once.
 Tracked in §32's "still open" list.
+
+## 34. Pinned `engines.node` to an exact version — 2026-08-31
+
+**Scoped narrowly to this one change** — the broader preview-branch `Workers Builds` cache
+investigation (§32/§33's "still open" lists) is a separate, ongoing concern and is not resolved by
+this alone; this entry documents only the deterministic fix that was safe to ship immediately.
+
+`web/package.json`'s `engines.node` changed from a range (`">=22.12.0"`) to an exact pin
+(`"22.12.0"`). Root cause, found by comparing successful vs. failing Cloudflare build logs line by
+line: a successful build shows `Restoring from build output cache` immediately followed by
+`Success: Build output restored from build cache.` before `Detected the following tools from
+environment: nodejs@22.12.0, pnpm@10.11.1`. A failing build skips that confirmation line entirely —
+`Detected the following tools from environment: nodejs@22.12.0 or newer, pnpm@10.11.1` — meaning the
+build-tool cache was cold (a miss), and Cloudflare's fallback auto-detection read `engines.node`
+directly, rendered the `>=` range as the literal English phrase "or newer", and then tried to
+install a package version by that literal (invalid) name.
+
+This was masked for hours by a lucky warm cache (multiple successful builds on unchanged commits all
+hit the cache and reused a previously-resolved `22.12.0`), which is why it was initially misdiagnosed
+as preview-branch-only (§33's "still open" list). It is not preview-specific: **any commit to `main`
+invalidates the build cache** (confirmed — PR #41's merge, a one-line `wrangler.jsonc` change with
+nothing to do with Node versions, triggered the exact same failure on `main` itself at
+`2026-08-31T06:22:18Z`). Setting the `NODE_VERSION` dashboard variable to `22.12.0` (§32) never
+actually fixed this; it was coincidental — some earlier build happened to cache a correct resolution,
+and every real commit since has been exposing the same underlying auto-detection bug again.
+
+An exact pin removes the range entirely, so there is nothing left for the fallback path to
+mis-render, regardless of cache state — this makes the deployed build deterministic independent of
+Cloudflare's cache behavior, rather than depending on a lucky warm cache to avoid the bug.
+`web/README.md`'s setup instructions updated to match (states the exact pin and why, rather than
+`Node ≥22.12`, which would now read as a minimum when it is not).
+
+**Verified:** `format:check`, `check`, `build`, both blog guardrail scripts, and the full Playwright
+suite all still pass with the pinned version (nothing about the pin itself changes runtime behavior —
+`22.12.0` was always the actual version installed in every successful build; this only removes the
+ambiguity that let the range-parsing bug surface).
+
+**Deliberately not addressed here:** why the build-output/dependency cache goes cold on a real commit
+in the first place, whether Cloudflare's range-parsing fallback is itself a platform bug worth a
+support ticket, and the standing `Workers Builds` preview-check investigation — all remain open,
+tracked in §32/§33.
