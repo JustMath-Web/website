@@ -1555,17 +1555,85 @@ assumed) — new git-connected static sites deploy via **Workers static assets**
 adapter, still fully static). The deployment-ops steps below are written for the Workers flow, not
 classic Pages.
 
+**Done, since this section was last updated:** the Cloudflare project (`justmathwebsite`, Workers
+static-assets flow) is created and live at `https://justmathwebsite.charlie-kong.workers.dev`,
+`DEPLOY_ENV=production` and the Sanity env vars are set in its production environment, and the Sanity
+publish webhook is wired to a real Cloudflare deploy hook and has been independently confirmed firing
+correctly (`npx sanity hooks logs` from `studio/`, three real deliveries, all `200`). See §33 for the
+incident this surfaced and its resolution.
+
 **Not yet done — still open (deployment ops, not code):**
 
-- No Cloudflare project exists yet. Still needed: create it (Workers static-assets flow, since classic
-  Pages creation is unavailable — repo `JustMath-Web/website`, path `/web`, build command
-  `pnpm build`; `web/wrangler.jsonc` supplies the assets directory, so no separate output-directory
-  field applies in this flow), set `DEPLOY_ENV=production` plus the Sanity env vars in the project's
-  production environment only, and connect the `mathematicsmalaysia.com` custom domain (still not
-  connected — §13).
-- The Sanity publish webhook still points at nothing real (the old Vercel deploy hook was never
-  documented as created in §26–31, and would need repointing regardless) — create a Cloudflare deploy
-  hook and wire it once the project exists.
+- The `mathematicsmalaysia.com` custom domain is still not connected (§13) — deliberately held, gated
+  on the other unresolved launch conditions there, not on anything from this migration.
 - Commercial-use terms for Cloudflare's free plan were not confirmed against Cloudflare's actual Terms
   of Service during this pass (§5) — verify before relying on the free plan for this commercial site,
   the same bar the guideline already sets for Vercel Hobby.
+- §33's verification step (a harmless Studio publish, confirming webhook → build → deploy succeeds
+  with zero manual intervention) has not been run yet.
+
+## 33. Content-gap incident: missing `homePage`, then null `footerLinks` — 2026-08-31
+
+**Record this narrowly and precisely** — the point is to explain the deployment timeline honestly, so
+a future reader doesn't misdiagnose the same symptoms as a webhook or Cloudflare platform bug. It was
+neither. Two independent, pre-existing content gaps in the production Sanity dataset, encountered
+back to back.
+
+**Symptom that started this:** Charlie added a header nav link ("Test") in Studio and published it.
+The site never showed it, despite the webhook visibly triggering a rebuild each time.
+
+**Finding 1 — `homePage` did not exist in the production dataset at all.** Confirmed via direct query
+(`count(*[_id=="homePage"])` → `0`, both published and as a draft). `web/src/lib/content/landingData.ts`'s
+`getLandingPageData()` requires `homePage`, `siteSettings`, and `navigation` all to be present or it
+falls back entirely to `defaultLandingData.ts`'s hardcoded content (deliberate, safe design — an
+incomplete CMS response must never partially render). Since `homePage` was always missing, **every**
+build silently rendered full local fallback content — including the header/footer nav — regardless of
+what was published to `navigation`. This was not a deploy or webhook problem; the real content was
+simply never being read at all.
+
+Fixed via a one-off script (`client.createIfNotExists`, run once locally, deleted after use — never
+committed) that created only the missing `homePage` document, reusing the same content-shape logic as
+`studio/scripts/seed.ts`'s `homePageDocument()`. Deliberately did **not** run `pnpm seed` itself: that
+script's singleton block uses `transaction.createOrReplace(...)` unconditionally on `siteSettings`,
+`navigation`, and `homePage` together — since `siteSettings`/`navigation` already existed (including
+Charlie's real "Test" edit), a real `pnpm seed` run at this point would have silently overwritten both
+with their hardcoded defaults. `createIfNotExists` was chosen specifically because it is a safe no-op
+against anything that already exists.
+
+**Finding 2 — once `homePage` existed, `navigation.footerLinks` was found to be `null`.** A second,
+independent gap: the `navigation` document had `headerLinks` set but had never had `footerLinks` set
+at all. `web/src/components/SiteFooter.astro` does `navigation.footerLinks.map(...)` with no null
+guard, since the code's own safety net (the `homePage`/`siteSettings`/`navigation` completeness check
+in `getLandingPageData()`) assumes any singleton that IS present is itself well-formed — it checks for
+*presence*, not internal shape. This bug was **latent since the project's earliest CMS setup**, never
+triggered before, because the missing `homePage` (Finding 1) always forced full fallback first,
+including a valid local `footerLinks` array — the real, broken `navigation.footerLinks` was never
+actually read by a build until Finding 1 was fixed. Reproduced locally and confirmed via direct query
+(`*[_id=="navigation"][0]{headerLinks,footerLinks}` → `footerLinks: null`). Fixed the same safe way:
+a `.patch("navigation").set({footerLinks: [...]}).commit()` (one-off script, deleted after use) that
+touched only `footerLinks`, never `headerLinks`.
+
+**The webhook itself was never broken.** Cross-checked `npx sanity hooks logs` (from `studio/`)
+against `npx wrangler deployments list --name justmathwebsite`:
+
+| Webhook delivery (Sanity) | Result | Cloudflare outcome |
+| --- | --- | --- |
+| `2026-08-31T03:38:10Z` | `200` | Deployment `03:38:54Z` — succeeded |
+| `2026-08-31T03:44:24Z` (Charlie's "Test" link publish) | `200` | Deployment `03:45:15Z` — succeeded (still full fallback content per Finding 1, so safely rendered, just not what anyone was looking for) |
+| `2026-08-31T04:10:33Z` (the `homePage` creation from Finding 1's fix) | `200` | **No deployment** — Cloudflare's own build log for this exact window (`04:10:36`–`04:11:07Z`) shows the build ran and crashed with precisely Finding 2's `TypeError: Cannot read properties of null (reading 'map')` in `SiteFooter`, then `Failed: error occurred while running build command` |
+
+In other words: the webhook correctly delivered every time, and Cloudflare correctly refused to
+publish a broken build once real (partially-complete) content made it crash. The pipeline behaved
+exactly as it should have; the underlying content was briefly in a genuinely broken state, for the
+short window between fixing Finding 1 and discovering/fixing Finding 2.
+
+**Manual `wrangler deploy` was used to reach the current live state, after both gaps were closed** —
+not before. `rm -rf dist && PUBLIC_SANITY_PROJECT_ID=v4v0i7gl PUBLIC_SANITY_DATASET=production pnpm build`
+succeeded cleanly only once both fixes were in place, confirmed in the built HTML (`grep` for the
+"Test" link in `dist/index.html`), then `npx wrangler deploy --name justmathwebsite` from `web/`
+pushed it live, re-confirmed via a direct `curl` of the real deployment URL.
+
+**Verification still open, not yet run:** publish one harmless change in Studio and confirm the full
+webhook → Cloudflare build → deploy chain completes on its own, with no manual `wrangler deploy` step.
+That is the actual proof this is self-sufficient going forward, not just patched by hand this once.
+Tracked in §32's "still open" list.
