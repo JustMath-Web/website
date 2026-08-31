@@ -60,6 +60,32 @@ conditions above.
 
 **Approved with conditions.**
 
+### 2026-08-30 Wrangler assets-only delta re-review
+
+Review type: narrow re-review of the follow-up commit on PR #31 adding `web/wrangler.jsonc` for
+Cloudflare Workers static assets deployment.
+
+Evidence:
+
+- `gh pr view 31 --json headRefOid,state,mergeable,isDraft,statusCheckRollup,url,title` confirmed PR
+  #31 is open, not draft, mergeable, and at head SHA `20274648424a4d7f6ea0b8d3e40abcd96ff4faac`.
+- CI status for that SHA is green: `web` success and `studio` success.
+- `git fetch origin cloudflare-pages-migration` and `git rev-parse HEAD` confirmed this checkout is
+  on `cloudflare-pages-migration` at the same PR head SHA.
+- `web/wrangler.jsonc` contains `name: "justmathweb"`, `compatibility_date: "2026-08-30"`, and
+  `assets.directory: "./dist"`, with no `main` key.
+- `web/.gitignore` contains `.wrangler/`.
+- `web/public/_headers` and `web/public/_redirects` are unchanged in substance and still build into
+  `dist/_headers` and `dist/_redirects`.
+- `cd web && pnpm format:check` passed.
+- `cd web && pnpm build` passed, still with Astro `output: "static"` and 8 pages generated.
+- `git diff --check origin/main..HEAD` passed.
+
+Result: no new finding. The assets-only Wrangler config is consistent with the static-hosting
+decision in §32 and does not reopen the adapter/dependency decision.
+
+Scoped verdict remains: **Approved with conditions.**
+
 Date: 2026-08-16 (scoped re-review)
 
 Reviewer role: Bob, independent reviewer. Claude is the implementer. Bob did not edit application
