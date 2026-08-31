@@ -1537,21 +1537,35 @@ Claude/Andy MUST NOT write Bob's verdict into Bob's own review files on Bob's be
 still needs to come from Bob's session before the Definition of Done's "`review/bob/CODE-REVIEW.md`
 ... current for the reviewed commit" line can be checked off.
 
-**Not yet done — still open:**
+**Merged.** PR #31 (`cloudflare-pages-migration`, merge commit `55f6647`, 2026-08-30) — the migration
+itself plus the `wrangler.jsonc` follow-up commit, both confirmed via `gh pr view 31 --json
+state,mergedAt,mergeCommit`. PR #32 (`bob-review-record-wrangler-migration`, merge commit `67c27c0`,
+2026-08-31, confirmed the same way) — closed a real process gap: Bob's narrow re-review write-up for
+the `wrangler.jsonc` delta was still uncommitted local changes at the moment PR #31 merged, so `main`
+briefly had the reviewed code without its own review record. PR #32 restored it through the normal
+protected-branch path (`main` requires a PR — confirmed via `gh api
+repos/.../branches/main/protection`), not by amending PR #31 or rewriting its history. Merge-log
+entries: `log/2026-08-30_PR31_cloudflare-pages-migration.md`,
+`log/2026-08-31_PR32_bob-review-record-wrangler-migration.md`.
 
-- Working tree is still uncommitted. Bob's code-side approval clears the gate that was blocking a
-  commit, but nothing has been staged, committed, branched, or opened as a PR — that action needs
-  Charlie's explicit go-ahead per the standing rule (never commit without being asked), independent of
-  whether the review verdict permits it.
-- Bob's own review-record files (above) don't yet reflect this round.
-- No Cloudflare Pages project exists yet. Still needed: create the project (root directory `web`,
-  build command `pnpm build`, output directory `dist`, Node ≥ `22.12.0` per `web/package.json`'s
-  `engines`), set `DEPLOY_ENV=production` plus the Sanity env vars in the Pages production
-  environment only, and connect the `mathematicsmalaysia.com` custom domain (still not connected —
-  §13).
+**Discovery mid-rollout, also recorded here for continuity:** Cloudflare's dashboard no longer offers
+classic Pages project creation for new projects (confirmed directly by Charlie in the dashboard, not
+assumed) — new git-connected static sites deploy via **Workers static assets** instead. This is why
+`web/wrangler.jsonc` exists; it does not change the core decision above (still no `@astrojs/cloudflare`
+adapter, still fully static). The deployment-ops steps below are written for the Workers flow, not
+classic Pages.
+
+**Not yet done — still open (deployment ops, not code):**
+
+- No Cloudflare project exists yet. Still needed: create it (Workers static-assets flow, since classic
+  Pages creation is unavailable — repo `JustMath-Web/website`, path `/web`, build command
+  `pnpm build`; `web/wrangler.jsonc` supplies the assets directory, so no separate output-directory
+  field applies in this flow), set `DEPLOY_ENV=production` plus the Sanity env vars in the project's
+  production environment only, and connect the `mathematicsmalaysia.com` custom domain (still not
+  connected — §13).
 - The Sanity publish webhook still points at nothing real (the old Vercel deploy hook was never
-  documented as created in §26–31, and would need repointing regardless) — create a Cloudflare Pages
-  deploy hook and wire it once the Pages project exists.
-- Commercial-use terms for Cloudflare Pages' free plan were not confirmed against Cloudflare's actual
-  Terms of Service during this pass (§5) — verify before relying on the free plan for this commercial
-  site, the same bar the guideline already sets for Vercel Hobby.
+  documented as created in §26–31, and would need repointing regardless) — create a Cloudflare deploy
+  hook and wire it once the project exists.
+- Commercial-use terms for Cloudflare's free plan were not confirmed against Cloudflare's actual Terms
+  of Service during this pass (§5) — verify before relying on the free plan for this commercial site,
+  the same bar the guideline already sets for Vercel Hobby.
