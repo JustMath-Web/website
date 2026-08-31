@@ -20,7 +20,8 @@ cp .env.example .env   # fill in values, see "Environment variables" below
 pnpm dev                # http://localhost:4321
 ```
 
-Requires Node ≥22.12 and pnpm (see `package.json#engines`).
+Requires Node 22.12.0 exactly and pnpm (see `package.json#engines` — pinned, not a minimum, to avoid
+Cloudflare's build-tool auto-detection mis-parsing a version range; see `docs/DECISIONS.md` §34).
 
 ## Commands
 
