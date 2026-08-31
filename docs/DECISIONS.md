@@ -1569,8 +1569,6 @@ incident this surfaced and its resolution.
 - Commercial-use terms for Cloudflare's free plan were not confirmed against Cloudflare's actual Terms
   of Service during this pass (§5) — verify before relying on the free plan for this commercial site,
   the same bar the guideline already sets for Vercel Hobby.
-- §33's verification step (a harmless Studio publish, confirming webhook → build → deploy succeeds
-  with zero manual intervention) has not been run yet.
 
 ## 33. Content-gap incident: missing `homePage`, then null `footerLinks` — 2026-08-31
 
@@ -1704,3 +1702,35 @@ closed by this entry; next candidates, in no particular order: a `.nvmrc` file (
 resolution mechanism than either `engines.node` or the variable, per Cloudflare's docs), inspecting
 Wrangler/Workers Build project settings for anything else that could govern the build-image Node
 version, or treating it as a Cloudflare platform bug worth a support ticket.
+
+## 35. §33's verification step: webhook → build → deploy confirmed end-to-end — 2026-08-31
+
+**Closes §33's open verification item.** Found the actual root cause of the webhook silence noted
+there in passing, and confirmed the full pipeline now works with zero manual intervention.
+
+**Root cause of the multi-hour webhook silence:** the Sanity webhook's "Trigger on" event-type
+filter did not have **Update** and **Delete** checked — only some other event type(s) were. A
+document *edit* (as opposed to a brand-new document) never fired the webhook while this was
+misconfigured. Charlie found and fixed this directly in the webhook's own settings in
+`sanity.io/manage` (not visible from `npx sanity hooks list`/`logs`, which show delivery history and
+target config but not the trigger-event checkboxes). This explains the gap between §33's three
+early, successful deliveries and the silence afterward — evidently at least one of those three
+happened to be an event type that was still enabled at the time, and normal content edits later were
+not.
+
+**Verified end-to-end, for real, immediately after the fix:**
+
+- Charlie published two further test edits directly in Studio (removing the earlier "Test" header
+  link, then adding a "Test2" one) — ordinary content edits, not document creations.
+- `npx sanity hooks logs` showed a new delivery at `2026-08-31T08:07:21Z`, `200`.
+- `npx wrangler deployments list --name justmathwebsite` showed a new successful deployment
+  45 seconds later, at `08:08:06Z` — no manual `wrangler deploy` run by anyone.
+- `curl` against the real live URL confirmed the header shows `Test2` — the actual new content, not
+  a cached or stale response.
+
+This is the first time this project has observed the complete chain (Studio edit → publish → Sanity
+webhook → Cloudflare build → live deploy) complete correctly on its own. The Cloudflare cold-cache
+Node-detection bug (§34) did not reproduce on this build either, but that is not claimed as fixed —
+recent builds (PR #42/#43's merge commits, and this one) have simply all succeeded; whether the
+underlying bug is fixed, intermittent, or coincidentally avoided remains genuinely unknown and is
+still tracked as its own open item in §34.
