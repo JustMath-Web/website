@@ -39,8 +39,8 @@ importers:
         specifier: 0.13.0
         version: 0.13.0(astro@7.2.4(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.3)(@vercel/functions@3.9.5(ws@8.21.3))(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))
       groq:
-        specifier: 6.10.1
-        version: 6.10.1
+        specifier: 6.11.0
+        version: 6.11.0
       katex:
         specifier: 0.18.4
         version: 0.18.4
@@ -1321,8 +1321,8 @@ packages:
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
 
-  groq@6.10.1:
-    resolution: {integrity: sha512-UyvLyV3Ge61Lusoyv7VvpXlM16KHAEUN5v2SZg0xdY5GD5IDeBMbDxAiwq9OEWSkiYMM7qPRinMh2suGL9qQ3Q==}
+  groq@6.11.0:
+    resolution: {integrity: sha512-fSGUDtPxmbrdeI7PaoVLkxMElXreqqaYCwnA9NQFGpZ+UWV5QI2QAFSPZrZv5e52hAk2sf/yaZd6cmpQCSowuQ==}
     engines: {node: '>=22.12'}
 
   h3@1.15.11:
@@ -3495,7 +3495,7 @@ snapshots:
 
   graceful-fs@4.2.11: {}
 
-  groq@6.10.1: {}
+  groq@6.11.0: {}
 
   h3@1.15.11:
     dependencies:
