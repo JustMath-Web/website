@@ -8,7 +8,11 @@ const fill = invert ? "var(--paper)" : "var(--ink-900)";
 const muted = invert ? "var(--ink-300)" : "var(--ink-500)";
 ---
 
-<span class="logo-lockup" aria-label="Just Math Malaysia">
+<span
+	class="logo-lockup"
+	aria-label="Just Math Malaysia"
+	style={`color:${fill}`}
+>
 	<svg
 		viewBox="0 0 160 160"
 		width="2.05em"
@@ -42,7 +46,6 @@ const muted = invert ? "var(--ink-300)" : "var(--ink-500)";
 		align-items: center;
 		gap: 0.6em;
 		font-size: clamp(1rem, 2vw, 1.25rem);
-		color: var(--ink-900);
 		text-decoration: none;
 	}
 
