@@ -1843,3 +1843,55 @@ and the live site have continued deploying successfully whenever a build happens
 cache), still not proven beyond the observed correlation, still tracked as its own open item rather
 than something worth continuing to chase without further information — e.g. a Cloudflare support
 response, or a change in Cloudflare's own platform behavior.
+
+## 38. Cloudflare project cutover — parallel-project theory confirmed, `justmathwebsite` replaced
+
+**Resolves the practical impact of §32/§34/§37's cold-cache investigation, though not the underlying
+mechanism.** Following Bob's explicit parallel-project plan (never delete/recreate the working
+project directly — prove a fresh one first, only cut over once proven, keep the old one as
+rollback): created a new Cloudflare project connected to the same repo/path/build command, with the
+same environment variables re-entered manually (Cloudflare does not carry these over between
+projects). Named `justmathweb` initially (a different name was required — Cloudflare does not allow
+duplicate project names while the original `justmathwebsite` still existed).
+
+**Four consecutive clean builds on the new project, zero failures** — a sharp contrast with the old
+project's persistent intermittent cold-cache failures documented in §32/§34/§37:
+
+| # | Time (UTC) | Trigger | Node detected | Result |
+| --- | --- | --- | --- | --- |
+| 1 | 16:09–16:10 | First build (new project) | `nodejs@22.12.0` (correct) | Success |
+| 2 | 16:17–16:18 | Manual dashboard retry | `nodejs@22.12.0` (correct) | Success |
+| 3 | 16:22–16:23 | Manual retry, post-rename to `justmathwebsite` | `nodejs@22.12.0` (correct) | Success, no name-mismatch warning |
+| 4 | 16:28–16:29 | **Real Sanity webhook trigger** (Charlie published a real excerpt/meta-description edit) | `nodejs@22.12.0` (correct) | Success |
+
+Each success independently verified against the real live deployment, not just trusted from the
+build log — direct `curl` confirmed real content (the post, the real excerpt, the real meta
+description) on every one.
+
+**This is strong evidence for — not an absolute proof of — a project-specific root cause.** The
+working theory: the original `justmathwebsite` project's very first setup attempt briefly had
+`NODE_VERSION` literally set to the invalid string `"22.12.0 or newer"` before Charlie corrected it;
+something about that bad value appears to have lodged in a deeper, more persistent cache layer
+specific to that project that normal fixes (correcting the variable, exact-pinning `engines.node`,
+adding `.nvmrc`) never reached, while a genuinely fresh project never inherited it. The underlying
+Cloudflare-side mechanism remains unconfirmed — this was never proven via a support response or
+platform documentation, only inferred from four consecutive successes where the old project would
+statistically have been expected to fail again eventually.
+
+**Cutover sequence actually executed, in order:**
+1. Old project renamed `justmathwebsite` → `justmathwebsite-old` (not deleted — kept as rollback per
+   the plan; full deployment history confirmed intact back to its original 2026-08-31T08:42:57Z
+   creation, verified via `wrangler deployments list --name justmathwebsite-old`).
+2. New project renamed `justmathweb` → `justmathwebsite` — lands exactly on the name
+   `web/wrangler.jsonc` already declared, so **no code change was needed**; build #3 above confirms
+   this (the earlier "Failed to match Worker name" warning is gone entirely).
+3. Sanity's deploy-hook webhook repointed from the old project to the new one.
+4. A real Studio publish (build #4 above) proved the full chain — Studio edit → publish → webhook →
+   build → deploy → live — end to end on the new project, not just a manual dashboard test.
+
+**Still open:** whether the old webhook target (now pointing at the inert `-old` project) was
+actually removed, or just superseded by the new one, was not independently confirmed in this
+session — low risk either way since nothing serves traffic from `justmathwebsite-old` anymore, but
+worth a cleanup pass. `justmathwebsite-old` should be deleted only after, per Bob's plan, at least a
+day or two of clean deploys on the new project — not yet. The custom domain connection remains
+untouched and still gated on §13's unrelated launch conditions.
