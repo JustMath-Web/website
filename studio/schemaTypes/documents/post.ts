@@ -25,8 +25,15 @@ export const post = defineType({
       title: 'Excerpt',
       type: 'text',
       rows: 3,
-      validation: (Rule) =>
-        Rule.required().max(220).warning('Excerpts over 220 characters may be truncated.'),
+      // Two separate Rule chains, not one chained call — Sanity's .warning()/.error() sets the
+      // severity for the WHOLE preceding chain in a single Rule, so
+      // Rule.required().max(220).warning(...) silently demoted required() to a warning too,
+      // letting Studio publish a post with excerpt: null. An array of Rules gives each constraint
+      // its own severity (Sanity docs: "combine both warnings and errors... use an array").
+      validation: (Rule) => [
+        Rule.required().error('Excerpt is required.'),
+        Rule.max(220).warning('Excerpts over 220 characters may be truncated.'),
+      ],
     }),
     defineField({
       name: 'body',

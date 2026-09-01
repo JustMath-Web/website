@@ -19,7 +19,12 @@ export async function GET(context: APIContext) {
 		site: context.site ?? siteSettings.domain,
 		items: posts.map((post) => ({
 			title: post.title,
-			description: post.excerpt,
+			// Defensive, not just typed as required: excerpt is a required Studio field, but
+			// Studio's own validation had a bug that let it publish as null (fixed separately in
+			// the schema) — a single post with a malformed excerpt must never be able to throw
+			// here and take the whole production build down with it. `@astrojs/rss` rejects an
+			// explicit null for an optional string field; coalesce to undefined instead.
+			description: post.excerpt || undefined,
 			pubDate: new Date(post.publishedAt),
 			link: `/blog/${post.slug.current}/`,
 		})),
