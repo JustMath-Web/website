@@ -1,0 +1,66 @@
+---
+import type { YoutubeEmbed } from "../../lib/sanity/types";
+
+interface Props {
+	node: YoutubeEmbed;
+}
+
+const { node } = Astro.props;
+
+// Matches youtube.com/watch?v=, youtu.be/, and youtube.com/embed/ — captures the 11-character
+// video ID. Studio's own copy of this pattern (studio/schemaTypes/objects/portableTextObjects.ts)
+// only needs to confirm the URL shape at author time; this one needs to reliably extract the ID,
+// so the two are kept separate rather than shared across the two packages.
+const YOUTUBE_URL_PATTERN =
+	/^https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/;
+
+const match = YOUTUBE_URL_PATTERN.exec(node.url);
+const videoId = match?.[1];
+const embedTitle = node.title || node.caption || "YouTube video";
+---
+
+{
+	videoId && (
+		<figure class="pt-youtube">
+			<div class="pt-youtube__frame">
+				<iframe
+					src={`https://www.youtube-nocookie.com/embed/${videoId}`}
+					title={embedTitle}
+					loading="lazy"
+					allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+					allowfullscreen
+				/>
+			</div>
+			{node.caption && (
+				<figcaption class="pt-youtube__caption">{node.caption}</figcaption>
+			)}
+		</figure>
+	)
+}
+
+<style>
+	.pt-youtube {
+		margin: var(--space-6) 0;
+	}
+
+	.pt-youtube__frame {
+		position: relative;
+		aspect-ratio: 16 / 9;
+		border-radius: var(--radius-md);
+		overflow: hidden;
+	}
+
+	.pt-youtube__frame iframe {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		border: 0;
+	}
+
+	.pt-youtube__caption {
+		margin: var(--space-2) 0 0;
+		color: var(--text-muted);
+		font: var(--type-small);
+	}
+</style>
