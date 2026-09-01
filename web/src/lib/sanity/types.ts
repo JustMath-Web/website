@@ -144,13 +144,22 @@ export interface PortableTextImage extends ImageWithAlt {
 	_type: "imageWithAlt";
 }
 
+export interface YoutubeEmbed {
+	_key: string;
+	_type: "youtubeEmbed";
+	url: string;
+	caption?: string;
+	title?: string;
+}
+
 export type PostBodyBlock =
 	| PortableTextBlock
 	| MathBlock
 	| Working
 	| CommonMistake
 	| Callout
-	| PortableTextImage;
+	| PortableTextImage
+	| YoutubeEmbed;
 
 /** Card/listing shape — archive and category-archive rows. No `body`. */
 export interface PostSummary {

@@ -124,6 +124,18 @@ test.describe("blog post (/blog/[slug]/)", () => {
 				"img[alt='A worked example showing surds being simplified step by step on a whiteboard']",
 			),
 		).toBeVisible();
+		const youtubeIframe = page.locator(".pt-youtube iframe");
+		await expect(youtubeIframe).toHaveAttribute(
+			"src",
+			"https://www.youtube-nocookie.com/embed/xxxxxxxxxxx",
+		);
+		await expect(youtubeIframe).toHaveAttribute(
+			"title",
+			"A five-minute recap of the same simplification method.",
+		);
+		await expect(
+			page.getByText("A five-minute recap of the same simplification method."),
+		).toBeVisible();
 	});
 
 	test("BlogPosting JSON-LD is present and valid, alongside the sitewide Organization JSON-LD", async ({

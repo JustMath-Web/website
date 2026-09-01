@@ -98,6 +98,14 @@ const surdsBody: PostBodyBlock[] = [
 		alt: "A worked example showing surds being simplified step by step on a whiteboard",
 		caption: "The same working, shown line by line.",
 	},
+	{
+		_key: "b7",
+		_type: "youtubeEmbed",
+		// Deliberately synthetic 11-char placeholder ID, same convention as b6's fake Sanity asset
+		// reference above — fixture mode tests the embed's structure/markup, not real video delivery.
+		url: "https://www.youtube.com/watch?v=xxxxxxxxxxx",
+		caption: "A five-minute recap of the same simplification method.",
+	},
 ];
 
 const indicesBody: PostBodyBlock[] = [

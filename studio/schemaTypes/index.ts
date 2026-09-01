@@ -2,7 +2,14 @@ import {seo} from './objects/seo'
 import {imageWithAlt} from './objects/imageWithAlt'
 import {cta} from './objects/cta'
 import {navItem} from './objects/navItem'
-import {mathInline, mathBlock, working, commonMistake, callout} from './objects/portableTextObjects'
+import {
+  mathInline,
+  mathBlock,
+  working,
+  commonMistake,
+  callout,
+  youtubeEmbed,
+} from './objects/portableTextObjects'
 import {
   statItem,
   levelBlock,
@@ -31,6 +38,7 @@ export const schemaTypes = [
   working,
   commonMistake,
   callout,
+  youtubeEmbed,
 
   // homePage-only objects
   statItem,

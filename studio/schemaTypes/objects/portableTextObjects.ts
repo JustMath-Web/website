@@ -103,6 +103,53 @@ export const commonMistake = defineType({
   },
 })
 
+// Matches youtube.com/watch?v=, youtu.be/, and youtube.com/embed/ — captures the 11-character
+// video ID. Deliberately not shared with web/'s frontend extraction logic (studio/ and web/ are
+// separate packages, not a pnpm workspace) — this copy only needs to confirm the URL shape at
+// author time, not reliably extract an ID, so a small independent regex is lower-risk than a
+// cross-package import into Studio's own Vite-bundled schema.
+const YOUTUBE_URL_PATTERN =
+  /^https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)[A-Za-z0-9_-]{11}(?:[?&#].*)?$/
+
+export const youtubeEmbed = defineType({
+  name: 'youtubeEmbed',
+  title: 'YouTube embed',
+  type: 'object',
+  description: 'Embeds a YouTube video at this point in the article body.',
+  fields: [
+    defineField({
+      name: 'url',
+      title: 'YouTube URL',
+      type: 'url',
+      description: 'A youtube.com/watch, youtu.be, or youtube.com/embed link.',
+      validation: (Rule) =>
+        Rule.required().custom((value: string | undefined) => {
+          if (!value) return true
+          return (
+            YOUTUBE_URL_PATTERN.test(value) ||
+            'Must be a youtube.com/watch, youtu.be, or youtube.com/embed URL.'
+          )
+        }),
+    }),
+    defineField({
+      name: 'caption',
+      title: 'Caption',
+      type: 'string',
+    }),
+    defineField({
+      name: 'title',
+      title: 'Video title',
+      description:
+        'Accessible title read out for the embedded player. Falls back to the caption, then a generic label, if left empty.',
+      type: 'string',
+    }),
+  ],
+  preview: {
+    select: {url: 'url', caption: 'caption'},
+    prepare: ({url, caption}) => ({title: `YouTube: ${caption || url || ''}`}),
+  },
+})
+
 export const callout = defineType({
   name: 'callout',
   title: 'Callout',
@@ -188,4 +235,5 @@ export const portableBodyOf = [
   defineArrayMember({type: 'commonMistake'}),
   defineArrayMember({type: 'callout'}),
   defineArrayMember({type: 'imageWithAlt'}),
+  defineArrayMember({type: 'youtubeEmbed'}),
 ]
