@@ -1804,3 +1804,42 @@ populate the archive, RSS feed, or filter counts — those only reflect posts wi
 transcript (pasted rather than run privately) — treated as one-time-use, not reused for anything
 else. Charlie was asked to revoke it in `sanity.io/manage` immediately after this run; not
 independently confirmed from this session — verify it was actually done if picking this up later.
+
+## 37. `.nvmrc` experiment also disproven — three independent mechanisms ruled out
+
+**Third and final pre-planned experiment, run on the explicit condition set in §34: only try
+`.nvmrc` once the exact `engines.node` pin had already failed.** It had (PR #42). Added
+`web/.nvmrc` containing `22.12.0` (PR #50) — Cloudflare's own docs (fetched directly, not assumed)
+state version files take priority over both the `NODE_VERSION` variable and `engines.node` for
+resolving the build image's Node version, a genuinely different code path than either prior attempt.
+
+**Result: identical failure**, reproduced on this PR's own first (guaranteed cold-cache) build —
+`nodejs@22.12.0 or newer` detected, `Installing nodejs 22.12.0 or newer`, `Failed: error occurred
+while installing tools or dependencies`. Same signature as every prior cold-cache failure: no
+`Success: Build output restored from build cache.` confirmation line before the mangled detection.
+
+**Three independent, documented Cloudflare mechanisms have now all been tried and disproven** as the
+fix for this specific failure mode:
+
+| Mechanism | Tried | Result |
+| --- | --- | --- |
+| `engines.node` as a range (`">=22.12.0"`) | Original state | Fails on cold cache |
+| `engines.node` pinned exact (`"22.12.0"`) | §34, PR #42 | Fails identically on cold cache |
+| `NODE_VERSION` dashboard variable | Confirmed correctly set throughout | No effect either way |
+| `.nvmrc` version file | This entry, PR #50 | Fails identically on cold cache |
+
+This is strong evidence the failure is a genuine bug in Cloudflare Workers Builds' own cold-cache
+tool-detection path, not a configuration gap in this repo — every officially documented override
+mechanism has been exhausted without changing the outcome. Remaining, not yet tried: other
+Wrangler/Workers Build project settings not yet inventoried, and a Cloudflare support ticket (the
+path this project's own prior notes named as the fallback once `.nvmrc` also failed).
+
+**`web/.nvmrc` is being kept regardless of this negative result** — same reasoning as §34's exact
+`engines.node` pin: an explicit, correct Node version pin is a reasonable project artifact on its own
+merits, independent of whether it fixes this particular Cloudflare-side bug.
+
+**Practical status unchanged from §34/§35's note:** still non-blocking (non-required check, `main`
+and the live site have continued deploying successfully whenever a build happens to land on a warm
+cache), still not proven beyond the observed correlation, still tracked as its own open item rather
+than something worth continuing to chase without further information — e.g. a Cloudflare support
+response, or a change in Cloudflare's own platform behavior.
