@@ -1802,4 +1802,5 @@ populate the archive, RSS feed, or filter counts — those only reflect posts wi
 
 **Token handling:** the Sanity write token used for this run was briefly exposed in the chat
 transcript (pasted rather than run privately) — treated as one-time-use, not reused for anything
-else, and revoked immediately after this run completed.
+else. Charlie was asked to revoke it in `sanity.io/manage` immediately after this run; not
+independently confirmed from this session — verify it was actually done if picking this up later.
