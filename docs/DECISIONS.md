@@ -1761,3 +1761,45 @@ Node-detection bug (§34) did not reproduce on this build either, but that is no
 recent builds (PR #42/#43's merge commits, and this one) have simply all succeeded; whether the
 underlying bug is fixed, intermittent, or coincidentally avoided remains genuinely unknown and is
 still tracked as its own open item in §34.
+
+## 36. Blog taxonomy seeded: six categories + one author — 2026-09-01
+
+**Factual record, docs-only.** Production Sanity had zero `category` and zero `author` documents
+(confirmed by direct query) — the six-pill category rail on `/blog` was rendering entirely from
+`web/src/lib/content/defaultLandingData.ts`'s local `defaultCategories` fallback
+(`web/src/lib/content/blogData.ts`'s `categories.length > 0 ? categories : defaultCategories`), not
+from real content. Seeded via a one-off, non-committed script (`createIfNotExists`/slug-lookup, the
+same safe pattern as the `homePage` fix in §33), run for real after a dry-run confirmed the plan.
+
+**Six category documents created**, canonical slugs and order values:
+
+| Title | Slug | Short label | Order | `_id` |
+| --- | --- | --- | --- | --- |
+| Standard 1 to 6 | `standard-1-6` | Standard 1 to 6 | 10 | `category-standard-1-6` |
+| Form 1 to 3 | `form-1-3` | Form 1 to 3 | 20 | `category-form-1-3` |
+| Form 4 to 5 | `form-4-5` | Form 4 to 5 | 30 | `category-form-4-5` |
+| Additional Mathematics | `add-maths` | Add Maths | 40 | `category-add-maths` |
+| SPM | `spm` | SPM | 50 | `category-spm` |
+| IGCSE | `igcse` | IGCSE | 60 | `category-igcse` |
+
+**One author document created** — Name: Mr Kong, Slug: `mr-kong`, Role: Tutor, Just Math Malaysia,
+`_id`: `author-mr-kong`.
+
+**Verified after the run, not just trusted from script output:** a direct read query confirmed
+exactly 6 `category` documents and 1 `author` document exist, with the values above. `homePage`,
+`navigation`, and `siteSettings` `_updatedAt` timestamps were checked before and after and are
+unchanged — this run did not touch them.
+
+**These are structural taxonomy records the frontend now depends on** (category filter rail, post
+categorization), not reviewed editorial content — the Mr Kong review gate from §13 ("blog content and
+maths need Mr Kong review before any post ships") applies at the individual **post** level via
+`reviewStatus == "approvedByMrKong"` (`web/src/lib/sanity/queries.ts`'s `APPROVED_POST_FILTER`), not
+to this taxonomy scaffolding.
+
+**Category and post counts stay `0` until real posts exist.** Seeding the taxonomy alone does not
+populate the archive, RSS feed, or filter counts — those only reflect posts with
+`reviewStatus == "approvedByMrKong"`, which is unaffected by this entry.
+
+**Token handling:** the Sanity write token used for this run was briefly exposed in the chat
+transcript (pasted rather than run privately) — treated as one-time-use, not reused for anything
+else, and revoked immediately after this run completed.
