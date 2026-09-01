@@ -36,15 +36,19 @@ const { categories, activeSlug, totalPosts } = Astro.props;
 <style>
 	.category-rail {
 		display: flex;
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
 		gap: var(--space-3);
 		margin-top: clamp(var(--space-5), 3vw, var(--space-7));
+		overflow-x: auto;
+		overflow-y: hidden;
+		-webkit-overflow-scrolling: touch;
 	}
 
 	.category-rail__pill {
 		display: inline-flex;
 		align-items: center;
 		gap: var(--space-2);
+		flex: 0 0 auto;
 		min-height: var(--control-h);
 		padding: 0 var(--space-4);
 		border: 1px solid var(--rule-strong);
