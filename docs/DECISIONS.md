@@ -1917,3 +1917,24 @@ without any prompt, landing on the same `https://justmath.sanity.studio/` URL as
 
 **No effect on the website's own deployment or build** — this is Studio-only tooling, `web/` is
 untouched by this change.
+
+## 40. `justmathwebsite-old` deleted from Cloudflare — §38 cutover fully closed out
+
+**Factual record.** Charlie deleted the retired `justmathwebsite-old` Cloudflare project on
+2026-09-02, after roughly a day of clean deploys on the replacement `justmathwebsite` project
+(cutover completed 2026-09-01, §38). This is earlier than §38's original "24–48 hours" guidance
+suggested — Charlie's own call, not something re-litigated here.
+
+**Deletion confirmed independently, not just taken on report:**
+- `npx wrangler deployments list --name justmathwebsite-old` now returns `[code: 10007] This Worker
+  does not exist on your account` — the project is actually gone, not just renamed again.
+- `npx wrangler deployments list --name justmathwebsite` still returns healthy recent deployments —
+  the active project is unaffected.
+- `npx sanity hooks list` shows exactly one webhook (`JustMathWebsite - CF Webhook`), already
+  pointed at the current project's deploy hook — no second, stale hook targeting the deleted project
+  existed to clean up. §38's "still open" cleanup-pass concern is resolved: there was nothing left
+  to remove.
+
+**§38's cutover is now fully closed out.** The only remaining open items from that section — the
+unconfirmed underlying Cloudflare-side root cause, and the untouched custom domain connection gated
+on §13 — are unrelated to this deletion and remain as they were.
