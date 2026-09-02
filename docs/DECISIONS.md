@@ -1895,3 +1895,25 @@ session — low risk either way since nothing serves traffic from `justmathwebsi
 worth a cleanup pass. `justmathwebsite-old` should be deleted only after, per Bob's plan, at least a
 day or two of clean deploys on the new project — not yet. The custom domain connection remains
 untouched and still gated on §13's unrelated launch conditions.
+
+## 39. Hosted Sanity Studio deployed — https://justmath.sanity.studio/ — 2026-09-02
+
+**Factual record.** Charlie previously only had local Studio access (`pnpm dev` in `studio/`,
+localhost:3333) — no hosted deployment had ever actually been run, despite §4d's "hosted Studio"
+references (aspirational at the time, not yet done). Confirmed **independent of the custom domain**:
+Sanity's hosted Studio is a separate service on Sanity's own infrastructure, entirely unrelated to
+`mathematicsmalaysia.com` or Cloudflare — there was no need to wait for the domain connection.
+
+Deployed via `npx sanity deploy --url justmath -y` (the `-y`/`--url` flags used specifically to avoid
+the command's normal interactive hostname prompt). Live at **https://justmath.sanity.studio/**,
+confirmed via a real request (redirects through Sanity's own hosted-app routing, the expected,
+normal behavior for a `*.sanity.studio` URL — not an error).
+
+**`studio/sanity.cli.ts` updated** to record the resulting `appId`
+(`y9gew7u6o2492ftxnfa25hy2`), per the CLI's own recommendation printed after the first deploy — pins
+future `sanity deploy` runs to this same hosted app so they never re-prompt for it. Re-deployed once
+after adding it to confirm: the "No appId configured" build warning is gone, and the deploy completed
+without any prompt, landing on the same `https://justmath.sanity.studio/` URL as before.
+
+**No effect on the website's own deployment or build** — this is Studio-only tooling, `web/` is
+untouched by this change.
