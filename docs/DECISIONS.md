@@ -430,16 +430,31 @@ site loads both (`gtag/js?id=G-6EWT7G0LZS` *and* `gtm.js?id=GTM-KP5SMKV`). Mirro
 double-count every pageview if the container also holds a GA4 tag, and container contents cannot be
 inspected from outside.
 
-> **Must be confirmed before cutover:** open the GTM container and check a **GA4 Configuration tag
-> for `G-6EWT7G0LZS` exists in it**. If it does not, add it *there* rather than adding a second
-> on-page tag. Then verify in GA4 Realtime after cutover. If this is skipped and the container has
-> no GA4 tag, analytics will load and collect nothing.
+> **CONFIRMED 2026-09-05 by the owner: a GA4 tag is configured inside the GTM container, so GTM
+> firing also carries GA4.** This closes the open question and validates the GTM-only implementation
+> — had GA4 also been added as a second on-page tag, every pageview would now be double-counted.
+> Remaining check is routine, not blocking: confirm hits in GA4 Realtime after cutover, since that is
+> the first moment the hostname gate lets anything fire.
 
 **Search Console verification is load-bearing and easy to lose.** The property is verified by **meta
 tag**, and `dig TXT mathematicsmalaysia.com` returns nothing — there is no DNS fallback. When the
 domain stops serving WordPress, verification breaks unless the new site carries that tag. It now
 does, on every page type, covered by a test. Losing it means losing the property and its 16 months
 of query history, which is the baseline `copywriting/SEARCH-STRATEGY.md` schedules a re-pull against.
+
+> **Owner action before cutover — add a DNS TXT record as a SECOND verification method on the
+> EXISTING property.** The distinction matters and is easy to get wrong: creating a new *Domain*
+> property does **not** protect the history — it starts at zero. Search Console permits multiple
+> verification methods on one property, so adding TXT to the existing URL-prefix property removes
+> the single point of failure without touching the history. The meta tag then stops being the only
+> thing standing between a deploy and losing the baseline.
+
+> **Owner action — review who has access to the GTM container.** `script-src` now allows
+> `https://www.googletagmanager.com`, which means anyone who can publish in that container can
+> execute arbitrary JavaScript on this site. That is inherent to GTM rather than a flaw in this
+> implementation, but the container is inherited from the legacy site and its access list has never
+> been established. The CSP is now exactly as strong as that list. Check it at the same time as the
+> GA4 tag check above.
 
 **Dev/test isolation is by hostname, not build flag.** §12 requires production analytics off in
 local/dev/test, but a build-time flag is insufficient here: the production build is what deploys to
@@ -457,8 +472,10 @@ dropped every hit).
 
 **`<noscript>` fallback added 2026-09-05** at the owner's request, matching his supplied install
 snippet, with `frame-src https://www.googletagmanager.com` added to the CSP for it. One limitation
-recorded rather than hidden: unlike the head tag it **cannot be host-gated**, because the gate is
-JavaScript and this element exists for agents that run none. It is therefore the single analytics
+recorded rather than hidden: unlike the head tag it **cannot be RUNTIME-gated**, because the gate is
+JavaScript and this element exists for agents that run none. It *could* be gated at build time via
+an env var, which would remove the exception entirely; that option was considered and deliberately
+not taken, because the exposure below does not justify a second configuration path. It is therefore the single analytics
 surface that is not inert on preview URLs pre-cutover. Exposure is small — it fires only for a
 visitor executing no JavaScript that also loads iframes, which excludes ordinary browsers and most
 crawlers — and GA4 cannot record a session from it regardless.

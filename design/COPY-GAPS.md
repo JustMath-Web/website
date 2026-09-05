@@ -7,6 +7,27 @@ and typographic substitution never register as a copy change.
 
 **Result: 213 unique strings · 174 carried verbatim · 38 derived · 0 replaced.**
 
+> ## Provenance class 2 — Bahasa Melayu, added 2026-09-05
+>
+> The count above describes **English strings only**, and every one of them is client-authored.
+> `copywriting/COPY-DRAFT-MS.md` introduces a **second and materially different class**: the BM
+> landing page, in which **every visitor-facing string is `✍️ AI-drafted`** — the first substantial
+> body of AI-authored visitor-facing copy on this site.
+>
+> It is tracked separately and deliberately **not folded into the 213**, so that a later reader can
+> tell at a glance which language on this site was written by whom. Rolling the two together would
+> make ~3,000 words of machine-drafted copy disappear into a figure that currently means "the client
+> wrote this".
+>
+> | Class | Strings | Provenance | Status |
+> | --- | --- | --- | --- |
+> | 1 — English landing page | 213 (174 verbatim, 38 derived) | Client-authored | Approved, verbatim-locked |
+> | 2 — BM landing page | ~2,950 words, not yet string-counted | **AI-drafted** | Draft; awaiting proofread |
+>
+> Class 2 carries no approval and must not ship until the CW-82 review in `LOCALISATION.md` §5.2 is
+> complete. Its string count is deliberately left un-tallied until the copy is final — counting a
+> draft that is expected to change would put a false precision next to class 1's measured figure.
+
 ## 1. Section classification
 
 The client supplied final, approved copy. Nothing was rewritten, shortened, or re-ordered.
