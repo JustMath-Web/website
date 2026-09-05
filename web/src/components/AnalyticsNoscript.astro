@@ -1,0 +1,25 @@
+---
+/**
+ * GTM's `<noscript>` fallback, kept as supplied in the owner's install snippet (2026-09-05).
+ *
+ * It belongs immediately after `<body>`, which is why it is a separate component from
+ * `Analytics.astro` (that one lives in `<head>`).
+ *
+ * **Known limitation, recorded rather than hidden:** unlike the head tag, this CANNOT be host-gated,
+ * because gating is done in JavaScript and this element exists precisely for agents that run none.
+ * So it is the one analytics surface that is not inert on preview/`*.workers.dev` URLs before
+ * cutover. The exposure is small — it fires only for a visitor that executes no JavaScript *and*
+ * loads iframes, which excludes ordinary browsers and most crawlers — and GA4 cannot record a
+ * session from it either way. Noted in `docs/DECISIONS.md` §12a.
+ */
+import { GTM_ID } from "../lib/analytics";
+---
+
+<noscript>
+	<iframe
+		src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+		height="0"
+		width="0"
+		style="display:none;visibility:hidden"
+		title="Google Tag Manager"></iframe>
+</noscript>

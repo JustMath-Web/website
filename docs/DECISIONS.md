@@ -455,6 +455,14 @@ executable inline scripts (JSON-LD data blocks excepted) — asserted by test. A
 the GA4 beacon hosts (previously these fell back to `default-src 'self'`, which would have silently
 dropped every hit).
 
+**`<noscript>` fallback added 2026-09-05** at the owner's request, matching his supplied install
+snippet, with `frame-src https://www.googletagmanager.com` added to the CSP for it. One limitation
+recorded rather than hidden: unlike the head tag it **cannot be host-gated**, because the gate is
+JavaScript and this element exists for agents that run none. It is therefore the single analytics
+surface that is not inert on preview URLs pre-cutover. Exposure is small — it fires only for a
+visitor executing no JavaScript that also loads iframes, which excludes ordinary browsers and most
+crawlers — and GA4 cannot record a session from it regardless.
+
 **Consent:** still none, and none added. §12's condition ("if non-essential tags require it for the
 chosen target markets") is unresolved — Malaysia's PDPA does not impose a GDPR-style prior-consent
 rule for analytics cookies, but this has not been checked against the actual tags in the container,
