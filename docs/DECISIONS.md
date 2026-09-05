@@ -399,6 +399,26 @@ Because no forms launch in v1:
 
 If forms are added later, they must follow the full Forms architecture in `02-INFORMATIVE-BLOG.md`.
 
+### 11a. Legacy WhatsApp number retired — 2026-09-05
+
+The legacy WordPress site published **`010 658 0242`** (`wa.me/60106580242`). The approved copy and
+every build surface use **`019 472 8768`**. Owner decision 2026-09-05: **retire `010`.**
+`019 472 8768` becomes the single conversion channel, which is already the shipped state — the old
+number appears nowhere in `web/`, only in `design/MARKET-SCAN.md` §0 and
+`copywriting/SEARCH-STRATEGY.md` as historical record. **No code change is required by this
+decision**; it is recorded so the divergence is not rediscovered later as a bug.
+
+**One transition risk, recorded not solved.** Cutover removes the *site's* links to `010`, but it
+does not remove the number from the world: past enquirers have it in their chat history, and it may
+sit on printed material, a Google Business Profile, social profiles, or old ad creative — none of
+which has been inventoried. A parent messaging `010` after retirement gets silence, and silence from
+a tuition enquiry is a lost booking that never appears in any metric.
+
+Recommended, and **not** actioned here because it is account work outside this repo: before `010`
+goes dark, set a WhatsApp **away message** on it pointing to `019 472 8768`, and keep it alive
+through at least one enquiry cycle. Retiring the number and retiring the *account* are separable —
+this decision covers the number as a published channel.
+
 ## 12. Analytics And Consent
 
 No analytics at scaffold time.
