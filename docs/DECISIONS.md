@@ -442,6 +442,11 @@ domain stops serving WordPress, verification breaks unless the new site carries 
 does, on every page type, covered by a test. Losing it means losing the property and its 16 months
 of query history, which is the baseline `copywriting/SEARCH-STRATEGY.md` schedules a re-pull against.
 
+> **DONE 2026-09-05 — verified live:** `dig +short TXT mathematicsmalaysia.com` returns
+> `"google-site-verification=gph_0vw9JyYV8vII8ecnQBcvDrx4gs0qmsFvL78sgtQ"`, matching the meta tag's
+> token. The property now has two independent verification methods and the meta tag is no longer a
+> single point of failure. Original action, kept for context:
+>
 > **Owner action before cutover — add a DNS TXT record as a SECOND verification method on the
 > EXISTING property.** The distinction matters and is easy to get wrong: creating a new *Domain*
 > property does **not** protect the history — it starts at zero. Search Console permits multiple
@@ -449,6 +454,10 @@ of query history, which is the baseline `copywriting/SEARCH-STRATEGY.md` schedul
 > the single point of failure without touching the history. The meta tag then stops being the only
 > thing standing between a deploy and losing the baseline.
 
+> **CLOSED 2026-09-05 — owner confirms he is the only user with access to the container.** The risk
+> below is therefore bounded to a single account; the residual control is 2FA on that account.
+> Original finding, kept for context:
+>
 > **Owner action — review who has access to the GTM container.** `script-src` now allows
 > `https://www.googletagmanager.com`, which means anyone who can publish in that container can
 > execute arbitrary JavaScript on this site. That is inherent to GTM rather than a flaw in this

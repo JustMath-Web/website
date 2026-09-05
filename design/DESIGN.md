@@ -247,7 +247,8 @@ Elements that could not be lifted onto a competitor's site unchanged:
 1. **The gap chart.** Eleven Malaysian school years as a ruled scale with exactly three inked
    measurement points (Standard 4, Form 3, SPM) and an ochre bracket over Form 4–5. It encodes this
    tutor's specific argument about *when* maths is independently measured.
-2. **The Learning Matrix dates.** "6 to 8 October", Year 4 from October 2026, Form 3 from 2027 —
+2. **The Learning Matrix dates.** "7 October" (tightened from "6 to 8 October" on 2026-09-05 —
+   that was the three-day window, not the maths sitting), Year 4 from October 2026, Form 3 from 2027 —
    current Malaysian assessment policy, wrong for any other market and stale if policy changes.
 3. **The IGCSE pricing row.** 90 minutes against everyone else's 60, with the stated reason that the
    international syllabus outruns an hour a week. A real operational decision, visible in the table.
