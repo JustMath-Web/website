@@ -348,6 +348,26 @@ three URLs that cease to exist as pages. The one-pager architecture is a deliber
 and this entry does not reverse it, but the cost is now measured rather than assumed, and it should
 be revisited if pricing intent shows up in post-cutover Search Console.
 
+**Resolved 2026-09-05 — the one-pager stands; do not build a standalone `/pricing/` page.** The risk
+above was briefly escalated to "the one architecture change this data supports". A page-level query
+cross-tab settled it and the escalation was wrong. `/pricing/`'s visible queries over 16 months are
+`maths enrichment class` (1 click), `malaysia ai math class for kids` (3 impr), `maths enrichment
+classes` (2), `just math` (1), `math enrichment class` (1) — **zero fee intent**, and widening the
+check to all 62 property queries returns zero for *price/pricing/fee/cost/rate/charge/yuran/harga/
+berapa* as well. The page earns stray *enrichment* traffic for a service the business does not sell
+under that name, plus brand traffic the 301 preserves anyway.
+
+Two framing corrections worth keeping: **the rebuild does not delete pricing** — the table is on the
+page and the 301 leads to it; only a separately rankable URL is lost. And **9 clicks over 16 months
+is ~0.5/month** — the "24% of all clicks" figure is true only because the property earned 37 clicks
+in total, and it was quoted without the small-base caution applied everywhere else in this analysis.
+
+Caveat, stated: 93% of `/pricing/`'s impressions are below Search Console's anonymisation threshold,
+so this is *no support for the justifying hypothesis*, not proof of no fee demand. It is enough to
+decide, because reversing a recorded architecture decision needs affirmative cause and none appeared.
+Re-test at the post-cutover re-pull (`copywriting/SEARCH-STRATEGY.md` §6) — at which point the move
+would be adding a page, not un-picking an aged redirect.
+
 **Still open.** No 404 page exists (`web/src/pages/404.astro` absent, no `not_found_handling` in
 `wrangler.jsonc`), so the four deliberate 404s and any stray legacy URL return a bare, unbranded
 404. A real 404 page needs approved copy and is therefore a separate change. Backlink inventory,

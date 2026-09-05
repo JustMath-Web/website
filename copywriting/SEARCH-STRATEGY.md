@@ -83,17 +83,51 @@ than the home page with meaningful clicks. It 301s to `/#pricing` on the new sit
 `/about/` (82 impressions) and `/faq/` (62), that is 255 impressions — 14% of the property — on three
 URLs that stop existing as pages.
 
-**This is the single strongest measured signal in the dataset, and it argues for one specific
-architecture change.** Everything else here is inference from query shape; this is observed
-behaviour. People arrive at this domain looking for price specifically, and the client publishes a
-complete price table — the one thing `SECTOR-PROFILE.md` Q2 ranks as table stakes that the category
-mostly defers ("spmmath RM60/mo, tavis RM99/mo, algonova 'from RM48'"). A standalone `/pricing/`
-page is the only architecture change this data actively supports.
+**RETRACTED, 2026-09-05 — a standalone `/pricing/` page is NOT supported by this data.** An earlier
+revision of this section claimed "people arrive at this domain looking for price specifically" and
+argued a separate pricing page was the one architecture change the data supported. **That was
+inference presented as measurement, and a page-level query cross-tab disconfirmed it.** The claim is
+withdrawn; the paragraph is kept rather than deleted so the reasoning error stays visible.
 
-This document does not reverse the one-pager — that is a design decision and a client call, not a
-copy decision. But "recorded risk" understates it, and it should be decided before cutover rather
-than after, because the redirect is cheap to change now and expensive to unwind once the 301 has
-aged. Recorded in `docs/DECISIONS.md` §10a.
+**What the cross-tab showed.** The visible queries for `/pricing/` over 16 months:
+
+| Query | Clicks | Impr |
+| --- | ---: | ---: |
+| `maths enrichment class` | 1 | 1 |
+| `malaysia ai math class for kids` | 0 | 3 |
+| `maths enrichment classes` | 0 | 2 |
+| `just math` | 0 | 1 |
+| `math enrichment class` | 0 | 1 |
+
+**Zero fee intent.** Not one visible query contains *price*, *pricing*, *fee*, *cost*, *rate*,
+*charge*, *yuran*, *harga* or *berapa* — and widening the check from `/pricing/`'s five queries to
+**all 62 property queries returns zero as well**. The commercial fee-intent class that would have
+justified a separate page is absent from the visible sample entirely.
+
+**What the page is actually earning.** Four of the eight visible impressions are *enrichment*
+queries, and the single click — `maths enrichment class`, 100% CTR at position 7 — is the same click
+that appears as the only click in the entire visible property table. So `/pricing/` corroborates the
+"ranks for dropped vocabulary" finding below rather than opening a new one: it earns stray
+*enrichment* traffic for a service the business does not sell under that name. One further
+impression is `just math` — brand, which the 301 preserves anyway. And
+`malaysia ai math class **for kids**` is a second independent point for the *kids*-not-*primary*
+vocabulary correction in §3.
+
+**The anomalous CTR is still real** — 8.11% at avg. position 15.41 is far above what page two
+normally returns — but its *composition* is not what was assumed, so it does not support the
+conclusion drawn from it.
+
+**Honest limit.** 93% of `/pricing/`'s impressions are hidden below the anonymisation threshold, so
+this is *no support for the justifying hypothesis*, not proof that no fee demand exists. That is
+enough to decide, because the burden runs the other way: the one-pager is a recorded architecture
+decision and reversing it needs affirmative cause. None appeared.
+
+**Resolution.** Keep the 301 to `/#pricing` — it preserves whatever equity exists, and the price
+table is still on the page for anyone who lands there. **Note the framing error this also corrects:
+the rebuild does not delete pricing.** The table is present; what is lost is only the ability to
+rank a separate URL. Re-test at the scheduled post-cutover re-pull (§6): if genuine fee queries
+appear on an indexable site, the move is *adding* a page, not un-picking an aged redirect. Recorded
+in `docs/DECISIONS.md` §10a.
 
 **Foreign traffic is on the home page, not the maths posts — disconfirmed by arithmetic.**
 The hypothesis was that international impressions land on the calculus and algebra posts, implying
@@ -118,6 +152,13 @@ the *only click in the entire visible table* (`maths enrichment class`, position
 title was "Expert Math Coaching and Programs". The approved copy uses neither word. This is not a
 recommendation to reintroduce them — "coaching" and "enrichment" describe a different service from
 one-to-one tuition — but it explains what little the domain currently ranks for.
+
+**Second, independent line of evidence for this (added 2026-09-05).** The page-level cross-tab for
+`/pricing/` returned *enrichment* queries as 4 of its 8 visible impressions, and the property's only
+visible click landed there. So the pattern holds at page level, not just in aggregate: where this
+domain earns attention at all, it earns it on vocabulary the approved copy deliberately dropped.
+This finding is now corroborated twice; it was the strongest thing the `/pricing/` cross-tab found,
+and it is not what that cross-tab was run to look for.
 
 ---
 
@@ -252,7 +293,8 @@ arguments and by competitor coverage, not by measured demand.
 | BM expansion — name a sign-off owner (CW-82) | client | Open — **gates all BM drafting** |
 | Learning Matrix content — name a policy review owner | client | Open |
 | 404 page (none exists) | design + copy | Open — `DECISIONS.md` §10a |
-| Re-pull Search Console 3 and 6 months post-cutover | Andy | Scheduled — this document's rankings are hypotheses until then |
+| Standalone `/pricing/` page — build or keep the anchor | — | **Closed 2026-09-05, do not build** — page-level cross-tab found zero fee intent; keep the 301 (§2) |
+| Re-pull Search Console 3 and 6 months post-cutover | Andy | Scheduled — this document's rankings are hypotheses until then; **re-test `/pricing/` fee intent then** |
 
 **Validation step still owed.** Nothing in §3 or §4 has been validated against measured Malaysian
 demand, because no dataset capable of that exists yet. The post-cutover re-pull is the step that
