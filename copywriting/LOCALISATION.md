@@ -19,7 +19,7 @@ string in this document is cleared to ship; §5 sets out what must happen first.
 | Timing | **After cutover, as a discrete release** | Cutover already carries five things testable only in production; BM would make eight, and confounds the baseline measurement. |
 | URL | `/ms/` subpath on the same domain | Keeps one property, one Search Console history, one analytics stream. |
 | Language | Bahasa Melayu (Malaysia) | Per approved copy: sessions run "in English or Bahasa Melayu". |
-| Sign-off owner | **Charlie** (confirmed 2026-09-05) | Closes CW-82's named-reader requirement. Method still to define — §5.2. |
+| Sign-off owner | **Charlie** (confirmed 2026-09-05) | Closes CW-82's named-reader requirement. Method resolved 2026-09-05 — separate proofreading session, recorded as self-review (§5.2). |
 
 **Why the blog is excluded.** Extending to the blog turns an untested hypothesis into a permanent
 process obligation: every future post would need a BM version or an explicit English-only state,

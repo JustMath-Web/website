@@ -22,13 +22,29 @@ choices here are deliberate departures from literal translation and each has a r
 1. **Register.** The English voice is a calm, exact, first-person practitioner. BM defaults to a
    warmer, more promotional tuition register and I have pushed against that throughout. If any line
    reads like an advertisement rather than a person, it is wrong.
-2. **`kita` vs `kami`.** Where the English "we" means *the tutor and your child*, strict BM wants
-   `kami` (exclusive of the reader). In the tutor's voice I have used **`kita`** (12 occurrences),
-   because `kami` reads corporate in Malaysian usage and would silently contradict the page's central
-   claim that one person teaches every session. This is a deliberate register choice over strict
-   grammar — the single decision most worth overruling if you disagree. **One `kami` is deliberate
-   and correct:** the FAQ question *"Bolehkah kami menjadualkan semula satu sesi?"* is voiced by the
-   *parent*, where `kami` (parent and child, excluding the tutor being asked) is right.
+2. **`kita` vs `kami` — and where to actually look.** `kita` appears **10 times in the copy body**
+   (§1–§10). It appears 12 times in this file; the other two are in this note, discussing the
+   decision. The body count is the one that matters.
+
+   Strict BM wants `kami` (exclusive of the reader) where "we" means *the tutor and your child*. I
+   used `kita` because `kami` reads corporate in Malaysian usage and would quietly contradict the
+   page's central claim that one person teaches every session. There is also a stronger argument
+   than register: the English copy's whole stance is **addressing the parent as the reader** — which
+   `SECTOR-PROFILE.md` §2 names as something almost nobody in this category does — and the product
+   loops the parent in, since the assessment produces findings delivered to *you*. On that reading
+   `kita` is the more faithful rendering of what the English is doing, not a concession against it.
+
+   **Three of the ten are unambiguously right** — the "we" there is tutor *and parent*: agreeing a
+   slot (§8), checking a slot fits (FAQ 3), looking at shorter sessions (FAQ 5).
+
+   **Seven describe something happening in the session, tutor and child only** — these are the ones
+   to read hard, and the clearest case is §4's *"kita kembali dan betulkan pecahan dahulu"*. Test
+   each against one question: **does the inclusive `kita` read as though you are in the room?** If it
+   does, that line should be `kami`. It may be that only one or two need changing, or none.
+
+   **One `kami` is deliberate and correct:** the FAQ question *"Bolehkah kami menjadualkan semula
+   satu sesi?"* is voiced by the *parent*, where `kami` (parent and child, excluding the tutor being
+   asked) is right.
 3. **Maths terminology.** *Pembezaan* (differentiation), *pengamiran* (integration), *janjang*
    (progressions), *ungkapan algebra*, *pecahan algebra*, *nilai tempat*, *pengamiran melalui
    penggantian* (integration by substitution). These are the KSSM textbook terms as I understand
