@@ -300,8 +300,13 @@ Approved copy `:115` reads *"they sit the Learning Matrix maths paper on 6 to 8 
 inside it, on the Wednesday. (Weekdays confirmed: 6 Oct 2026 = Tuesday, 7 Oct = Wednesday, 8 Oct =
 Thursday, matching LP's subject order exactly.)
 
-The copy is client-authored and verbatim-locked, so whether to tighten it is the client's call and
-it is minor as page copy. **What matters is that it must not propagate.** The planned post will be
+**RESOLVED 2026-09-05: the owner tightened it, in both languages, as one change.** English now reads
+"on 7 October"; the BM draft reads "pada 7 Oktober". Recorded as Amendment 1 in `design/COPY-GAPS.md`
+— the first change to approved copy on this project, and an owner correcting his own imprecision
+rather than a drafter substituting words. **The Sanity `homePage` document must carry the same edit**
+or production will still serve the old string; see the PR.
+
+The point that drove it, kept for the record: **it must not propagate.** The planned post will be
 the most specific thing this site says about this exam; it must carry **Wednesday 7 October,
 8:10–9:25 am** with LP cited, and must not repeat the window as though it were the maths date.
 
@@ -320,9 +325,9 @@ arguments and by competitor coverage, not by measured demand.
 | GA4 `G-6EWT7G0LZS` / GTM `GTM-KP5SMKV` — confirm client-owned and reuse | client | Open — unblocks `DECISIONS.md` §12 |
 | WhatsApp `010 658 0242` — retire, forward, or notice | client | Open — only conversion channel |
 | BM expansion — name a sign-off owner (CW-82) | client | **Closed 2026-09-05** — Charlie named; scope, timing and remaining conditions in `copywriting/LOCALISATION.md` |
-| Search Console — add DNS TXT as a *second* method on the **existing** property | client | Open — **not** a new Domain property, which would start history at zero |
-| GTM container access list — who can execute JS on the site | client | Open — `script-src googletagmanager.com` makes container access equal to arbitrary JS |
-| GTM container — confirm a GA4 Configuration tag for `G-6EWT7G0LZS` exists inside it | client | Open — `DECISIONS.md` §12a |
+| Search Console — DNS TXT as a second verification method | client | **Done 2026-09-05** — verified live via `dig` |
+| GTM container access list | client | **Closed 2026-09-05** — owner is the sole user; residual control is 2FA on that account |
+| GTM container — GA4 Configuration tag present | client | **Confirmed 2026-09-05** — GTM firing carries GA4 |
 | Learning Matrix content — name a policy review owner | client | Open |
 | 404 page (none exists) | design + copy | Open — `DECISIONS.md` §10a |
 | Standalone `/pricing/` page — build or keep the anchor | — | **Closed 2026-09-05, do not build** — page-level cross-tab found zero fee intent; keep the 301 (§2) |

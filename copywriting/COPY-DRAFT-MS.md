@@ -50,12 +50,11 @@ choices here are deliberate departures from literal translation and each has a r
    penggantian* (integration by substitution). These are the KSSM textbook terms as I understand
    them; you teach from the books, so please check them against what your students actually read.
 
-**One inherited imprecision, deliberately mirrored — flagged, not fixed.** §5 Block 1 renders "6 to
-8 October" faithfully. That is the full three-day assessment window; the maths paper is one
-75-minute sitting on **Wednesday 7 October, 8:10–9:25 am** (`SEARCH-STRATEGY.md` §5). I mirrored the
-English rather than silently correcting it, because two language versions of the same page stating
-different facts is worse than a shared imprecision. **Recommend tightening both together** — which
-needs a decision on the English, since it is verbatim-locked.
+**The date imprecision flagged in the first draft is now FIXED, in both languages.** §5 Blok satu
+reads *"pada 7 Oktober"*, matching the amended English "on 7 October". The maths paper is one
+75-minute sitting on Wednesday 7 October, 8:10–9:25 am; 6–8 October is the whole three-day window.
+The owner amended the English source on 2026-09-05 so the two versions were tightened together and
+never diverged — recorded as Amendment 1 in `design/COPY-GAPS.md`.
 
 ---
 
@@ -163,7 +162,7 @@ Membina keyakinan nombor sebelum jurangnya menjadi tidak kelihatan.
 
 - Kelancaran aritmetik, nilai tempat, pecahan dan perpuluhan, dan masalah berayat di mana matematiknya mudah tetapi membaca soalannya tidak.
 - Kebimbangan matematik yang awal, biasanya berpunca daripada anak yang dibawa ke topik seterusnya sebelum idea sebelumnya kukuh.
-- Jika anak anda berada di Tahun 4 tahun ini, mereka menduduki kertas matematik Matriks Pembelajaran pada 6 hingga 8 Oktober. Penilaian sekarang memberitahu anda apa yang akan mereka ketahui pada bulan Oktober, dengan Tahun 5 dan 6 masih ada untuk bertindak.
+- Jika anak anda berada di Tahun 4 tahun ini, mereka menduduki kertas matematik Matriks Pembelajaran pada 7 Oktober. Penilaian sekarang memberitahu anda apa yang akan mereka ketahui pada bulan Oktober, dengan Tahun 5 dan 6 masih ada untuk bertindak.
 
 ### Blok dua — Tingkatan 1 hingga Tingkatan 3
 
