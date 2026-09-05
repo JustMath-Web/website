@@ -2,7 +2,7 @@
 document_type: copy-deliverable
 scope: "Localisation — Bahasa Melayu, landing page only"
 provenance: ai-drafted
-status: plan — not yet approved; no BM string is cleared to ship
+status: plan — decisions resolved 2026-09-05; draft copy in COPY-DRAFT-MS.md awaiting proofread
 date: 2026-09-05
 ---
 
@@ -73,20 +73,22 @@ that the system measures too rarely and that a *grade* is not a *diagnosis*.
 | B | Ketahui tahap sebenar matematik anak anda | Tighter, slightly more formal; loses the "exactly" emphasis. |
 | C | Di mana sebenarnya tahap matematik anak anda? | Question form; more conversational, but the EN hero is a statement and the register is deliberately calm rather than probing. |
 
-**Recommendation: A**, and note that "tahap" is also the word Lembaga Peperiksaan itself uses for
+**Recommendation: A** — and note that "tahap" is also the word Lembaga Peperiksaan itself uses for
 Learning Matrix reporting (*"tahap penguasaan"*), which aligns the page with the vocabulary parents
 will meet on the result slip.
+
+> **APPROVED 2026-09-05 (Charlie): Option A.** `Tahu di mana sebenarnya tahap matematik anak anda`
 
 ### 4.2 Terms that must NOT be translated
 
 | Keep in English/as-is | Why |
 | --- | --- |
 | SPM, IGCSE, KSSR, KSSM | Official names; translating them would be wrong, not localised |
-| Additional Mathematics / Add Maths | **Decision needed** — *Matematik Tambahan* is the official BM name and is what parents search. Recommend using *Matematik Tambahan (Add Maths)* on first mention, then *Matematik Tambahan*. |
-| Modern Mathematics | *Matematik Moden* is official BM. Same pattern. |
+| Additional Mathematics / Add Maths | **RESOLVED 2026-09-05:** *Matematik Tambahan (Add Maths)* on first mention, then *Matematik Tambahan*. |
+| Modern Mathematics | *Matematik Moden* — same pattern, same resolution. |
 | Google Meet, WhatsApp, DuitNow | Product names |
-| "Standard 1 to Form 5" | Recommend *Darjah 1 hingga Tingkatan 5* — these are the standard BM school-level terms and the ones a BM-reading parent uses |
-| Mr Kong | Personal name. **Decision needed:** *Cikgu Kong* is the natural BM register for a teacher and reads warmer; *Mr Kong* preserves brand consistency with the English page. Recommend **Cikgu Kong** on the BM page — the whole point of the page is register. |
+| "Standard 1 to Form 5" | *Darjah 1 hingga Tingkatan 5* — the standard BM school-level terms, and the ones a BM-reading parent uses. **Approved 2026-09-05.** |
+| Mr Kong | **RESOLVED 2026-09-05 (Charlie): keep `Mr Kong`.** My recommendation was *Cikgu Kong* on register grounds; the owner chose brand consistency across both language versions, which is a legitimate trade and is the client's call on his own name. Recorded as an owner decision against the drafter's recommendation, not as an oversight. |
 
 ### 4.3 Register
 
@@ -107,11 +109,13 @@ other.
 All four are open. **None is cutover-blocking** — which is part of the argument for BM following
 cutover: it gives these room to be done properly rather than compressed into the riskiest week.
 
-1. **Provenance class registered** in `COPY-GAPS.md` (§3 above) — not folded into the 213.
-2. **CW-82 review *method*, not just an owner.** The named reader is Charlie, which closes the name.
-   How each string is read and signed off, and when, is undefined. Charlie is also the approver of
-   the English source, so this must be **recorded explicitly as self-review** — it is not
-   independent, and the record should not imply that it is.
+1. **Provenance class registered — DONE 2026-09-05.** `design/COPY-GAPS.md` now carries a
+   "Provenance class 2" block, kept separate from the 213 English strings.
+2. **CW-82 review method — RESOLVED 2026-09-05.** Charlie proofreads the BM in a **separate
+   session**, against the drafted file. Recorded honestly: this is **self-review**, because the same
+   person approves the English source. A separate session gives it fresh eyes on the text rather
+   than on the reasoning that produced it, which is a real improvement over reviewing inline here —
+   but it is not independent review and this record does not claim it is.
 3. **Transcreation decisions recorded** per §4, with the three marked "decision needed" resolved.
 4. **Technical contract agreed** — §6.
 
@@ -136,8 +140,11 @@ cutover: it gives these room to be done properly rather than compressed into the
 
 | Item | Owner | State |
 | --- | --- | --- |
-| Resolve the three §4.2 "decision needed" terms | Charlie | Open |
-| Approve or amend the §4.1 hero recommendation | Charlie | Open |
-| Define the CW-82 review method (§5.2) | Charlie | Open |
-| Register the provenance class in `COPY-GAPS.md` | Andy | Open — do at drafting |
-| Draft the BM landing copy | Andy | **Blocked on 1–4 above and on cutover** |
+| Resolve the three §4.2 "decision needed" terms | Charlie | **Resolved 2026-09-05** |
+| Approve or amend the §4.1 hero recommendation | Charlie | **Approved 2026-09-05** — Option A |
+| Define the CW-82 review method (§5.2) | Charlie | **Resolved 2026-09-05** — separate proofreading session |
+| Proofread `COPY-DRAFT-MS.md` | Charlie | **Open — gates shipping** |
+| Decide whether to tighten the "6 to 8 October" date in BOTH languages | Charlie | Open — see `COPY-DRAFT-MS.md` header |
+| Register the provenance class in `COPY-GAPS.md` | Andy | **Done 2026-09-05** |
+| Draft the BM landing copy | Andy | **Drafted 2026-09-05** — `COPY-DRAFT-MS.md`, awaiting proofread |
+| Build `/ms/` route + reciprocal hreflang | dev | Not started — after cutover, per §1 |

@@ -430,10 +430,11 @@ site loads both (`gtag/js?id=G-6EWT7G0LZS` *and* `gtm.js?id=GTM-KP5SMKV`). Mirro
 double-count every pageview if the container also holds a GA4 tag, and container contents cannot be
 inspected from outside.
 
-> **Must be confirmed before cutover:** open the GTM container and check a **GA4 Configuration tag
-> for `G-6EWT7G0LZS` exists in it**. If it does not, add it *there* rather than adding a second
-> on-page tag. Then verify in GA4 Realtime after cutover. If this is skipped and the container has
-> no GA4 tag, analytics will load and collect nothing.
+> **CONFIRMED 2026-09-05 by the owner: a GA4 tag is configured inside the GTM container, so GTM
+> firing also carries GA4.** This closes the open question and validates the GTM-only implementation
+> — had GA4 also been added as a second on-page tag, every pageview would now be double-counted.
+> Remaining check is routine, not blocking: confirm hits in GA4 Realtime after cutover, since that is
+> the first moment the hostname gate lets anything fire.
 
 **Search Console verification is load-bearing and easy to lose.** The property is verified by **meta
 tag**, and `dig TXT mathematicsmalaysia.com` returns nothing — there is no DNS fallback. When the
