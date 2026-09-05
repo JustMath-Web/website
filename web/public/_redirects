@@ -1,6 +1,41 @@
-/about/ /#about 301
-/faq/ /#faq 301
-/pricing/ /#pricing 301
-/category/algebra/ /blog/level/form-1-3/ 301
-/differentiation-using-the-first-principle/ /blog/level/add-maths/ 301
-/mastering-algebra/ /blog/level/form-1-3/ 301
+# Legacy WordPress → new site redirect map.
+#
+# Inventory source (docs/DECISIONS.md §10): the union of all six legacy sitemaps AND Search Console
+# `Pages.csv` (16 months to 2026-09-04). The union matters — `/writer/kongsf/` returns 200 and has 26
+# impressions at avg. position 9.08, but appears in NO sitemap. A sitemap-only audit misses it.
+#
+# Impression figures below are 16-month Search Console totals, recorded so the next person can see
+# why each target was chosen rather than re-deriving it.
+
+# --- Pages folded into the one-pager ---------------------------------------------------------
+# /pricing/ is the property's best-performing page by CTR (9 clicks / 111 impr / 8.11%) — 24% of all
+# site clicks from 6% of impressions. It is being folded into an anchor; see §10's recorded risk.
+/pricing/                                       /#pricing                    301
+/about/                                         /#about                      301
+/faq/                                           /#faq                        301
+
+# Author archive. No sitemap entry; 26 impr @ 9.08. The tutor section is its closest equivalent.
+/writer/kongsf/                                 /#about                      301
+
+# --- Legacy posts ----------------------------------------------------------------------------
+# Highest-impression content page on the property (113 impr @ 8.22). Best candidate for a 1:1
+# redirect to a refreshed post once one exists — until then, its level archive.
+/online-mathematics-tuition-form-1-chapter-2/   /blog/level/form-1-3/        301
+/differentiation-using-the-first-principle/     /blog/level/add-maths/       301
+/chapter-1-rational-numbers/                    /blog/level/form-1-3/        301
+/mastering-algebra/                             /blog/level/form-1-3/        301
+
+# --- Legacy taxonomy -------------------------------------------------------------------------
+/category/form-1/                               /blog/level/form-1-3/        301
+/category/rational-numbers/                     /blog/level/form-1-3/        301
+/category/algebra/                              /blog/level/form-1-3/        301
+/category/differentiation/                      /blog/level/add-maths/       301
+/category/math/                                 /blog/                       301
+
+# --- Deliberately NOT redirected -------------------------------------------------------------
+# /sample-page/, /optin_confirmation/, /preference_page/, /unsubscribe_confirmation/
+# WordPress and mailing-list plumbing. Zero clicks and zero impressions across 16 months, and the
+# new site has no forms or lead capture at all (docs/DECISIONS.md §11), so there is no honest
+# target. A 404 is the correct signal; redirecting them to the home page would be a soft-404.
+# Recorded as a decision, not an oversight. `_redirects` on Workers Static Assets cannot emit 410,
+# so these fall through to the default 404 — see §10 for the open item on a real 404 page.

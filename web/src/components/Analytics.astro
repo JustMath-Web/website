@@ -1,0 +1,21 @@
+---
+/**
+ * Google Tag Manager tag, per `docs/DECISIONS.md` §12 ("prefer GTM as the single container").
+ *
+ * The loader itself lives at `public/analytics.js` — a static, same-origin file, so the existing
+ * `script-src 'self'` CSP covers it without `'unsafe-inline'`. This tag carries no inline JS; it
+ * only passes configuration down as data attributes, so `src/lib/analytics.ts` stays the single
+ * source of truth for both values.
+ *
+ * `is:inline` here means "do not process/bundle this tag" — it is NOT an inline script. Without it
+ * Astro rewrites the `src` and can inline small chunks, which is exactly what the CSP rejects.
+ */
+import { ANALYTICS_HOSTNAME, GTM_ID } from "../lib/analytics";
+---
+
+<script
+	is:inline
+	defer
+	src="/analytics.js"
+	data-gtm-id={GTM_ID}
+	data-analytics-host={ANALYTICS_HOSTNAME}></script>

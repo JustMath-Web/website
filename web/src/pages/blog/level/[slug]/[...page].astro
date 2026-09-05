@@ -38,13 +38,36 @@ const { categories } = await getBlogArchiveData();
 const { siteSettings, navigation } = await getLandingPageData();
 
 const categoryTitle = category?.title ?? slug!;
+
+/**
+ * Category SEO was authored in the Studio, stored on the schema and projected by
+ * `categoryBySlugQuery` — and then never read here, so anything typed into those fields changed
+ * nothing and reported no error. Resolved per field, on the same contract as `blog/[slug].astro`:
+ * the Studio value wins, then the derived archive value, and `defaultSeo` only as a last resort.
+ */
+const baseTitle =
+	category?.seo?.metaTitle ??
+	`${categoryTitle} — Notes — ${siteSettings.siteName}`;
+// Pages 2+ of a paginated series must not reuse page 1's exact title.
+const pageTitle =
+	page.currentPage > 1 ? `${baseTitle} (page ${page.currentPage})` : baseTitle;
+const pageDescription =
+	category?.seo?.metaDescription ??
+	category?.description ??
+	`Notes for ${categoryTitle}, filed by syllabus level.`;
+
+/**
+ * `category.seo.canonicalUrl` is deliberately NOT wired here. One stored URL cannot be correct for
+ * a paginated series — it would collapse every page of the archive onto page 1 and hide those posts'
+ * links. `noindex` does apply series-wide, so it resolves normally.
+ */
 ---
 
 <BaseLayout
-	title={`${categoryTitle} — Notes — ${siteSettings.siteName}`}
-	description={category?.description ??
-		`Notes for ${categoryTitle}, filed by syllabus level.`}
+	title={pageTitle}
+	description={pageDescription}
 	siteSettings={siteSettings}
+	noindex={category?.seo?.noindex ?? false}
 >
 	<SiteHeader
 		navigation={navigation}

@@ -17,6 +17,13 @@ const CTA = {
 
 const paragraphs = (...items: string[]) => items.join("\n\n");
 
+/**
+ * The home page's SEO, reused as `siteSettings.defaultSeo` — correct, since the landing page IS the
+ * site on a one-pager. It is deliberately NOT attached to the seeded categories: a category that
+ * carries the home page's title is not "unset", it is wrong, and it hid the fact that the category
+ * route never read `category.seo` at all. Seeded categories now carry no `seo`, which is what an
+ * unoptimised category actually looks like, so the route's derived title is what gets exercised.
+ */
 const seo = {
 	metaTitle: "Just Math Malaysia | One-to-one online maths tuition",
 	metaDescription:
@@ -33,7 +40,6 @@ export const defaultCategories: CategoryWithCount[] = [
 		description:
 			"Primary maths foundations, number confidence, fractions, decimals, and word problems.",
 		order: 10,
-		seo,
 		postCount: 0,
 	},
 	{
@@ -44,7 +50,6 @@ export const defaultCategories: CategoryWithCount[] = [
 		description:
 			"Lower secondary algebra, indices, equations, and the shift into abstraction.",
 		order: 20,
-		seo,
 		postCount: 0,
 	},
 	{
@@ -54,7 +59,6 @@ export const defaultCategories: CategoryWithCount[] = [
 		shortLabel: "Form 4 to 5",
 		description: "SPM Modern Mathematics and upper secondary technique.",
 		order: 30,
-		seo,
 		postCount: 0,
 	},
 	{
@@ -65,7 +69,6 @@ export const defaultCategories: CategoryWithCount[] = [
 		description:
 			"Functions, quadratics, logarithms, trigonometry, calculus, and exam technique.",
 		order: 40,
-		seo,
 		postCount: 0,
 	},
 	{
@@ -75,7 +78,6 @@ export const defaultCategories: CategoryWithCount[] = [
 		shortLabel: "SPM",
 		description: "SPM Mathematics preparation and paper technique.",
 		order: 50,
-		seo,
 		postCount: 0,
 	},
 	{
@@ -85,7 +87,6 @@ export const defaultCategories: CategoryWithCount[] = [
 		shortLabel: "IGCSE",
 		description: "IGCSE Mathematics and IGCSE Additional Mathematics.",
 		order: 60,
-		seo,
 		postCount: 0,
 	},
 ];

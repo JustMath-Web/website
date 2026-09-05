@@ -297,6 +297,83 @@ Known limitation: this is not a full continuity audit. Missing: indexed URL expo
 data, backlink inventory, analytics history, complete WordPress content export, plugin/integration
 inventory, old sitemap/feed inspection, and full redirect parity.
 
+### 10a. Continuity audit completed — 2026-09-05
+
+The "known limitation" above is now **closed for URL inventory and redirect parity**. Four of the
+eight missing inputs were obtained; the rest are recorded as still-open below.
+
+**Method.** The inventory is the **union** of all six legacy sitemaps and Search Console
+`Pages.csv` (Web, last 16 months, to 2026-09-04). The union is load-bearing, not belt-and-braces:
+`/writer/kongsf/` returns 200 and carries 26 impressions at avg. position 9.08 while appearing in
+**no sitemap**. A sitemap-only audit — which is what the original list above was — misses it. That
+is also why the table above listed 7 URLs and this one lists 19.
+
+**Full inventory and decisions.** Impressions/position are 16-month Search Console totals.
+
+| Old URL | Clicks | Impr | Pos | Decision |
+| --- | ---: | ---: | ---: | --- |
+| `/` | 27 | 1533 | 11.32 | Served natively |
+| `/blog/` | 0 | 31 | 8.32 | Served natively |
+| `/pricing/` | 9 | 111 | 15.41 | 301 → `/#pricing` — **see risk below** |
+| `/about/` | 0 | 82 | 15.49 | 301 → `/#about` |
+| `/faq/` | 0 | 62 | 22.56 | 301 → `/#faq` |
+| `/writer/kongsf/` | 0 | 26 | 9.08 | 301 → `/#about` (new; sitemap-invisible) |
+| `/online-mathematics-tuition-form-1-chapter-2/` | 1 | 113 | 8.22 | 301 → `/blog/level/form-1-3/`; **best 1:1 refresh candidate** (new) |
+| `/differentiation-using-the-first-principle/` | 0 | 59 | 36.76 | 301 → `/blog/level/add-maths/`; 1:1 refresh candidate |
+| `/chapter-1-rational-numbers/` | 0 | 8 | 7.00 | 301 → `/blog/level/form-1-3/` (new) |
+| `/mastering-algebra/` | 0 | 2 | 6.00 | 301 → `/blog/level/form-1-3/` |
+| `/category/math/` | 0 | 2 | 7.00 | 301 → `/blog/` (new) |
+| `/category/form-1/` | 0 | 2 | 8.00 | 301 → `/blog/level/form-1-3/` (new) |
+| `/category/rational-numbers/` | 0 | 1 | 6.00 | 301 → `/blog/level/form-1-3/` (new) |
+| `/category/differentiation/` | 0 | 0 | — | 301 → `/blog/level/add-maths/` (new) |
+| `/category/algebra/` | 0 | 0 | — | 301 → `/blog/level/form-1-3/` |
+| `/sample-page/` | 0 | 0 | — | **No redirect — 404 by decision** |
+| `/optin_confirmation/` | 0 | 0 | — | **No redirect — 404 by decision** |
+| `/preference_page/` | 0 | 0 | — | **No redirect — 404 by decision** |
+| `/unsubscribe_confirmation/` | 0 | 0 | — | **No redirect — 404 by decision** |
+
+**Why those four 404 rather than redirect.** WordPress and mailing-list plumbing with zero clicks
+and zero impressions across 16 months. The new site has no forms and no lead capture at all (§11),
+so there is no honest target; pointing them at the home page would be a soft-404. This is a recorded
+decision, not an oversight. Note `_redirects` on Workers Static Assets supports only 301/302/303/
+307/308 — **410 is not available**, so these fall through to the default 404.
+
+**Recorded risk — `/pricing/` is the property's best-converting page.** 9 clicks from 111
+impressions is an 8.11% CTR against a site-wide average of 2.03% (37/1,821): 24% of all site clicks
+from 6% of impressions, and the only page besides the home page with meaningful clicks. (Its avg.
+position of 15.41 is identical to Malaysia's country-level 15.41 — verified as a coincidence in
+`Pages.csv` line 3, not a transcription error. Noted so the check is not repeated.) It is being folded into an anchor on the one-pager,
+along with `/about/` (82 impr) and `/faq/` (62 impr) — 255 impressions, 14% of the property, on
+three URLs that cease to exist as pages. The one-pager architecture is a deliberate design decision
+and this entry does not reverse it, but the cost is now measured rather than assumed, and it should
+be revisited if pricing intent shows up in post-cutover Search Console.
+
+**Resolved 2026-09-05 — the one-pager stands; do not build a standalone `/pricing/` page.** The risk
+above was briefly escalated to "the one architecture change this data supports". A page-level query
+cross-tab settled it and the escalation was wrong. `/pricing/`'s visible queries over 16 months are
+`maths enrichment class` (1 click), `malaysia ai math class for kids` (3 impr), `maths enrichment
+classes` (2), `just math` (1), `math enrichment class` (1) — **zero fee intent**, and widening the
+check to all 62 property queries returns zero for *price/pricing/fee/cost/rate/charge/yuran/harga/
+berapa* as well. The page earns stray *enrichment* traffic for a service the business does not sell
+under that name, plus brand traffic the 301 preserves anyway.
+
+Two framing corrections worth keeping: **the rebuild does not delete pricing** — the table is on the
+page and the 301 leads to it; only a separately rankable URL is lost. And **9 clicks over 16 months
+is ~0.5/month** — the "24% of all clicks" figure is true only because the property earned 37 clicks
+in total, and it was quoted without the small-base caution applied everywhere else in this analysis.
+
+Caveat, stated: 93% of `/pricing/`'s impressions are below Search Console's anonymisation threshold,
+so this is *no support for the justifying hypothesis*, not proof of no fee demand. It is enough to
+decide, because reversing a recorded architecture decision needs affirmative cause and none appeared.
+Re-test at the post-cutover re-pull (`copywriting/SEARCH-STRATEGY.md` §6) — at which point the move
+would be adding a page, not un-picking an aged redirect.
+
+**Still open.** No 404 page exists (`web/src/pages/404.astro` absent, no `not_found_handling` in
+`wrangler.jsonc`), so the four deliberate 404s and any stray legacy URL return a bare, unbranded
+404. A real 404 page needs approved copy and is therefore a separate change. Backlink inventory,
+complete WordPress content export, and plugin/integration inventory remain unobtained; none of them
+block redirect parity, which is what this entry closes.
+
 ## 11. Forms, Lead Capture, And WhatsApp
 
 No contact form at launch.
@@ -336,6 +413,64 @@ When IDs are supplied:
 - Keep production analytics disabled in local/dev/test.
 - Add consent handling if non-essential analytics/advertising tags require it for the chosen target
   markets and tag stack.
+
+### 12a. Blocker resolved — legacy IDs reused, implemented 2026-09-05
+
+The owner confirmed on 2026-09-05 that the IDs running on the legacy WordPress site are his to
+reuse, which closes §12's blocker. Implemented as:
+
+| Item | Value | Where |
+| --- | --- | --- |
+| GTM container | `GTM-KP5SMKV` | `web/src/lib/analytics.ts` |
+| GA4 measurement ID | `G-6EWT7G0LZS` | Recorded only — **not** loaded on the page, see below |
+| Search Console verification | `gph_0vw9…sgtQ` | `<meta>` in `BaseLayout.astro` |
+
+**GTM is the single container, per §12 — GA4 is deliberately not a second on-page tag.** The legacy
+site loads both (`gtag/js?id=G-6EWT7G0LZS` *and* `gtm.js?id=GTM-KP5SMKV`). Mirroring that here would
+double-count every pageview if the container also holds a GA4 tag, and container contents cannot be
+inspected from outside.
+
+> **Must be confirmed before cutover:** open the GTM container and check a **GA4 Configuration tag
+> for `G-6EWT7G0LZS` exists in it**. If it does not, add it *there* rather than adding a second
+> on-page tag. Then verify in GA4 Realtime after cutover. If this is skipped and the container has
+> no GA4 tag, analytics will load and collect nothing.
+
+**Search Console verification is load-bearing and easy to lose.** The property is verified by **meta
+tag**, and `dig TXT mathematicsmalaysia.com` returns nothing — there is no DNS fallback. When the
+domain stops serving WordPress, verification breaks unless the new site carries that tag. It now
+does, on every page type, covered by a test. Losing it means losing the property and its 16 months
+of query history, which is the baseline `copywriting/SEARCH-STRATEGY.md` schedules a re-pull against.
+
+**Dev/test isolation is by hostname, not build flag.** §12 requires production analytics off in
+local/dev/test, but a build-time flag is insufficient here: the production build is what deploys to
+`*.workers.dev` preview URLs while the site is still pre-launch behind `Disallow: /` (§13/§27).
+`public/analytics.js` therefore no-ops unless `location.hostname === "mathematicsmalaysia.com"`, so
+it is inert everywhere today and self-activates at cutover with no follow-up deploy.
+
+**CSP was widened, minimally, and no `'unsafe-inline'` was introduced.** GTM's documented snippet is
+inline JS, which `script-src 'self'` blocks; using it would have forced `'unsafe-inline'` sitewide to
+install one tag. The loader is a static same-origin file instead, and the site still ships zero
+executable inline scripts (JSON-LD data blocks excepted) — asserted by test. Added to
+`web/public/_headers`: `googletagmanager.com` on `script-src`/`img-src`, and a new `connect-src` for
+the GA4 beacon hosts (previously these fell back to `default-src 'self'`, which would have silently
+dropped every hit).
+
+**`<noscript>` fallback added 2026-09-05** at the owner's request, matching his supplied install
+snippet, with `frame-src https://www.googletagmanager.com` added to the CSP for it. One limitation
+recorded rather than hidden: unlike the head tag it **cannot be host-gated**, because the gate is
+JavaScript and this element exists for agents that run none. It is therefore the single analytics
+surface that is not inert on preview URLs pre-cutover. Exposure is small — it fires only for a
+visitor executing no JavaScript that also loads iframes, which excludes ordinary browsers and most
+crawlers — and GA4 cannot record a session from it regardless.
+
+**Consent:** still none, and none added. §12's condition ("if non-essential tags require it for the
+chosen target markets") is unresolved — Malaysia's PDPA does not impose a GDPR-style prior-consent
+rule for analytics cookies, but this has not been checked against the actual tags in the container,
+which cannot be inspected from outside. **Open item**, carried, not silently closed.
+
+**Tests:** `web/tests/e2e/analytics-host-gate.spec.ts` — the tag ships with its configuration but
+fires no Google request off-host and leaves `dataLayer` undefined; the verification meta is present
+on home, blog archive and category pages; no executable inline script exists.
 
 ## 13. Assets And Launch Conditions
 
