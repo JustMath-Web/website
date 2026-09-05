@@ -44,10 +44,24 @@ if (!post) {
 const { siteSettings, navigation } = await getLandingPageData();
 const category = post.categories[0]?.title ?? "";
 
-const pageSeo = post.seo ?? siteSettings.defaultSeo;
+/**
+ * Per-FIELD SEO resolution, deliberately not `post.seo ?? siteSettings.defaultSeo`.
+ *
+ * `seo` is optional on the post schema, so an object-level fallback handed every unoptimised post
+ * the whole site default — which carries a populated `metaTitle`/`metaDescription` — and the
+ * per-post fallbacks below could never run. Result: every such post shipped the home page's title
+ * and description, so the blog cannibalised itself on the one surface meant to carry long-tail
+ * search. `defaultSeo` is now the last resort per field, never the first.
+ *
+ * `canonicalUrl` and `noindex` resolve from the post alone: inheriting a site-level canonical would
+ * point every post at one URL, and indexability is a per-document decision.
+ */
 const pageTitle =
-	pageSeo.metaTitle ?? `${post.title} — Notes — ${siteSettings.siteName}`;
-const pageDescription = pageSeo.metaDescription ?? post.excerpt;
+	post.seo?.metaTitle ?? `${post.title} — Notes — ${siteSettings.siteName}`;
+const pageDescription =
+	post.seo?.metaDescription ??
+	post.excerpt ??
+	siteSettings.defaultSeo.metaDescription;
 
 /**
  * BlogPosting JSON-LD, following BaseLayout.astro's own Organization JSON-LD pattern exactly (own
@@ -68,8 +82,8 @@ const blogPostingJsonLd = {
 	title={pageTitle}
 	description={pageDescription}
 	siteSettings={siteSettings}
-	canonicalUrl={pageSeo.canonicalUrl}
-	noindex={pageSeo.noindex}
+	canonicalUrl={post.seo?.canonicalUrl}
+	noindex={post.seo?.noindex ?? false}
 >
 	<script
 		is:inline

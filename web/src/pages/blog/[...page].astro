@@ -24,10 +24,16 @@ interface Props {
 const { page } = Astro.props;
 const { categories } = await getBlogArchiveData();
 const { siteSettings, navigation } = await getLandingPageData();
+
+// Pages 2+ of a paginated series must not reuse page 1's exact title.
+const pageTitle =
+	page.currentPage > 1
+		? `Notes (page ${page.currentPage}) — ${siteSettings.siteName}`
+		: `Notes — ${siteSettings.siteName}`;
 ---
 
 <BaseLayout
-	title={`Notes — ${siteSettings.siteName}`}
+	title={pageTitle}
 	description="Written for parents, filed by syllabus level: where maths goes wrong and what to do about it."
 	siteSettings={siteSettings}
 >

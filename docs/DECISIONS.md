@@ -297,6 +297,61 @@ Known limitation: this is not a full continuity audit. Missing: indexed URL expo
 data, backlink inventory, analytics history, complete WordPress content export, plugin/integration
 inventory, old sitemap/feed inspection, and full redirect parity.
 
+### 10a. Continuity audit completed — 2026-09-05
+
+The "known limitation" above is now **closed for URL inventory and redirect parity**. Four of the
+eight missing inputs were obtained; the rest are recorded as still-open below.
+
+**Method.** The inventory is the **union** of all six legacy sitemaps and Search Console
+`Pages.csv` (Web, last 16 months, to 2026-09-04). The union is load-bearing, not belt-and-braces:
+`/writer/kongsf/` returns 200 and carries 26 impressions at avg. position 9.08 while appearing in
+**no sitemap**. A sitemap-only audit — which is what the original list above was — misses it. That
+is also why the table above listed 7 URLs and this one lists 18.
+
+**Full inventory and decisions.** Impressions/position are 16-month Search Console totals.
+
+| Old URL | Clicks | Impr | Pos | Decision |
+| --- | ---: | ---: | ---: | --- |
+| `/` | 27 | 1533 | 11.32 | Served natively |
+| `/blog/` | 0 | 31 | 8.32 | Served natively |
+| `/pricing/` | 9 | 111 | 15.41 | 301 → `/#pricing` — **see risk below** |
+| `/about/` | 0 | 82 | 15.49 | 301 → `/#about` |
+| `/faq/` | 0 | 62 | 22.56 | 301 → `/#faq` |
+| `/writer/kongsf/` | 0 | 26 | 9.08 | 301 → `/#about` (new; sitemap-invisible) |
+| `/online-mathematics-tuition-form-1-chapter-2/` | 1 | 113 | 8.22 | 301 → `/blog/level/form-1-3/`; **best 1:1 refresh candidate** (new) |
+| `/differentiation-using-the-first-principle/` | 0 | 59 | 36.76 | 301 → `/blog/level/add-maths/`; 1:1 refresh candidate |
+| `/chapter-1-rational-numbers/` | 0 | 8 | 7.00 | 301 → `/blog/level/form-1-3/` (new) |
+| `/mastering-algebra/` | 0 | 2 | 6.00 | 301 → `/blog/level/form-1-3/` |
+| `/category/math/` | 0 | 2 | 7.00 | 301 → `/blog/` (new) |
+| `/category/form-1/` | 0 | 2 | 8.00 | 301 → `/blog/level/form-1-3/` (new) |
+| `/category/rational-numbers/` | 0 | 1 | 6.00 | 301 → `/blog/level/form-1-3/` (new) |
+| `/category/differentiation/` | 0 | 0 | — | 301 → `/blog/level/add-maths/` (new) |
+| `/category/algebra/` | 0 | 0 | — | 301 → `/blog/level/form-1-3/` |
+| `/sample-page/` | 0 | 0 | — | **No redirect — 404 by decision** |
+| `/optin_confirmation/` | 0 | 0 | — | **No redirect — 404 by decision** |
+| `/preference_page/` | 0 | 0 | — | **No redirect — 404 by decision** |
+| `/unsubscribe_confirmation/` | 0 | 0 | — | **No redirect — 404 by decision** |
+
+**Why those four 404 rather than redirect.** WordPress and mailing-list plumbing with zero clicks
+and zero impressions across 16 months. The new site has no forms and no lead capture at all (§11),
+so there is no honest target; pointing them at the home page would be a soft-404. This is a recorded
+decision, not an oversight. Note `_redirects` on Workers Static Assets supports only 301/302/303/
+307/308 — **410 is not available**, so these fall through to the default 404.
+
+**Recorded risk — `/pricing/` is the property's best-converting page.** 9 clicks from 111
+impressions is an 8.11% CTR: 24% of all site clicks from 6% of impressions, and the only page
+besides the home page with meaningful clicks. It is being folded into an anchor on the one-pager,
+along with `/about/` (82 impr) and `/faq/` (62 impr) — 255 impressions, 14% of the property, on
+three URLs that cease to exist as pages. The one-pager architecture is a deliberate design decision
+and this entry does not reverse it, but the cost is now measured rather than assumed, and it should
+be revisited if pricing intent shows up in post-cutover Search Console.
+
+**Still open.** No 404 page exists (`web/src/pages/404.astro` absent, no `not_found_handling` in
+`wrangler.jsonc`), so the four deliberate 404s and any stray legacy URL return a bare, unbranded
+404. A real 404 page needs approved copy and is therefore a separate change. Backlink inventory,
+complete WordPress content export, and plugin/integration inventory remain unobtained; none of them
+block redirect parity, which is what this entry closes.
+
 ## 11. Forms, Lead Capture, And WhatsApp
 
 No contact form at launch.
