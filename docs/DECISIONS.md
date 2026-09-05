@@ -306,7 +306,7 @@ eight missing inputs were obtained; the rest are recorded as still-open below.
 `Pages.csv` (Web, last 16 months, to 2026-09-04). The union is load-bearing, not belt-and-braces:
 `/writer/kongsf/` returns 200 and carries 26 impressions at avg. position 9.08 while appearing in
 **no sitemap**. A sitemap-only audit — which is what the original list above was — misses it. That
-is also why the table above listed 7 URLs and this one lists 18.
+is also why the table above listed 7 URLs and this one lists 19.
 
 **Full inventory and decisions.** Impressions/position are 16-month Search Console totals.
 
@@ -339,8 +339,10 @@ decision, not an oversight. Note `_redirects` on Workers Static Assets supports 
 307/308 — **410 is not available**, so these fall through to the default 404.
 
 **Recorded risk — `/pricing/` is the property's best-converting page.** 9 clicks from 111
-impressions is an 8.11% CTR: 24% of all site clicks from 6% of impressions, and the only page
-besides the home page with meaningful clicks. It is being folded into an anchor on the one-pager,
+impressions is an 8.11% CTR against a site-wide average of 2.03% (37/1,821): 24% of all site clicks
+from 6% of impressions, and the only page besides the home page with meaningful clicks. (Its avg.
+position of 15.41 is identical to Malaysia's country-level 15.41 — verified as a coincidence in
+`Pages.csv` line 3, not a transcription error. Noted so the check is not repeated.) It is being folded into an anchor on the one-pager,
 along with `/about/` (82 impr) and `/faq/` (62 impr) — 255 impressions, 14% of the property, on
 three URLs that cease to exist as pages. The one-pager architecture is a deliberate design decision
 and this entry does not reverse it, but the cost is now measured rather than assumed, and it should

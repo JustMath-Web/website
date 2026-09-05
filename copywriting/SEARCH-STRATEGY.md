@@ -64,6 +64,12 @@ shape, competitor targeting and page-level evidence — labelled hypothesis wher
 Search Console aggregates page and property totals differently; treat both as approximate at the
 margin and do not compute percentages to more than two significant figures from them.
 
+**Source verification.** Every figure quoted in this document was checked against the exported CSVs
+by exact-line match, not transcribed by eye — 19 assertions across `Queries.csv`, `Pages.csv`,
+`Countries.csv` and `Devices.csv`, all matching. One that looks like an error and is not:
+`/pricing/` has an avg. position of **15.41**, identical to Malaysia's country-level **15.41**.
+Both are verbatim from source (`Pages.csv` line 3, `Countries.csv` line 2). Coincidence, not a slip.
+
 ---
 
 ## 2. What the legacy site actually did — findings, not inference
@@ -71,12 +77,23 @@ margin and do not compute percentages to more than two significant figures from 
 These come from `Pages.csv` and the live HTML, and do not depend on the anonymised query table.
 
 **`/pricing/` is the property's best-converting page, and it is being deleted.**
-9 clicks / 111 impressions / **8.11% CTR** — 24% of every click the site has earned, from 6% of its
-impressions, and the only page other than the home page with meaningful clicks. It 301s to
-`/#pricing` on the new site. Together with `/about/` (82 impressions) and `/faq/` (62), that is 255
-impressions — 14% of the property — on three URLs that stop existing as pages. The one-pager is a
-deliberate architecture decision and this document does not reverse it, but the cost is now measured
-rather than assumed. Recorded in `docs/DECISIONS.md` §10a.
+9 clicks / 111 impressions / **8.11% CTR — 4× the site-wide average of 2.03%** (37/1,821). That is
+24% of every click the site has earned, from 6% of its impressions, and it is the only page other
+than the home page with meaningful clicks. It 301s to `/#pricing` on the new site. Together with
+`/about/` (82 impressions) and `/faq/` (62), that is 255 impressions — 14% of the property — on three
+URLs that stop existing as pages.
+
+**This is the single strongest measured signal in the dataset, and it argues for one specific
+architecture change.** Everything else here is inference from query shape; this is observed
+behaviour. People arrive at this domain looking for price specifically, and the client publishes a
+complete price table — the one thing `SECTOR-PROFILE.md` Q2 ranks as table stakes that the category
+mostly defers ("spmmath RM60/mo, tavis RM99/mo, algonova 'from RM48'"). A standalone `/pricing/`
+page is the only architecture change this data actively supports.
+
+This document does not reverse the one-pager — that is a design decision and a client call, not a
+copy decision. But "recorded risk" understates it, and it should be decided before cutover rather
+than after, because the redirect is cheap to change now and expensive to unwind once the 301 has
+aged. Recorded in `docs/DECISIONS.md` §10a.
 
 **Foreign traffic is on the home page, not the maths posts — disconfirmed by arithmetic.**
 The hypothesis was that international impressions land on the calculus and algebra posts, implying
@@ -151,7 +168,10 @@ service pages, which the current architecture does not have.
 **Secondary, carried naturally by the approved copy:** Standard 1 to Form 5, Add Maths, SPM, IGCSE,
 English/BM.
 
-**Metadata — the only strings this document proposes changing.**
+**Metadata — the only strings this document proposes changing, and they are NOT applied.**
+`defaultLandingData.ts:21-23` is unchanged in PR #54 apart from an explanatory comment. Moving from
+brand-first to keyword-first is a positioning decision for the client, not plumbing, so it is
+proposed here and left for a separate approval. Do not read "post SEO fixed" as "metadata changed".
 
 Current (`web/src/lib/content/defaultLandingData.ts`):
 - Title: `Just Math Malaysia | One-to-one online maths tuition` — brand-first, for a brand with 29
@@ -199,11 +219,20 @@ the approved copy already makes, so none requires new client fact-approval.
 | `spm` / `form-4-5` | Technique-and-timing marks; post-SPM maths grade requirements | |
 | `igcse` | How IGCSE maths differs from SPM | |
 
-**The Learning Matrix post is time-boxed and the window is real but short.** The exam is 6–8 October
-2026; cutover is expected before early October. That leaves days-to-weeks of indexable life before
-the event, on a domain with no authority. Write it because it is the strongest argument the site
-makes and it will be re-usable for the Form 3 rollout in 2027 — **not** on an expectation that it
-ranks this year. `SECTOR-PROFILE.md` Q5 flags this content as dating policy with no named review
+**The Learning Matrix post is time-boxed, and its value is NOT October rankings.** The exam is 6–8
+October 2026.
+
+*Assumption, not a recorded decision:* the project owner stated on 2026-09-05 that domain cutover is
+expected before early October. **No committed cutover date exists in `docs/DECISIONS.md`.** §38 and
+§40 record the *Cloudflare project* cutover (completed 2026-09-01), which is a different thing from
+moving `mathematicsmalaysia.com` off WordPress — that has not happened, and until it does the new
+site carries `robots.txt: Disallow: /` and a site-wide `X-Robots-Tag: noindex`.
+
+**The dependency, stated plainly:** even on the optimistic assumption, this leaves days-to-weeks of
+indexable life before the event, on a domain with ~52 Malaysian impressions a month and no
+authority. Write the post because it is the strongest argument the site makes and because it is
+re-usable for the Form 3 rollout in 2027 — **not** on any expectation that it ranks this year. If
+cutover slips past early October, it is not urgent; it is next year's post, written early. `SECTOR-PROFILE.md` Q5 flags this content as dating policy with no named review
 owner; that owner is still unnamed.
 
 **Search Console coverage note.** Every topic above sits in the "weak zero" category — no content
