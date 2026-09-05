@@ -112,7 +112,7 @@ Building number confidence before the gaps become invisible.
 
 - Arithmetic fluency, place value, fractions and decimals, and word problems where the maths is easy but reading the question is not.
 - Early maths anxiety, usually caused by a child being moved on before the previous idea was solid.
-- If your child is in Year 4 this year, they sit the Learning Matrix maths paper on 6 to 8 October. An assessment now tells you what they will find out in October, with Years 5 and 6 still available to act on it.
+- If your child is in Year 4 this year, they sit the Learning Matrix maths paper on 7 October. An assessment now tells you what they will find out in October, with Years 5 and 6 still available to act on it.
 
 ### Block two — Form 1 to Form 3
 

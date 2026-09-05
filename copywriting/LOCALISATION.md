@@ -144,7 +144,7 @@ cutover: it gives these room to be done properly rather than compressed into the
 | Approve or amend the §4.1 hero recommendation | Charlie | **Approved 2026-09-05** — Option A |
 | Define the CW-82 review method (§5.2) | Charlie | **Resolved 2026-09-05** — separate proofreading session |
 | Proofread `COPY-DRAFT-MS.md` | Charlie | **Open — gates shipping** |
-| Decide whether to tighten the "6 to 8 October" date in BOTH languages | Charlie | Open — see `COPY-DRAFT-MS.md` header |
+| Tighten the "6 to 8 October" date in BOTH languages | Charlie | **Done 2026-09-05** — English and BM both now read 7 October |
 | Register the provenance class in `COPY-GAPS.md` | Andy | **Done 2026-09-05** |
 | Draft the BM landing copy | Andy | **Drafted 2026-09-05** — `COPY-DRAFT-MS.md`, awaiting proofread |
 | Build `/ms/` route + reciprocal hreflang | dev | Not started — after cutover, per §1 |

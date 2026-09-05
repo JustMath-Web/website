@@ -7,6 +7,23 @@ and typographic substitution never register as a copy change.
 
 **Result: 213 unique strings · 174 carried verbatim · 38 derived · 0 replaced.**
 
+> ### Amendment 1 to the approved source — 2026-09-05
+>
+> **The first change to client-approved copy on this project.** Counted separately from the 0
+> "replaced" above, because that figure means *no drafter substituted their own words* and that is
+> still true: this is the **owner amending his own copy for factual precision**, on his instruction.
+>
+> | | |
+> | --- | --- |
+> | Was | "…they sit the Learning Matrix maths paper on **6 to 8 October**." |
+> | Now | "…they sit the Learning Matrix maths paper on **7 October**." |
+> | Where | Level block one, `just-math-page-copy-final.md:115` |
+> | Why | 6–8 October is the whole three-day assessment window; the **maths paper** is one 75-minute sitting on Wednesday 7 October, 8:10–9:25 am (Lembaga Peperiksaan timetable). The old wording was imprecise rather than false, but the sentence's job is to make a parent act on a date, and a three-day window makes them plan for something that does not exist for maths. |
+> | Approved by | Owner, 2026-09-05 |
+>
+> The Bahasa Melayu draft carries the matching change (*"pada 7 Oktober"*), so the two language
+> versions do not diverge.
+
 > ## Provenance class 2 — Bahasa Melayu, added 2026-09-05
 >
 > The count above describes **English strings only**, and every one of them is client-authored.
@@ -78,7 +95,7 @@ Each restates something the approved copy already asserts. Trace given; no new f
 | `3 POINTS · 11 YEARS` | The three measured points named in Problem, across Standard 1–Form 5 |
 | `11 YEARS` | Standard 1 to Form 5 = eleven school years |
 | `independent checks in eleven years of schooling` | As above, restated as the Stat label |
-| `OCT 2026` | "…they sit the Learning Matrix maths paper on 6 to 8 October" |
+| `OCT 2026` | "…they sit the Learning Matrix maths paper on 7 October" (amended 2026-09-05, see below) |
 | `Standard 1, 2, 3, 5, 6 and Form 1, 2, 4 are never independently measured. Form 3 to SPM is the longest unchecked stretch — and the one Additional Mathematics arrives in.` | Condenses the Problem section's own argument |
 | `minutes, free` · `students a year` | Stat-component labels under approved figures |
 
