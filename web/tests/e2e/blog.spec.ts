@@ -191,6 +191,20 @@ test.describe("KaTeX self-hosting and CSS scoping (VS-KaTeX)", () => {
 		// non-existent asset ID (docs/DECISIONS.md §28) — that's Sanity's real, legitimate image CDN,
 		// not something KaTeX self-hosting is meant to eliminate. Scoped to the resource types this
 		// check actually cares about: stylesheet/font/script, not images.
+		//
+		// The fixture post also carries a deliberate YouTube embed (PR #48), and the youtube-nocookie
+		// player fetches its OWN css/js/fonts from Google hosts once the lazy iframe starts loading.
+		// Those are the embed's subresources, not this site's — the CSP already allows the frame
+		// (`frame-src https://www.youtube-nocookie.com`), and this test is about first-party CSS,
+		// fonts and scripts being self-hosted. Excluded by host rather than by timing: the iframe is
+		// `loading="lazy"`, so whether its requests land before `goto` resolves is a RACE, and this
+		// assertion was already flaky on main (observed failing 1 run in 5 with no code changes)
+		// before anything on this branch touched it. Excluding the hosts makes it deterministic.
+		const EMBED_HOSTS = [
+			"www.youtube-nocookie.com",
+			"fonts.gstatic.com",
+			"www.google.com",
+		];
 		const externalRequests: string[] = [];
 		page.on("request", (request) => {
 			const type = request.resourceType();
@@ -198,7 +212,11 @@ test.describe("KaTeX self-hosting and CSS scoping (VS-KaTeX)", () => {
 				return;
 			}
 			const url = new URL(request.url());
-			if (url.hostname !== "127.0.0.1" && url.hostname !== "localhost") {
+			if (
+				url.hostname !== "127.0.0.1" &&
+				url.hostname !== "localhost" &&
+				!EMBED_HOSTS.includes(url.hostname)
+			) {
 				externalRequests.push(`${type}: ${request.url()}`);
 			}
 		});

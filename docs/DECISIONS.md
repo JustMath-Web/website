@@ -414,6 +414,56 @@ When IDs are supplied:
 - Add consent handling if non-essential analytics/advertising tags require it for the chosen target
   markets and tag stack.
 
+### 12a. Blocker resolved — legacy IDs reused, implemented 2026-09-05
+
+The owner confirmed on 2026-09-05 that the IDs running on the legacy WordPress site are his to
+reuse, which closes §12's blocker. Implemented as:
+
+| Item | Value | Where |
+| --- | --- | --- |
+| GTM container | `GTM-KP5SMKV` | `web/src/lib/analytics.ts` |
+| GA4 measurement ID | `G-6EWT7G0LZS` | Recorded only — **not** loaded on the page, see below |
+| Search Console verification | `gph_0vw9…sgtQ` | `<meta>` in `BaseLayout.astro` |
+
+**GTM is the single container, per §12 — GA4 is deliberately not a second on-page tag.** The legacy
+site loads both (`gtag/js?id=G-6EWT7G0LZS` *and* `gtm.js?id=GTM-KP5SMKV`). Mirroring that here would
+double-count every pageview if the container also holds a GA4 tag, and container contents cannot be
+inspected from outside.
+
+> **Must be confirmed before cutover:** open the GTM container and check a **GA4 Configuration tag
+> for `G-6EWT7G0LZS` exists in it**. If it does not, add it *there* rather than adding a second
+> on-page tag. Then verify in GA4 Realtime after cutover. If this is skipped and the container has
+> no GA4 tag, analytics will load and collect nothing.
+
+**Search Console verification is load-bearing and easy to lose.** The property is verified by **meta
+tag**, and `dig TXT mathematicsmalaysia.com` returns nothing — there is no DNS fallback. When the
+domain stops serving WordPress, verification breaks unless the new site carries that tag. It now
+does, on every page type, covered by a test. Losing it means losing the property and its 16 months
+of query history, which is the baseline `copywriting/SEARCH-STRATEGY.md` schedules a re-pull against.
+
+**Dev/test isolation is by hostname, not build flag.** §12 requires production analytics off in
+local/dev/test, but a build-time flag is insufficient here: the production build is what deploys to
+`*.workers.dev` preview URLs while the site is still pre-launch behind `Disallow: /` (§13/§27).
+`public/analytics.js` therefore no-ops unless `location.hostname === "mathematicsmalaysia.com"`, so
+it is inert everywhere today and self-activates at cutover with no follow-up deploy.
+
+**CSP was widened, minimally, and no `'unsafe-inline'` was introduced.** GTM's documented snippet is
+inline JS, which `script-src 'self'` blocks; using it would have forced `'unsafe-inline'` sitewide to
+install one tag. The loader is a static same-origin file instead, and the site still ships zero
+executable inline scripts (JSON-LD data blocks excepted) — asserted by test. Added to
+`web/public/_headers`: `googletagmanager.com` on `script-src`/`img-src`, and a new `connect-src` for
+the GA4 beacon hosts (previously these fell back to `default-src 'self'`, which would have silently
+dropped every hit).
+
+**Consent:** still none, and none added. §12's condition ("if non-essential tags require it for the
+chosen target markets") is unresolved — Malaysia's PDPA does not impose a GDPR-style prior-consent
+rule for analytics cookies, but this has not been checked against the actual tags in the container,
+which cannot be inspected from outside. **Open item**, carried, not silently closed.
+
+**Tests:** `web/tests/e2e/analytics-host-gate.spec.ts` — the tag ships with its configuration but
+fires no Google request off-host and leaves `dataLayer` undefined; the verification meta is present
+on home, blog archive and category pages; no executable inline script exists.
+
 ## 13. Assets And Launch Conditions
 
 Assets available:
