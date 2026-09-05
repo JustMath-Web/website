@@ -441,6 +441,20 @@ domain stops serving WordPress, verification breaks unless the new site carries 
 does, on every page type, covered by a test. Losing it means losing the property and its 16 months
 of query history, which is the baseline `copywriting/SEARCH-STRATEGY.md` schedules a re-pull against.
 
+> **Owner action before cutover — add a DNS TXT record as a SECOND verification method on the
+> EXISTING property.** The distinction matters and is easy to get wrong: creating a new *Domain*
+> property does **not** protect the history — it starts at zero. Search Console permits multiple
+> verification methods on one property, so adding TXT to the existing URL-prefix property removes
+> the single point of failure without touching the history. The meta tag then stops being the only
+> thing standing between a deploy and losing the baseline.
+
+> **Owner action — review who has access to the GTM container.** `script-src` now allows
+> `https://www.googletagmanager.com`, which means anyone who can publish in that container can
+> execute arbitrary JavaScript on this site. That is inherent to GTM rather than a flaw in this
+> implementation, but the container is inherited from the legacy site and its access list has never
+> been established. The CSP is now exactly as strong as that list. Check it at the same time as the
+> GA4 tag check above.
+
 **Dev/test isolation is by hostname, not build flag.** §12 requires production analytics off in
 local/dev/test, but a build-time flag is insufficient here: the production build is what deploys to
 `*.workers.dev` preview URLs while the site is still pre-launch behind `Disallow: /` (§13/§27).
@@ -457,8 +471,10 @@ dropped every hit).
 
 **`<noscript>` fallback added 2026-09-05** at the owner's request, matching his supplied install
 snippet, with `frame-src https://www.googletagmanager.com` added to the CSP for it. One limitation
-recorded rather than hidden: unlike the head tag it **cannot be host-gated**, because the gate is
-JavaScript and this element exists for agents that run none. It is therefore the single analytics
+recorded rather than hidden: unlike the head tag it **cannot be RUNTIME-gated**, because the gate is
+JavaScript and this element exists for agents that run none. It *could* be gated at build time via
+an env var, which would remove the exception entirely; that option was considered and deliberately
+not taken, because the exposure below does not justify a second configuration path. It is therefore the single analytics
 surface that is not inert on preview URLs pre-cutover. Exposure is small — it fires only for a
 visitor executing no JavaScript that also loads iframes, which excludes ordinary browsers and most
 crawlers — and GA4 cannot record a session from it regardless.

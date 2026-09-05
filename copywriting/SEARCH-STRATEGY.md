@@ -254,7 +254,7 @@ the approved copy already makes, so none requires new client fact-approval.
 
 | Category | Topics | Note |
 | --- | --- | --- |
-| `standard-1-6` | **Matriks Pembelajaran Tahun 4, 6–8 Oct 2026** | Time-boxed — see below |
+| `standard-1-6` | **Matriks Pembelajaran Tahun 4 — maths paper Wed 7 Oct 2026, 8:10–9:25 am** | Time-boxed — see below; use the exact date, not the window |
 | `form-1-3` | Algebraic fractions and the primary gap beneath them; why "always good at maths" students stall in Form 2; the Form 3 stream decision — is Add Maths realistic? | Where the strong zero says organic search is hard; write for the parent, not the SERP |
 | `add-maths` | Why Add Maths punishes weak Form 1–3 algebra; chapter guides | Best commercial-adjacent cluster |
 | `spm` / `form-4-5` | Technique-and-timing marks; post-SPM maths grade requirements | |
@@ -276,6 +276,35 @@ re-usable for the Form 3 rollout in 2027 — **not** on any expectation that it 
 cutover slips past early October, it is not urgent; it is next year's post, written early. `SECTOR-PROFILE.md` Q5 flags this content as dating policy with no named review
 owner; that owner is still unnamed.
 
+**Learning Matrix — the exact figures the post must carry, and a correction.**
+
+Verified against Lembaga Peperiksaan's published timetable and the reporting of it:
+
+| | |
+| --- | --- |
+| Maths paper | **Wednesday 7 October 2026, 8:10–9:25 am** |
+| Duration | 1 hour 15 minutes (MBPK: +30 minutes) |
+| Assessment window | 6–8 Oct (Tue: BM + English · **Wed: Maths + Science** · Thu: Chinese + Tamil) |
+| Paper shape | Objective and subjective items in one paper |
+| Maths constructs | Numeracy concepts, problem-solving, applying maths to everyday situations |
+| Reporting | **Mastery level + intervention recommendation — not a grade or ranking** |
+
+*Not established, do not invent:* the per-section item count for Maths. Science's is published (10
+items in Bahagian A, 2 in B, 4 in C); the Maths equivalent is not in any reachable source, including
+LP's own page. It needs LP's format circular.
+
+**Correction to an earlier claim in this session.** It was stated that "every claim in the approved
+copy checks out, including the dates." **That was an over-claim and one date does not hold.**
+Approved copy `:115` reads *"they sit the Learning Matrix maths paper on 6 to 8 October"* — but
+6–8 October is the **whole three-day assessment window**; the maths paper is one 75-minute sitting
+inside it, on the Wednesday. (Weekdays confirmed: 6 Oct 2026 = Tuesday, 7 Oct = Wednesday, 8 Oct =
+Thursday, matching LP's subject order exactly.)
+
+The copy is client-authored and verbatim-locked, so whether to tighten it is the client's call and
+it is minor as page copy. **What matters is that it must not propagate.** The planned post will be
+the most specific thing this site says about this exam; it must carry **Wednesday 7 October,
+8:10–9:25 am** with LP cited, and must not repeat the window as though it were the maths date.
+
 **Search Console coverage note.** Every topic above sits in the "weak zero" category — no content
 ever existed, so no data exists. These are content decisions justified by the approved copy's own
 arguments and by competitor coverage, not by measured demand.
@@ -290,7 +319,10 @@ arguments and by competitor coverage, not by measured demand.
 | Legacy URL inventory and redirect parity | dev | **Closed** — `DECISIONS.md` §10a, 19/19 URLs |
 | GA4 `G-6EWT7G0LZS` / GTM `GTM-KP5SMKV` — confirm client-owned and reuse | client | Open — unblocks `DECISIONS.md` §12 |
 | WhatsApp `010 658 0242` — retire, forward, or notice | client | Open — only conversion channel |
-| BM expansion — name a sign-off owner (CW-82) | client | Open — **gates all BM drafting** |
+| BM expansion — name a sign-off owner (CW-82) | client | **Closed 2026-09-05** — Charlie named; scope, timing and remaining conditions in `copywriting/LOCALISATION.md` |
+| Search Console — add DNS TXT as a *second* method on the **existing** property | client | Open — **not** a new Domain property, which would start history at zero |
+| GTM container access list — who can execute JS on the site | client | Open — `script-src googletagmanager.com` makes container access equal to arbitrary JS |
+| GTM container — confirm a GA4 Configuration tag for `G-6EWT7G0LZS` exists inside it | client | Open — `DECISIONS.md` §12a |
 | Learning Matrix content — name a policy review owner | client | Open |
 | 404 page (none exists) | design + copy | Open — `DECISIONS.md` §10a |
 | Standalone `/pricing/` page — build or keep the anchor | — | **Closed 2026-09-05, do not build** — page-level cross-tab found zero fee intent; keep the 301 (§2) |
