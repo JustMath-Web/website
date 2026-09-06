@@ -7,7 +7,10 @@ import CategoryRail from "../../components/blog/CategoryRail.astro";
 import EmptyState from "../../components/blog/EmptyState.astro";
 import Pagination from "../../components/blog/Pagination.astro";
 import PostRow from "../../components/blog/PostRow.astro";
-import { getBlogArchiveData } from "../../lib/content/blogData";
+import {
+	BLOG_DESCRIPTION,
+	getBlogArchiveData,
+} from "../../lib/content/blogData";
 import { getLandingPageData } from "../../lib/content/landingData";
 import { buildWhatsAppUrl } from "../../lib/content/whatsappUrl";
 import type { PostSummary } from "../../lib/sanity/types";
@@ -34,7 +37,7 @@ const pageTitle =
 
 <BaseLayout
 	title={pageTitle}
-	description="Written for parents, filed by syllabus level: where maths goes wrong and what to do about it."
+	description={BLOG_DESCRIPTION}
 	siteSettings={siteSettings}
 >
 	<SiteHeader

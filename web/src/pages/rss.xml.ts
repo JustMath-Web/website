@@ -1,6 +1,6 @@
 import rss from "@astrojs/rss";
 import type { APIContext } from "astro";
-import { getBlogArchiveData } from "../lib/content/blogData";
+import { BLOG_DESCRIPTION, getBlogArchiveData } from "../lib/content/blogData";
 import { getLandingPageData } from "../lib/content/landingData";
 
 // Sourced from the same fixture-safe getBlogArchiveData() wrapper the archive/category pages use
@@ -14,8 +14,7 @@ export async function GET(context: APIContext) {
 
 	return rss({
 		title: `${siteSettings.siteName} — Notes`,
-		description:
-			siteSettings.defaultSeo.metaDescription ?? siteSettings.siteName,
+		description: BLOG_DESCRIPTION,
 		site: context.site ?? siteSettings.domain,
 		items: posts.map((post) => ({
 			title: post.title,
