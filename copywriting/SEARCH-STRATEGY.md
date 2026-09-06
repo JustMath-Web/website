@@ -318,7 +318,7 @@ arguments and by competitor coverage, not by measured demand.
 | Post/category metadata defects | dev | **Closed** — fixed and verified in this branch |
 | Legacy URL inventory and redirect parity | dev | **Closed** — `DECISIONS.md` §10a, 19/19 URLs |
 | GA4 `G-6EWT7G0LZS` / GTM `GTM-KP5SMKV` — confirm client-owned and reuse | client | Open — unblocks `DECISIONS.md` §12 |
-| WhatsApp `010 658 0242` — retire, forward, or notice | client | Open — only conversion channel |
+| WhatsApp `010 658 0242` | client | **Decided 2026-09-05: retire.** `019 472 8768` is the sole channel. Transition note in `DECISIONS.md` §11a |
 | BM expansion — name a sign-off owner (CW-82) | client | **Closed 2026-09-05** — Charlie named; scope, timing and remaining conditions in `copywriting/LOCALISATION.md` |
 | Search Console — add DNS TXT as a *second* method on the **existing** property | client | Open — **not** a new Domain property, which would start history at zero |
 | GTM container access list — who can execute JS on the site | client | Open — `script-src googletagmanager.com` makes container access equal to arbitrary JS |
