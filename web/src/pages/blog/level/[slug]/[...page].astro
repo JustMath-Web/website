@@ -12,6 +12,7 @@ import {
 	getBlogCategorySlugs,
 	getCategoryArchiveData,
 } from "../../../../lib/content/blogData";
+import { firstNonEmpty } from "../../../../lib/content/contentGuards";
 import { getLandingPageData } from "../../../../lib/content/landingData";
 import { buildWhatsAppUrl } from "../../../../lib/content/whatsappUrl";
 import type { PostSummary } from "../../../../lib/sanity/types";
@@ -45,16 +46,19 @@ const categoryTitle = category?.title ?? slug!;
  * nothing and reported no error. Resolved per field, on the same contract as `blog/[slug].astro`:
  * the Studio value wins, then the derived archive value, and `defaultSeo` only as a last resort.
  */
+const derivedTitle = `${categoryTitle} — Notes — ${siteSettings.siteName}`;
 const baseTitle =
-	category?.seo?.metaTitle ??
-	`${categoryTitle} — Notes — ${siteSettings.siteName}`;
+	firstNonEmpty(category?.seo?.metaTitle, derivedTitle) ?? derivedTitle;
 // Pages 2+ of a paginated series must not reuse page 1's exact title.
 const pageTitle =
 	page.currentPage > 1 ? `${baseTitle} (page ${page.currentPage})` : baseTitle;
+const derivedDescription = `Notes for ${categoryTitle}, filed by syllabus level.`;
 const pageDescription =
-	category?.seo?.metaDescription ??
-	category?.description ??
-	`Notes for ${categoryTitle}, filed by syllabus level.`;
+	firstNonEmpty(
+		category?.seo?.metaDescription,
+		category?.description,
+		derivedDescription,
+	) ?? derivedDescription;
 
 /**
  * `category.seo.canonicalUrl` is deliberately NOT wired here. One stored URL cannot be correct for
