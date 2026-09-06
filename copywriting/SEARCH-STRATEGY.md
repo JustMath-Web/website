@@ -328,7 +328,7 @@ arguments and by competitor coverage, not by measured demand.
 | Search Console — DNS TXT as a second verification method | client | **Done 2026-09-05** — verified live via `dig` |
 | GTM container access list | client | **Closed 2026-09-05** — owner is the sole user; residual control is 2FA on that account |
 | GTM container — GA4 Configuration tag present | client | **Confirmed 2026-09-05** — GTM firing carries GA4 |
-| Learning Matrix content — name a policy review owner | client | Open |
+| Learning Matrix content — policy review owner | client | **Closed 2026-09-06 — Mr Kong.** Tracked automatically by `.github/workflows/content-review.yml`; see `DECISIONS.md` §13a |
 | 404 page (none exists) | design + copy | Open — `DECISIONS.md` §10a |
 | Standalone `/pricing/` page — build or keep the anchor | — | **Closed 2026-09-05, do not build** — page-level cross-tab found zero fee intent; keep the 301 (§2) |
 | Re-pull Search Console 3 and 6 months post-cutover | Andy | Scheduled — this document's rankings are hypotheses until then; **re-test `/pricing/` fee intent then** |

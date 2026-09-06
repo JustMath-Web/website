@@ -1,0 +1,74 @@
+{
+  "_comment": [
+    "Dated content that expires, and who re-checks it. Read by .github/scripts/check-content-review.mjs,",
+    "which runs weekly and opens a GitHub issue when an item falls due.",
+    "",
+    "This file tracks; it never edits. Every string below is client-approved copy and only its owner",
+    "changes it — see docs/DECISIONS.md #13a for why rewriting is deliberately NOT automated.",
+    "",
+    "To add an item: give it an id, a dueOn date (ISO), an owner, and the exact strings to re-check.",
+    "To close one: set \"done\": true with a dated note. Do not delete it — the record is the point."
+  ],
+  "items": [
+    {
+      "id": "learning-matrix-2026-sitting",
+      "dueOn": "2026-10-09",
+      "owner": "Mr Kong",
+      "title": "Learning Matrix: the 2026 maths paper has been sat — these statements are now past tense",
+      "why": "The Year 4 maths paper is sat on Wednesday 7 October 2026 (8:10-9:25am). From 8 October the page describes a future exam that has already happened. The site's whole argument is precision about the school system, so a stale future tense here undermines the thing it is selling. Nothing will flag this on its own: no test fails and no build breaks.",
+      "strings": [
+        "Problem section: 'Year 4, from October 2026. The Examinations Board runs the new Learning Matrix nationally...'",
+        "Level block 1, bullet 3: 'If your child is in Year 4 this year, they sit the Learning Matrix maths paper on 7 October.'",
+        "Level block 1, bullet 3: 'An assessment now tells you what they will find out in October, with Years 5 and 6 still available to act on it.'",
+        "Gap chart annotation: label 'OCT 2026' on stop S4"
+      ],
+      "decideAlso": "What should the Year 4 bullet say to a parent who now HAS the result slip? That is a new argument, not a tense change - the result reports a mastery level plus an intervention recommendation, not a grade.",
+      "editIn": [
+        "Sanity (live): homePage -> Problem, Levels[0].bullets[2], gapChartAnnotations",
+        "Repo (source of record): just-math-page-copy-final.md",
+        "Repo (fallback only): web/src/lib/content/defaultLandingData.ts",
+        "BM, if shipped by then: copywriting/COPY-DRAFT-MS.md"
+      ],
+      "sources": ["https://lp.moe.gov.my/"],
+      "done": false
+    },
+    {
+      "id": "learning-matrix-form-3-2027",
+      "dueOn": "2027-01-15",
+      "owner": "Mr Kong",
+      "title": "Learning Matrix: confirm the Form 3 rollout before describing it as current",
+      "why": "The page states 'Form 3, from 2027. Same idea, five papers this time.' That is a claim about future MOE policy, and policy moves. Confirm with Lembaga Peperiksaan that the Form 3 rollout is going ahead, on what dates, and with how many papers, BEFORE the page stops describing it as a future plan.",
+      "strings": [
+        "Problem section: 'Form 3, from 2027. Same idea, five papers this time.'",
+        "Gap chart annotation: label 'FROM 2027' on stop F3"
+      ],
+      "decideAlso": "If the rollout slipped or changed shape, the Problem section's central argument (two independent checks before SPM) needs re-checking, not just the date.",
+      "editIn": [
+        "Sanity (live): homePage -> Problem, gapChartAnnotations",
+        "Repo (source of record): just-math-page-copy-final.md",
+        "Repo (fallback only): web/src/lib/content/defaultLandingData.ts",
+        "BM, if shipped by then: copywriting/COPY-DRAFT-MS.md"
+      ],
+      "sources": ["https://lp.moe.gov.my/"],
+      "done": false
+    },
+    {
+      "id": "fees-annual-review-2027",
+      "dueOn": "2027-01-05",
+      "owner": "Mr Kong",
+      "title": "Annual fee review - the page states rates 'apply for 2026'",
+      "why": "Approved copy: 'Rates shown apply for 2026 and are reviewed once a year.' On 1 January 2027 that sentence dates itself, whether or not the rates change.",
+      "strings": [
+        "Pricing: 'Fees are paid before the first session of each month, by DuitNow or bank transfer. Rates shown apply for 2026 and are reviewed once a year.'",
+        "The five-row fee table itself"
+      ],
+      "editIn": [
+        "Sanity (live): homePage -> Pricing",
+        "Repo (source of record): just-math-page-copy-final.md",
+        "Repo (fallback only): web/src/lib/content/defaultLandingData.ts"
+      ],
+      "sources": [],
+      "done": false
+    }
+  ]
+}

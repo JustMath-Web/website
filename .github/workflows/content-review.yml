@@ -1,0 +1,67 @@
+name: Content review
+
+# Watches the site's dated policy claims. Two checks, one job:
+#   1. .github/content-review.json — items that have fallen due
+#   2. Lembaga Peperiksaan's Matriks Pembelajaran page — has the source changed?
+#
+# It opens a GitHub issue and stops. It never edits copy — see docs/DECISIONS.md §13a.
+
+on:
+  schedule:
+    # 01:00 UTC Monday = 09:00 Monday in Malaysia, so an alert lands at the start of the week
+    # rather than in the middle of a Sunday night.
+    - cron: "0 1 * * 1"
+  workflow_dispatch:
+    inputs:
+      dryRun:
+        description: "Print what would be opened instead of opening issues"
+        type: boolean
+        default: false
+
+concurrency:
+  group: content-review
+  cancel-in-progress: false
+
+jobs:
+  review:
+    name: check
+    runs-on: ubuntu-latest
+    permissions:
+      # Issues, to raise the alert. Contents, to commit the moved snapshot so the next run
+      # compares against the latest capture rather than re-reporting the same change forever.
+      contents: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "26"
+
+      - name: Check calendar and watched sources
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          # Passed as an env var, never interpolated into the run block. `inputs.dryRun` is a typed
+          # boolean and this workflow has no untrusted event triggers, so injection is not reachable
+          # here — but the safe pattern costs nothing and keeps the file correct by inspection.
+          DRY_RUN: ${{ inputs.dryRun }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            node .github/scripts/check-content-review.mjs --dry-run
+          else
+            node .github/scripts/check-content-review.mjs
+          fi
+
+      - name: Commit refreshed snapshots
+        if: ${{ inputs.dryRun != true }}
+        run: |
+          if [ -z "$(git status --porcelain .github/content-review-snapshots)" ]; then
+            echo "snapshots unchanged"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/content-review-snapshots
+          git commit -m "chore(content-review): refresh watched-source snapshot"
+          git push

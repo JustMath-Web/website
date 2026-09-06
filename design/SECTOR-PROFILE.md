@@ -98,7 +98,8 @@ here; it is the medium.
 - **Syllabus naming** — KSSR, KSSM, SPM, IGCSE — must be used accurately; these are official
   Malaysian curriculum terms `[client: page copy]`.
 - **Assessment policy is live and dated.** The Learning Matrix (Year 4 from October 2026, Form 3
-  from 2027) is current policy `[client: page copy]`; it will date and needs a review owner.
+  from 2027) is current policy `[client: page copy]`; it will date. **Review owner named 2026-09-06:
+  Mr Kong**, with the review dates tracked automatically (`DECISIONS.md` §13a).
 - **Minors' data and imagery.** No student photographs, no named children, no testimonials from
   children — the design has none `[client: brief]`.
 - **PDPA:** WhatsApp is the only data channel; there is no form, no account, no email capture, so the

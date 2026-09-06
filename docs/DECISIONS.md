@@ -540,6 +540,51 @@ Launch conditions:
   re-review caught the production Vercel deployment being publicly indexable while every other
   condition above was still open.
 
+### 13a. Dated content: tracked automatically, never auto-rewritten — 2026-09-06
+
+**Review owner: Mr Kong** (named 2026-09-06, closing `design/SECTOR-PROFILE.md` Q5's open item).
+
+The site makes claims that expire — the Learning Matrix dates, the Form 3 rollout year, the fee
+table's "rates shown apply for 2026". Nothing catches these going stale: no test fails, no build
+breaks, no alert fires. The page simply starts describing an exam that already happened, on a site
+whose entire argument is precision about the school system.
+
+**What is automated — noticing.** `.github/workflows/content-review.yml` runs weekly and opens a
+GitHub issue on either of two triggers:
+
+1. **Calendar.** An item in `.github/content-review.json` falls due. Three are seeded: the 2026
+   sitting (2026-10-09), the Form 3 rollout confirmation (2027-01-15), and the annual fee review
+   (2027-01-05). The issue names the exact strings, where each lives, and what to decide.
+2. **Source change.** Lembaga Peperiksaan's Matriks Pembelajaran page changes. This catches the case
+   the calendar cannot — policy moving *before* a review date.
+
+**What is NOT automated, deliberately — the rewriting.** Three reasons, in order of weight:
+
+- **It is not a mechanical edit.** Turning "they sit the paper on 7 October" into past tense is easy;
+  deciding what the bullet should now say to a parent holding a result slip is a new argument, not a
+  tense change. Machines can detect staleness. They cannot decide what the page should argue.
+- **The copy is client-approved.** Auto-editing it would bypass the provenance model this project
+  runs on (`design/COPY-GAPS.md`, amendment records, review before approval). An automated rewrite
+  has no owner and no approval, which is exactly what the model exists to prevent.
+- **Policy claims cannot be verified by a diff.** A watcher can see that LP's page changed. It cannot
+  tell whether the Form 3 rollout still involves five papers. Publishing an unverified claim about
+  government policy on a tuition site is worse than publishing a stale one.
+
+So the watchdog opens an issue and stops. A human edits Sanity, then the repo.
+
+**Why no third-party crawler.** Firecrawl and similar were considered. The LP pages are
+server-rendered Joomla and their text is present in the raw HTML (verified 2026-09-06), so JS
+rendering buys nothing — and `fetch` in the existing Actions runner needs no account, no API key, no
+credit budget and cannot expire. A free-tier dependency on a watchdog that must still work in 2027
+is a liability, not a saving.
+
+**Noise control, stated because it is the usual failure of this kind of watcher.** A whole-page hash
+on a government CMS fires on every unrelated edit and gets muted within a month; a muted watchdog is
+worse than none. The comparison therefore runs only over lines matching
+`matriks|pembelajaran|tahun 4|tingkatan 3|mpt4|matematik|jadual|instrumen`. That trades some recall
+for a signal worth reading. Both paths were verified end-to-end before merge by simulating a due
+date and an upstream change.
+
 ## 14. Implementation Constraints From Design Review
 
 - Green only means a control opens WhatsApp.
