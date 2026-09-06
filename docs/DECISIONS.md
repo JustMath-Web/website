@@ -1351,6 +1351,53 @@ to PR 3, not silently dropped:
   `decoding="async"`. Revisit under image/performance review once PR 3 has a real route to measure
   against, rather than optimizing a component nothing renders yet.
 
+### 28a. Landing content: guard the content, not the document — 2026-09-06
+
+**Root cause, stated once, because it produced four bugs that looked separate:** *presence tested
+where content should be tested.*
+
+| # | Instance | Status |
+| --- | --- | --- |
+| 1 | `post.seo ?? siteSettings.defaultSeo` — object exists, so its empty fields win | Fixed, PR #54 |
+| 2 | `category.seo` projected and never read — the field exists, so nobody noticed | Fixed, PR #54 |
+| 3 | `if (!homePage \|\| !siteSettings \|\| !navigation)` — a **husk is truthy**, so it renders | Fixed here |
+| 4 | `??` chains on user-editable strings — nullish-only, so `""` ships | Fixed here |
+
+**Why #3 mattered.** On 2026-09-06 a `drafts.homePage` holding only Sanity schema defaults — a
+*husk* — was found in production. It had been there since 2026-08-31, six days, **one Publish click
+from blanking the live homepage**, and nothing in this repo could see it, because the document
+existed. The mechanism that creates husks is "someone opens a singleton in the Studio before it is
+seeded", which is a thing people do; discarding that one draft fixed the data and changed nothing
+about the next one.
+
+**What changed.** `web/src/lib/content/contentGuards.ts` now holds `findMissingLandingContent`,
+which names every required field that is missing *or blank*, plus `hasText` / `firstNonEmpty` for
+string chains. `landingData.ts` consults it and, **in production, throws rather than falling back** —
+previously it had *no* production strictness at all, where `blogData.ts` had four checks. A static
+build that quietly substitutes fixture copy for real copy ships a page nobody authored and reports
+success; §28/§29 already forbade that for the blog, and the landing path simply had no equivalent
+rule. `isProductionBuild()` moved into the shared module so both paths read one definition.
+
+**Why a build failure rather than a warning.** This is a static site: if the build fails, nothing
+ships. That makes the guard itself the standing assertion — no separate scheduled check can be as
+strong, because a scheduled check reports *after* the bad page is already live.
+
+**#4 was checked, not assumed.** The empty `defaultSeo` fields found the same day were **absent
+keys, not empty strings** (`{_type: "seo", noindex: false}`), so `??` caught them and no empty
+`<title>` ever shipped. The class is real and now closed regardless; the specific near-miss did not
+occur.
+
+**Guardrail:** `pnpm test:landing-content-guard` (CI) asserts the production husk shape, null
+documents, empty strings and whitespace-only values are all rejected, and that `firstNonEmpty` skips
+blanks `??` would pass through.
+
+**The remaining gap, stated plainly.** Sanity content is still the only part of this system with no
+review trail — the repo diffs, the dataset does not. Four content defects were found in one manual
+pass on 2026-09-06 ("6 to 8 October", `whatsappMessage: "Test"`, empty `defaultSeo`, the husk), and
+three of the four would have shipped at cutover. This entry closes the two that a build can catch.
+Auditing *editorial correctness* in Sanity remains a human job, and the content-review watchdog
+(§13a) is the nearest thing to a standing check on it.
+
 ## 29. Blog infrastructure PR 2 — archive + category routes, fixture-safe data layer — 2026-08-26
 
 Second of the 4-PR blog sequence. Ships `web/src/pages/blog/[...page].astro` and
