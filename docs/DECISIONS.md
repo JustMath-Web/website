@@ -1351,6 +1351,39 @@ to PR 3, not silently dropped:
   `decoding="async"`. Revisit under image/performance review once PR 3 has a real route to measure
   against, rather than optimizing a component nothing renders yet.
 
+### 28b. The production sentinel cannot be silently disarmed — 2026-09-06
+
+Every production rule in §28/§29 and §28a is gated on `DEPLOY_ENV === "production"`. **That variable
+is set in the Cloudflare dashboard, not in this repo.** If it is renamed, cleared, or lost in a
+project migration, all of those guards degrade to fallback behaviour at once and **the build still
+reports success** — shipping fixture copy to the live site.
+
+`assert-production-fails-without-sanity.mjs` protects against *code* breaking the detection. Nothing
+protected against the *variable* being absent. That is the same shape as two other problems this
+project has already been bitten by: the Search Console meta tag that was the sole proof of ownership
+(§12a), and a Sanity husk no repo check could see (§28a) — **an unversioned external control the
+repo assumes is present.**
+
+**The cross-check.** Cloudflare Workers Builds injects `WORKERS_CI_BRANCH` on every build, and a
+human cannot forget it because Cloudflare sets it. If Cloudflare says it is building `main` but
+`DEPLOY_ENV` does not say `production`, the two disagree and the build fails. The legacy
+`CF_PAGES_BRANCH` is honoured as a fallback source, since this project migrated from Pages (§32).
+The inverse — production rules on a preview branch — warns rather than fails: odd, not dangerous.
+
+**Why an Astro integration hook rather than a package script.** The Cloudflare build command is
+itself configured in a dashboard, so a check wired into `pnpm build` could be bypassed by editing
+that command — the same class of problem this check exists to catch. `astro:build:start` runs on
+every Astro build regardless of who invoked it.
+
+**Verified rather than reasoned about:** a real `astro build` with `WORKERS_CI_BRANCH=main` and no
+`DEPLOY_ENV` fails with the guard's message; the same build with `DEPLOY_ENV=production` passes the
+guard; an ordinary local build is unaffected. Guardrail: `pnpm test:deploy-env-guard` in CI.
+
+**Known consequence, recorded so it is not mistaken for a bug.** Production builds now fail on
+incomplete or unreachable Sanity (§28a) and on a missing sentinel. A Sanity incident will therefore
+block an unrelated deploy — push a CSS fix mid-incident and the build refuses. That is the guard
+working. The alternative is shipping a page nobody authored and being told it succeeded.
+
 ### 28a. Landing content: guard the content, not the document — 2026-09-06
 
 **Root cause, stated once, because it produced four bugs that looked separate:** *presence tested

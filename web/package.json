@@ -16,7 +16,8 @@
 		"test:e2e": "playwright test",
 		"test:blog-production-guardrail": "node scripts/assert-production-fails-without-sanity.mjs",
 		"test:blog-null-post-filter": "node --experimental-strip-types scripts/assert-post-static-paths-filter-nulls.mjs",
-		"test:landing-content-guard": "node --experimental-strip-types scripts/assert-landing-content-guard.mjs"
+		"test:landing-content-guard": "node --experimental-strip-types scripts/assert-landing-content-guard.mjs",
+		"test:deploy-env-guard": "node --experimental-strip-types scripts/assert-deploy-env-guard.mjs"
 	},
 	"dependencies": {
 		"@astrojs/rss": "4.0.19",
