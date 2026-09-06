@@ -3,9 +3,14 @@
 // (web/src/lib/content/contentGuards.ts -> findMissingLandingContent).
 //
 // Why this exists. On 2026-09-06 a `drafts.homePage` containing only Sanity schema defaults — a
-// "husk" — was found sitting in production. It had been there six days, one Publish click from
-// blanking the live homepage, and nothing in this repo could see it: the old guard was
-// `if (!homePage || !siteSettings || !navigation)`, and a husk is a truthy object.
+// "husk" — was found sitting in production, where it had been for six days. Nothing in this repo
+// could see it: the old guard was `if (!homePage || !siteSettings || !navigation)`, and a husk is a
+// truthy object.
+//
+// Precise about the path, because Studio validation already covers the other one. The Studio could
+// not have published that husk — the landing-critical fields are `Rule.required()` and Sanity
+// disables Publish on validation errors. An API write (script, migration, agent tool) runs no such
+// validation, and that is how it would have been published. Two independent controls, two paths.
 //
 // Discarding that draft fixed the data. This asserts the GUARD, because the mechanism that creates
 // husks is "someone opens a singleton in the Studio", which is a thing people do. Without this, the

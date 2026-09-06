@@ -9,9 +9,16 @@
  *   4. `?? ` chains on strings — nullish-only, so `""` passes through as a legitimate value
  *
  * #3 is the one that mattered: a `drafts.homePage` containing only schema defaults sat in production
- * Sanity for six days, one Publish click from wiping the live page, and every automated check in
- * this repo was blind to it because the document existed. Discarding that draft fixed the data. This
- * file fixes the guard, which is what made the data dangerous.
+ * Sanity for six days, and every automated check in this repo was blind to it because the document
+ * existed. Discarding that draft fixed the data. This file fixes the guard.
+ *
+ * **Precise about the exposure, because an earlier version of this comment overstated it.** The
+ * Studio could NOT have published that husk: `studio/schemaTypes/documents/homePage.ts` already
+ * marks the hero, trust bar, problem and sessions fields `Rule.required()`, and Sanity disables the
+ * Publish button on validation errors. The reachable path was an **API write** — a script, a
+ * migration, or an agent tool — none of which run Studio validation. That is not hypothetical: the
+ * husk was found *because* an API client was about to patch and publish it, which would have
+ * succeeded. This guard exists for the path validation does not cover.
  */
 
 /**

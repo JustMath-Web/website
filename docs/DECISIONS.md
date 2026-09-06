@@ -1397,9 +1397,20 @@ where content should be tested.*
 | 4 | `??` chains on user-editable strings — nullish-only, so `""` ships | Fixed here |
 
 **Why #3 mattered.** On 2026-09-06 a `drafts.homePage` holding only Sanity schema defaults — a
-*husk* — was found in production. It had been there since 2026-08-31, six days, **one Publish click
-from blanking the live homepage**, and nothing in this repo could see it, because the document
-existed. The mechanism that creates husks is "someone opens a singleton in the Studio before it is
+*husk* — was found in production, where it had sat since 2026-08-31. Nothing in this repo could see
+it, because the document existed.
+
+> **Correction, same day.** This entry first said the husk was "one Publish click from blanking the
+> live homepage". **That was wrong, and it overstated the risk.** The Studio could not have published
+> it: `homePage`, `siteSettings` and `navigation` already mark their landing-critical fields
+> `Rule.required()` (8 on `siteSettings` alone, including a digits-only regex on `whatsappNumber`),
+> and Sanity disables Publish on validation errors.
+>
+> The reachable path is an **API write** — a script, a migration, a seed, or an agent tool — none of
+> which run Studio validation. That is not hypothetical: the husk was found precisely because an API
+> client was about to patch and publish it, and would have succeeded. **The exposure is narrower than
+> first stated and entirely real**, and it is the path this guard covers. Schema validation and the
+> build guard are two independent controls over two different paths; neither is redundant. The mechanism that creates husks is "someone opens a singleton in the Studio before it is
 seeded", which is a thing people do; discarding that one draft fixed the data and changed nothing
 about the next one.
 
