@@ -31,6 +31,18 @@ function isProductionBuild(): boolean {
 	return import.meta.env.DEPLOY_ENV === "production";
 }
 
+/**
+ * The Notes blog's own one-line description. Shared by the archive page and the RSS channel so the
+ * two cannot drift — a feed described differently from the page it mirrors is a small thing that
+ * looks like neglect in a reader.
+ *
+ * Deliberately NOT `siteSettings.defaultSeo.metaDescription`: that describes the tuition service,
+ * which is the wrong sentence for a feed of maths notes. The site default remains the right fallback
+ * for a page with nothing better; it was never the right description for this feed.
+ */
+export const BLOG_DESCRIPTION =
+	"Written for parents, filed by syllabus level: where maths goes wrong and what to do about it.";
+
 function isFixtureMode(): boolean {
 	return import.meta.env.USE_BLOG_FIXTURES === "true" && !isProductionBuild();
 }
