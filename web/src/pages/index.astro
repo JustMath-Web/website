@@ -2,6 +2,7 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { firstNonEmpty } from "../lib/content/contentGuards";
 import GapChart from "../components/GapChart.astro";
+import AboutPortrait from "../components/AboutPortrait.astro";
 import SectionMarker from "../components/SectionMarker.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import SiteHeader from "../components/SiteHeader.astro";
@@ -257,18 +258,22 @@ function categoryHref(level: LevelBlock) {
 			aria-labelledby="about-title"
 		>
 			<div class="two-column two-column--portrait container">
-				<aside
-					class="portrait-fallback"
-					aria-label="Typographic fallback for Mr Kong portrait"
-				>
-					<div>
-						<span>{homePage.about.byline}</span>
-						<strong>{homePage.about.yearsExperience}</strong>
-						<p>years teaching every level from Standard 1 to Form 5</p>
-					</div>
-				</aside>
+				<AboutPortrait
+					portrait={homePage.about.portrait}
+					byline={homePage.about.byline}
+					yearsExperience={homePage.about.yearsExperience}
+				/>
 				<div>
 					<SectionMarker number="04" label="The tutor" />
+					{
+						/* Approved copy puts the byline "small, above the heading" (§6). It renders
+						   here only when the photograph is shown — when the typographic fallback is
+						   showing instead, the byline lives inside it, and rendering both would
+						   duplicate approved copy on the page. */
+						homePage.about.portrait?.image && (
+							<p class="about-byline">{homePage.about.byline}</p>
+						)
+					}
 					<h2 id="about-title">{homePage.about.heading}</h2>
 					<div class="prose">
 						{
@@ -976,6 +981,14 @@ function categoryHref(level: LevelBlock) {
 		font: var(--weight-regular) clamp(20px, 2.9vw, 34px) / 1.32
 			var(--font-serif);
 		letter-spacing: -0.022em;
+	}
+
+	.about-byline {
+		margin: 0 0 var(--space-2);
+		color: var(--text-muted);
+		font: var(--type-label);
+		letter-spacing: var(--tracking-wide);
+		text-transform: uppercase;
 	}
 
 	.portrait-fallback {

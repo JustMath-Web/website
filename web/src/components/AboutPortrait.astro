@@ -1,0 +1,137 @@
+---
+/**
+ * The About section's portrait — the only photograph on the site.
+ *
+ * Built to `design/ASSETS.md` §2: slot `#mrkong-portrait`, **4:5 portrait**, sticky within its
+ * column at desktop only (`design/STATES.md`). Until 2026-09-08 no photograph existed, so the page
+ * shipped the typographic fallback ASSETS.md §2 mandates — "if the portrait cannot be supplied, the
+ * section is rebuilt typographically; **a placeholder face is never shipped**". Both states live
+ * here, and the fallback is kept rather than deleted: it is the correct rendering whenever the image
+ * is absent, including blog-fixture builds, and deleting it would make removing the photo a crash
+ * instead of a graceful degrade.
+ *
+ * The byline is rendered HERE only in the fallback, because there the typography *is* the portrait.
+ * When the photograph shows, `index.astro` renders the byline above the heading instead — where the
+ * approved copy puts it ("Byline, small, above the heading", `just-math-page-copy-final.md` §6) —
+ * guarded by the same `portrait?.image` condition. The two are mutually exclusive on purpose:
+ * rendering both would duplicate approved copy on the page.
+ */
+import { urlFor } from "../lib/sanity/image";
+import type { ImageWithAlt } from "../lib/sanity/types";
+
+interface Props {
+	portrait?: ImageWithAlt;
+	byline: string;
+	yearsExperience: number;
+}
+
+const { portrait, byline, yearsExperience } = Astro.props;
+const image = portrait?.image;
+
+/**
+ * Widths matched to the slot's real rendered size, not to ASSETS.md's asset-supply spec. The column
+ * is `minmax(0, 300px)` at desktop and full-width below 860px, so 300 covers desktop 1x, 600 covers
+ * desktop 2x and mid mobile, and 900 covers a large phone at 2x. Nothing larger is requested,
+ * because the supplied asset is 1040px wide and a 4:5 crop of it is only ~922px — asking Sanity for
+ * more would upscale rather than sharpen.
+ */
+const SRCSET_WIDTHS = [300, 600, 900];
+
+/** 4:5 per ASSETS.md §2. One constant, so the crop, the CSS and the declared box cannot disagree. */
+const ASPECT = 1.25;
+const BASE_WIDTH = 600;
+
+/**
+ * `fit("crop")` honours the hotspot/crop set in the Studio (`imageWithAlt` enables `hotspot: true`),
+ * so if the default centre crop cuts badly the fix is dragging the hotspot in Sanity — no code
+ * change. 4:5 is enforced here rather than by CSS `object-fit` so the bytes sent match the pixels
+ * shown.
+ */
+const crop = (width: number) =>
+	urlFor(image!)
+		.width(width)
+		.height(Math.round(width * ASPECT))
+		.fit("crop")
+		.auto("format")
+		.url();
+
+const src = image ? crop(BASE_WIDTH) : undefined;
+const srcset = image
+	? SRCSET_WIDTHS.map((width) => `${crop(width)} ${width}w`).join(", ")
+	: undefined;
+
+// `intent: "decorative"` means the image adds nothing a screen reader needs — but this portrait is
+// the page's central claim that a real named person teaches every session, so an empty alt would be
+// wrong here. The field is respected regardless: authoring intent wins over this component's opinion.
+const alt = portrait?.intent === "decorative" ? "" : (portrait?.alt ?? "");
+/**
+ * The DELIVERED dimensions, not the source asset's. Declaring the source (1040x1153, ratio 0.902)
+ * while CSS enforces 4:5 (0.8) makes the browser reserve a box of the wrong shape and shift the
+ * layout once the image loads — the exact problem width/height exist to prevent. These track
+ * `src` through the same two constants.
+ */
+const width = BASE_WIDTH;
+const height = Math.round(BASE_WIDTH * ASPECT);
+---
+
+{
+	image ? (
+		<figure id="mrkong-portrait" class="portrait">
+			<img
+				class="portrait__img"
+				src={src}
+				srcset={srcset}
+				sizes="(min-width: 861px) 300px, 100vw"
+				width={width}
+				height={height}
+				alt={alt}
+				loading="lazy"
+				decoding="async"
+			/>
+		</figure>
+	) : (
+		<aside
+			class="portrait-fallback"
+			aria-label="Typographic fallback for Mr Kong portrait"
+		>
+			<div>
+				<span>{byline}</span>
+				<strong>{yearsExperience}</strong>
+				<p>years teaching every level from Standard 1 to Form 5</p>
+			</div>
+		</aside>
+	)
+}
+
+<style>
+	.portrait {
+		margin: 0;
+	}
+
+	.portrait__img {
+		display: block;
+		width: 100%;
+		height: auto;
+		/* Enforced in CSS as well as in the requested crop, so a source whose ratio drifts can never
+		   change the slot's shape and reflow the section. */
+		aspect-ratio: 4 / 5;
+		object-fit: cover;
+		border-radius: var(--radius-md);
+		background: var(--rule);
+	}
+
+	/* design/STATES.md: "About portrait — sticky within its column at desktop only." 860px is this
+	   page's two-column breakpoint. */
+	@media (min-width: 861px) {
+		.portrait {
+			position: sticky;
+			top: var(--space-6);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.portrait {
+			position: static;
+		}
+	}
+</style>
