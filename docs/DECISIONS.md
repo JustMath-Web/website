@@ -518,6 +518,34 @@ which cannot be inspected from outside. **Open item**, carried, not silently clo
 fires no Google request off-host and leaves `dataLayer` undefined; the verification meta is present
 on home, blog archive and category pages; no executable inline script exists.
 
+### 13b. Cutover runbook — the order inside the window matters
+
+`web/astro.config.mjs` hardcodes `site: "https://mathematicsmalaysia.com"`, and `BaseLayout.astro`
+builds every canonical from it. **So every page self-canonicalises to the real domain no matter
+where it is served from**, including `*.workers.dev`. That makes the two cutover steps
+order-dependent in both directions:
+
+| Wrong order | What happens |
+| --- | --- |
+| Guards off **before** the domain is connected | The `workers.dev` build becomes crawlable while canonicalising to `mathematicsmalaysia.com` — which at that moment still serves WordPress. Google sees a canonical pointing at entirely different content, may disregard it, and can index the `workers.dev` URLs instead. |
+| Domain connected **while** guards are still on | The new site serves `noindex` to its first crawls, and that can persist longer than you want. |
+
+**Correct order:**
+
+1. **Connect the domain and verify it serves the new site.** It is still `noindex` at this point,
+   which is harmless — it simply is not crawled.
+2. **Merge the guard-removal PR.** The guards come off only once the domain already resolves to the
+   new site, so the canonical is truthful the first moment crawling is permitted.
+3. **Set the WhatsApp away message on `010` → `019`** in the same window. Independent of the above —
+   it is for people who already have the old number saved (§11a).
+
+Keep the guard-removal PR **prepared and unmerged** beforehand, so the gap between "domain verified"
+and "guards off" is a single merge rather than a work session.
+
+**Both guards must go in that one PR.** `web/public/robots.txt` (`Disallow: /`) and the
+`X-Robots-Tag: noindex, nofollow, noarchive` line in `web/public/_headers`. Removing one and not the
+other leaves the site noindexed **with no obvious symptom** — the surviving control is silent.
+
 ## 13. Assets And Launch Conditions
 
 Assets available:
