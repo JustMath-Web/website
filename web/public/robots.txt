@@ -1,0 +1,11 @@
+# Launch configuration (docs/DECISIONS.md §13b). This file REPLACED the pre-launch
+# `Disallow: /` guard at cutover — it was not deleted, deliberately:
+#
+#   - no robots.txt at all means crawlers infer "crawl everything", which works but says nothing
+#   - an explicit file lets us declare the sitemap, which is the main reason to serve one
+#   - the e2e test in landing.spec.ts asserts THIS content, so a future accidental revert to
+#     `Disallow: /` fails the build instead of silently delisting the site
+User-agent: *
+Allow: /
+
+Sitemap: https://mathematicsmalaysia.com/sitemap-index.xml

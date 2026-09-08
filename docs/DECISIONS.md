@@ -546,6 +546,22 @@ and "guards off" is a single merge rather than a work session.
 `X-Robots-Tag: noindex, nofollow, noarchive` line in `web/public/_headers`. Removing one and not the
 other leaves the site noindexed **with no obvious symptom** — the surviving control is silent.
 
+**`robots.txt` is REPLACED, not deleted.** Deleting it works — crawlers infer "crawl everything" —
+but an explicit file lets us declare the sitemap, which is the main reason to serve one at all, and
+it keeps the e2e test meaningful. The launch file is `User-agent: * / Allow: / / Sitemap: …
+sitemap-index.xml`.
+
+**The e2e test is INVERTED, not deleted.** `landing.spec.ts` asserted the pre-launch guard existed
+(§27); it now asserts the opposite — crawling permitted, sitemap declared, and **no active
+`Disallow: /` line**. Deleting the test would have left the highest-consequence file on the site
+untested: an accidental revert to `Disallow: /` delists everything, with no symptom anyone notices
+for weeks. The second assertion ignores commented lines and `Disallow:` with a path, so only a real
+block-everything directive fails it.
+
+*Caught by CI, not by review.* The first cut of the cutover PR deleted `robots.txt` and the `web`
+job failed on that pre-launch test — verified with `astro build` locally but not the Playwright
+suite. The test doing exactly what it was written to do.
+
 ## 13. Assets And Launch Conditions
 
 Assets available:
