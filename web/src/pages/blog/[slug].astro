@@ -6,7 +6,12 @@ import SiteHeader from "../../components/SiteHeader.astro";
 import WhatsAppCta from "../../components/WhatsAppCta.astro";
 import Meta from "../../components/blog/Meta.astro";
 import { postBodyComponents } from "../../components/portabletext";
-import { getBlogPostData, getBlogPostSlugs } from "../../lib/content/blogData";
+import {
+	BLOG_DESCRIPTION,
+	getBlogPostData,
+	getBlogPostSlugs,
+} from "../../lib/content/blogData";
+import { firstNonEmpty } from "../../lib/content/contentGuards";
 import { getLandingPageData } from "../../lib/content/landingData";
 import { resolveValidPosts } from "../../lib/content/resolveValidPosts";
 import { buildWhatsAppUrl } from "../../lib/content/whatsappUrl";
@@ -56,12 +61,18 @@ const category = post.categories[0]?.title ?? "";
  * `canonicalUrl` and `noindex` resolve from the post alone: inheriting a site-level canonical would
  * point every post at one URL, and indexability is a per-document decision.
  */
+const derivedTitle = `${post.title} — Notes — ${siteSettings.siteName}`;
 const pageTitle =
-	post.seo?.metaTitle ?? `${post.title} — Notes — ${siteSettings.siteName}`;
+	firstNonEmpty(post.seo?.metaTitle, derivedTitle) ?? derivedTitle;
+// Always resolves: BLOG_DESCRIPTION is a constant, so a post with a blank excerpt AND no site
+// default still ships a real description rather than an empty one.
 const pageDescription =
-	post.seo?.metaDescription ??
-	post.excerpt ??
-	siteSettings.defaultSeo.metaDescription;
+	firstNonEmpty(
+		post.seo?.metaDescription,
+		post.excerpt,
+		siteSettings.defaultSeo?.metaDescription,
+		BLOG_DESCRIPTION,
+	) ?? BLOG_DESCRIPTION;
 
 /**
  * BlogPosting JSON-LD, following BaseLayout.astro's own Organization JSON-LD pattern exactly (own

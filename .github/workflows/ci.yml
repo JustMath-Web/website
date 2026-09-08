@@ -46,6 +46,17 @@ jobs:
       # getStaticPaths() filters out at build time (docs/DECISIONS.md §30) — a genuinely non-existent
       # slug 404ing on its own doesn't exercise this code, since that's true without the filter too.
       - run: pnpm test:blog-null-post-filter
+      # Guardrail for the landing-content completeness check (lib/content/contentGuards.ts). A Sanity
+      # singleton opened in the Studio before it is seeded exists as a "husk" — a truthy document
+      # holding only schema defaults. One sat in production for six days, one Publish click from
+      # blanking the live homepage, invisible to the old `if (!homePage || ...)` presence check.
+      # Asserts a husk, a null document, an empty string and a whitespace-only value are all rejected.
+      - run: pnpm test:landing-content-guard
+      # Guardrail for the DEPLOY_ENV cross-check. Every production rule above is gated on that
+      # variable, which lives in the Cloudflare dashboard rather than this repo — if it is renamed or
+      # lost, all of them silently degrade to fallback behaviour and the build still goes green.
+      # Asserts a `main` deploy with the sentinel missing or misspelled fails the build.
+      - run: pnpm test:deploy-env-guard
 
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e

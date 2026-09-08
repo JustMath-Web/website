@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { firstNonEmpty } from "../lib/content/contentGuards";
 import GapChart from "../components/GapChart.astro";
 import SectionMarker from "../components/SectionMarker.astro";
 import SiteFooter from "../components/SiteFooter.astro";
@@ -11,15 +12,23 @@ import type { LevelBlock } from "../lib/sanity/types";
 const { homePage, siteSettings, navigation, categories } =
 	await getLandingPageData();
 
-const pageSeo = homePage.seo ?? siteSettings.defaultSeo;
+/**
+ * `firstNonEmpty`, not `??` — see lib/content/contentGuards.ts. `??` is nullish-only, so a field
+ * cleared to "" in the Studio would win the chain and ship an empty <title> instead of falling
+ * through to the value written for exactly that case.
+ */
 const pageTitle =
-	pageSeo.metaTitle ??
-	siteSettings.defaultSeo.metaTitle ??
-	siteSettings.siteName;
+	firstNonEmpty(
+		homePage.seo?.metaTitle,
+		siteSettings.defaultSeo?.metaTitle,
+		siteSettings.siteName,
+	) ?? siteSettings.siteName;
 const pageDescription =
-	pageSeo.metaDescription ??
-	siteSettings.defaultSeo.metaDescription ??
-	homePage.hero.subheadline;
+	firstNonEmpty(
+		homePage.seo?.metaDescription,
+		siteSettings.defaultSeo?.metaDescription,
+		homePage.hero.subheadline,
+	) ?? homePage.hero.subheadline;
 const heroCta = homePage.hero.cta;
 
 function splitParagraphs(value: string | undefined) {
@@ -48,9 +57,9 @@ function categoryHref(level: LevelBlock) {
 	title={pageTitle}
 	description={pageDescription}
 	siteSettings={siteSettings}
-	canonicalUrl={pageSeo.canonicalUrl}
-	noindex={pageSeo.noindex}
-	ogImageAlt={pageSeo.ogImageAlt}
+	canonicalUrl={homePage.seo?.canonicalUrl}
+	noindex={homePage.seo?.noindex ?? false}
+	ogImageAlt={homePage.seo?.ogImageAlt}
 >
 	<SiteHeader
 		navigation={navigation}

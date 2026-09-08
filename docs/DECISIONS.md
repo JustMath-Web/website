@@ -1351,6 +1351,97 @@ to PR 3, not silently dropped:
   `decoding="async"`. Revisit under image/performance review once PR 3 has a real route to measure
   against, rather than optimizing a component nothing renders yet.
 
+### 28b. The production sentinel cannot be silently disarmed — 2026-09-06
+
+Every production rule in §28/§29 and §28a is gated on `DEPLOY_ENV === "production"`. **That variable
+is set in the Cloudflare dashboard, not in this repo.** If it is renamed, cleared, or lost in a
+project migration, all of those guards degrade to fallback behaviour at once and **the build still
+reports success** — shipping fixture copy to the live site.
+
+`assert-production-fails-without-sanity.mjs` protects against *code* breaking the detection. Nothing
+protected against the *variable* being absent. That is the same shape as two other problems this
+project has already been bitten by: the Search Console meta tag that was the sole proof of ownership
+(§12a), and a Sanity husk no repo check could see (§28a) — **an unversioned external control the
+repo assumes is present.**
+
+**The cross-check.** Cloudflare Workers Builds injects `WORKERS_CI_BRANCH` on every build, and a
+human cannot forget it because Cloudflare sets it. If Cloudflare says it is building `main` but
+`DEPLOY_ENV` does not say `production`, the two disagree and the build fails. The legacy
+`CF_PAGES_BRANCH` is honoured as a fallback source, since this project migrated from Pages (§32).
+The inverse — production rules on a preview branch — warns rather than fails: odd, not dangerous.
+
+**Why an Astro integration hook rather than a package script.** The Cloudflare build command is
+itself configured in a dashboard, so a check wired into `pnpm build` could be bypassed by editing
+that command — the same class of problem this check exists to catch. `astro:build:start` runs on
+every Astro build regardless of who invoked it.
+
+**Verified rather than reasoned about:** a real `astro build` with `WORKERS_CI_BRANCH=main` and no
+`DEPLOY_ENV` fails with the guard's message; the same build with `DEPLOY_ENV=production` passes the
+guard; an ordinary local build is unaffected. Guardrail: `pnpm test:deploy-env-guard` in CI.
+
+**Known consequence, recorded so it is not mistaken for a bug.** Production builds now fail on
+incomplete or unreachable Sanity (§28a) and on a missing sentinel. A Sanity incident will therefore
+block an unrelated deploy — push a CSS fix mid-incident and the build refuses. That is the guard
+working. The alternative is shipping a page nobody authored and being told it succeeded.
+
+### 28a. Landing content: guard the content, not the document — 2026-09-06
+
+**Root cause, stated once, because it produced four bugs that looked separate:** *presence tested
+where content should be tested.*
+
+| # | Instance | Status |
+| --- | --- | --- |
+| 1 | `post.seo ?? siteSettings.defaultSeo` — object exists, so its empty fields win | Fixed, PR #54 |
+| 2 | `category.seo` projected and never read — the field exists, so nobody noticed | Fixed, PR #54 |
+| 3 | `if (!homePage \|\| !siteSettings \|\| !navigation)` — a **husk is truthy**, so it renders | Fixed here |
+| 4 | `??` chains on user-editable strings — nullish-only, so `""` ships | Fixed here |
+
+**Why #3 mattered.** On 2026-09-06 a `drafts.homePage` holding only Sanity schema defaults — a
+*husk* — was found in production, where it had sat since 2026-08-31. Nothing in this repo could see
+it, because the document existed.
+
+> **Correction, same day.** This entry first said the husk was "one Publish click from blanking the
+> live homepage". **That was wrong, and it overstated the risk.** The Studio could not have published
+> it: `homePage`, `siteSettings` and `navigation` already mark their landing-critical fields
+> `Rule.required()` (8 on `siteSettings` alone, including a digits-only regex on `whatsappNumber`),
+> and Sanity disables Publish on validation errors.
+>
+> The reachable path is an **API write** — a script, a migration, a seed, or an agent tool — none of
+> which run Studio validation. That is not hypothetical: the husk was found precisely because an API
+> client was about to patch and publish it, and would have succeeded. **The exposure is narrower than
+> first stated and entirely real**, and it is the path this guard covers. Schema validation and the
+> build guard are two independent controls over two different paths; neither is redundant. The mechanism that creates husks is "someone opens a singleton in the Studio before it is
+seeded", which is a thing people do; discarding that one draft fixed the data and changed nothing
+about the next one.
+
+**What changed.** `web/src/lib/content/contentGuards.ts` now holds `findMissingLandingContent`,
+which names every required field that is missing *or blank*, plus `hasText` / `firstNonEmpty` for
+string chains. `landingData.ts` consults it and, **in production, throws rather than falling back** —
+previously it had *no* production strictness at all, where `blogData.ts` had four checks. A static
+build that quietly substitutes fixture copy for real copy ships a page nobody authored and reports
+success; §28/§29 already forbade that for the blog, and the landing path simply had no equivalent
+rule. `isProductionBuild()` moved into the shared module so both paths read one definition.
+
+**Why a build failure rather than a warning.** This is a static site: if the build fails, nothing
+ships. That makes the guard itself the standing assertion — no separate scheduled check can be as
+strong, because a scheduled check reports *after* the bad page is already live.
+
+**#4 was checked, not assumed.** The empty `defaultSeo` fields found the same day were **absent
+keys, not empty strings** (`{_type: "seo", noindex: false}`), so `??` caught them and no empty
+`<title>` ever shipped. The class is real and now closed regardless; the specific near-miss did not
+occur.
+
+**Guardrail:** `pnpm test:landing-content-guard` (CI) asserts the production husk shape, null
+documents, empty strings and whitespace-only values are all rejected, and that `firstNonEmpty` skips
+blanks `??` would pass through.
+
+**The remaining gap, stated plainly.** Sanity content is still the only part of this system with no
+review trail — the repo diffs, the dataset does not. Four content defects were found in one manual
+pass on 2026-09-06 ("6 to 8 October", `whatsappMessage: "Test"`, empty `defaultSeo`, the husk), and
+three of the four would have shipped at cutover. This entry closes the two that a build can catch.
+Auditing *editorial correctness* in Sanity remains a human job, and the content-review watchdog
+(§13a) is the nearest thing to a standing check on it.
+
 ## 29. Blog infrastructure PR 2 — archive + category routes, fixture-safe data layer — 2026-08-26
 
 Second of the 4-PR blog sequence. Ships `web/src/pages/blog/[...page].astro` and
