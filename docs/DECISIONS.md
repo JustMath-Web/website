@@ -1395,6 +1395,42 @@ to PR 3, not silently dropped:
   `decoding="async"`. Revisit under image/performance review once PR 3 has a real route to measure
   against, rather than optimizing a component nothing renders yet.
 
+### 22a. `_headers` is now tested as content — 2026-09-08
+
+`web/public/_headers` had **no test of any kind**. The only reference to it anywhere in the suite was
+a comment explaining why it isn't tested — that the HTTP header can't be asserted through
+`scripts/serve-dist.mjs`, which doesn't apply Pages headers (§22).
+
+That reasoning was half right and answered the wrong question. The *header* isn't testable locally.
+The *file content* is, and that is where regression risk lives. The asymmetry was stark: after
+cutover `robots.txt` had two Playwright tests guarding against the block-everything guard coming
+back, while the other half of the same pair — the `X-Robots-Tag` header, which must move with it —
+had none.
+
+**What `pnpm test:headers-guard` asserts**, all as content rather than presence:
+
+| Invariant | Why it is silent if it breaks |
+| --- | --- |
+| No `X-Robots-Tag` directive | Delists the entire site. Every page still renders, nothing errors; you find out from a traffic graph, weeks later. |
+| No `'unsafe-inline'` in `script-src` | Refused deliberately when GTM was added (§12a) — the loader is a same-origin static file so the site ships zero executable inline scripts. Re-adding it re-opens every page to injected script, and nothing looks different. |
+| `img-src` allows `cdn.sanity.io` | Every image, including the only photograph on the site (`ASSETS.md` §2), renders as markup and silently fails to load. Reads as a rendering bug, not a policy one. |
+| `default-src`/`object-src`/`base-uri`/`frame-ancestors` unchanged | Each absence quietly widens the policy. |
+| `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options` present | — |
+
+Commented-out lines are ignored, so a historical note in the file cannot fail the build.
+
+**Verified by deliberately breaking it, eight ways** — reinstating `X-Robots-Tag`, adding
+`'unsafe-inline'`, removing `cdn.sanity.io`, dropping each of `object-src`/`frame-ancestors`/
+`default-src`/`X-Frame-Options`, and deleting the CSP entirely. All eight fail; a commented-out
+header does not; the real file passes.
+
+**A note on that verification, because it is the reason it was done.** The first version of this
+script failed on the *correct* file: its CSP parser required `^` or `;` before a directive name, and
+the first directive follows `Content-Security-Policy:`, so `default-src` always parsed as `null`.
+Had the negative tests been run against a script that always failed, all eight "caught" results would
+have been meaningless — and had the bug gone the other way, every assertion about `default-src` would
+have passed vacuously forever. **A test that has never been observed to fail is not yet a test.**
+
 ### 28b. The production sentinel cannot be silently disarmed — 2026-09-06
 
 Every production rule in §28/§29 and §28a is gated on `DEPLOY_ENV === "production"`. **That variable

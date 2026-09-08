@@ -57,6 +57,11 @@ jobs:
       # lost, all of them silently degrade to fallback behaviour and the build still goes green.
       # Asserts a `main` deploy with the sentinel missing or misspelled fails the build.
       - run: pnpm test:deploy-env-guard
+      # Guardrail for web/public/_headers, which until now had no test at all. It carries two silent
+      # failures: X-Robots-Tag coming back (delists the whole site, every page still renders fine),
+      # and CSP drift — specifically 'unsafe-inline' in script-src, which was refused when GTM was
+      # added (§12a), and cdn.sanity.io in img-src, without which every image silently fails to load.
+      - run: pnpm test:headers-guard
 
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
