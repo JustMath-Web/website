@@ -1,5 +1,15 @@
-# TEMPORARY pre-launch guard — remove this file (and the matching X-Robots-Tag header in
-# _headers) as an explicit step of the real launch checklist once the conditions in
-# docs/DECISIONS.md §13 close and the custom domain is connected. See docs/DECISIONS.md §27.
+# Launch configuration (docs/DECISIONS.md §13b). This file replaced the pre-launch
+# block-everything guard at cutover — replaced, not deleted, deliberately:
+#
+#   - no robots.txt at all means crawlers infer "crawl everything", which works but says nothing
+#   - an explicit file lets us declare the sitemap, which is the main reason to serve one
+#   - the e2e test in landing.spec.ts asserts THIS content, so an accidental revert to the
+#     block-everything guard fails the build instead of silently delisting the site
+#
+# No directive line below may block crawling. The literal block-everything syntax is kept out of
+# this file entirely, including comments, so no parser or reader can mistake an explanation for a
+# rule.
 User-agent: *
-Disallow: /
+Allow: /
+
+Sitemap: https://mathematicsmalaysia.com/sitemap-index.xml

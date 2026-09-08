@@ -518,6 +518,50 @@ which cannot be inspected from outside. **Open item**, carried, not silently clo
 fires no Google request off-host and leaves `dataLayer` undefined; the verification meta is present
 on home, blog archive and category pages; no executable inline script exists.
 
+### 13b. Cutover runbook — the order inside the window matters
+
+`web/astro.config.mjs` hardcodes `site: "https://mathematicsmalaysia.com"`, and `BaseLayout.astro`
+builds every canonical from it. **So every page self-canonicalises to the real domain no matter
+where it is served from**, including `*.workers.dev`. That makes the two cutover steps
+order-dependent in both directions:
+
+| Wrong order | What happens |
+| --- | --- |
+| Guards off **before** the domain is connected | The `workers.dev` build becomes crawlable while canonicalising to `mathematicsmalaysia.com` — which at that moment still serves WordPress. Google sees a canonical pointing at entirely different content, may disregard it, and can index the `workers.dev` URLs instead. |
+| Domain connected **while** guards are still on | The new site serves `noindex` to its first crawls, and that can persist longer than you want. |
+
+**Correct order:**
+
+1. **Connect the domain and verify it serves the new site.** It is still `noindex` at this point,
+   which is harmless — it simply is not crawled.
+2. **Merge the guard-removal PR.** The guards come off only once the domain already resolves to the
+   new site, so the canonical is truthful the first moment crawling is permitted.
+3. **Set the WhatsApp away message on `010` → `019`** in the same window. Independent of the above —
+   it is for people who already have the old number saved (§11a).
+
+Keep the guard-removal PR **prepared and unmerged** beforehand, so the gap between "domain verified"
+and "guards off" is a single merge rather than a work session.
+
+**Both guards must go in that one PR.** `web/public/robots.txt` (`Disallow: /`) and the
+`X-Robots-Tag: noindex, nofollow, noarchive` line in `web/public/_headers`. Removing one and not the
+other leaves the site noindexed **with no obvious symptom** — the surviving control is silent.
+
+**`robots.txt` is REPLACED, not deleted.** Deleting it works — crawlers infer "crawl everything" —
+but an explicit file lets us declare the sitemap, which is the main reason to serve one at all, and
+it keeps the e2e test meaningful. The launch file is `User-agent: * / Allow: / / Sitemap: …
+sitemap-index.xml`.
+
+**The e2e test is INVERTED, not deleted.** `landing.spec.ts` asserted the pre-launch guard existed
+(§27); it now asserts the opposite — crawling permitted, sitemap declared, and **no active
+`Disallow: /` line**. Deleting the test would have left the highest-consequence file on the site
+untested: an accidental revert to `Disallow: /` delists everything, with no symptom anyone notices
+for weeks. The second assertion ignores commented lines and `Disallow:` with a path, so only a real
+block-everything directive fails it.
+
+*Caught by CI, not by review.* The first cut of the cutover PR deleted `robots.txt` and the `web`
+job failed on that pre-launch test — verified with `astro build` locally but not the Playwright
+suite. The test doing exactly what it was written to do.
+
 ## 13. Assets And Launch Conditions
 
 Assets available:

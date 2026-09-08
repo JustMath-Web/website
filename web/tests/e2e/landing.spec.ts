@@ -59,17 +59,38 @@ test.describe("structured data (VS-07)", () => {
 	});
 });
 
-// TEMPORARY pre-launch guard (docs/DECISIONS.md §27) — asserts the disallow-all robots.txt exists.
-// _headers' matching X-Robots-Tag header is HTTP-layer only, not testable through this suite's
-// local static server (scripts/serve-dist.mjs doesn't apply Pages headers — same caveat as the
-// CSP/security-header tests, see docs/DECISIONS.md §22).
-test.describe("robots.txt (pre-launch guard, §27)", () => {
-	test("disallows all crawling", async ({ page }) => {
+// Post-cutover (docs/DECISIONS.md §13b). This test was the INVERSE until launch: it asserted the
+// pre-launch `Disallow: /` guard existed (§27). Inverted rather than deleted, so the file keeps a
+// test — an accidental revert to `Disallow: /` would otherwise delist the entire site with no
+// symptom anyone would notice for weeks.
+//
+// _headers' X-Robots-Tag is HTTP-layer only and not testable through this suite's local static
+// server (scripts/serve-dist.mjs doesn't apply Pages headers — same caveat as the CSP/security-header
+// tests, docs/DECISIONS.md §22), so its removal is verified by inspection in the cutover PR.
+test.describe("robots.txt (post-cutover, §13b)", () => {
+	test("permits crawling and declares the sitemap", async ({ page }) => {
 		const response = await page.goto("/robots.txt");
 		expect(response?.status()).toBe(200);
 		const body = await response!.text();
 		expect(body).toMatch(/User-agent:\s*\*/i);
-		expect(body).toMatch(/Disallow:\s*\/\s*$/im);
+		expect(body).toMatch(/Allow:\s*\//i);
+		expect(body).toMatch(
+			/Sitemap:\s*https:\/\/mathematicsmalaysia\.com\/sitemap-index\.xml/i,
+		);
+	});
+
+	test("does NOT disallow crawling — the pre-launch guard must not come back", async ({
+		page,
+	}) => {
+		const response = await page.goto("/robots.txt");
+		const body = await response!.text();
+		// Only a bare `Disallow: /` blocks everything; `Disallow:` with a path is fine, and a
+		// commented line is not a directive.
+		const activeDisallowAll = body
+			.split("\n")
+			.filter((line) => !line.trim().startsWith("#"))
+			.some((line) => /^\s*Disallow:\s*\/\s*$/i.test(line));
+		expect(activeDisallowAll).toBe(false);
 	});
 });
 
