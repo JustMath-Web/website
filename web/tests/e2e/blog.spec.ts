@@ -117,8 +117,17 @@ test.describe("blog post (/blog/[slug]/)", () => {
 		page,
 	}) => {
 		await page.goto("/blog/why-surds-trip-up-students/");
-		await expect(page.getByText("Where this goes wrong")).toBeVisible();
+		// One positive assertion per override. The failure this guards against is a SILENT DROP:
+		// if a major astro-portabletext bump changes the override signature, it does not throw — it
+		// renders the block as nothing. The page builds, the post loads, and the maths or the embed
+		// is simply absent. "The post looks fine" is exactly the check that would pass.
+		await expect(page.locator(".callout")).toBeVisible();
+		await expect(page.getByText("Where this goes wrong")).toBeVisible(); // commonMistake's label
 		await expect(page.locator(".working")).toBeVisible();
+		// Block and inline maths are separate overrides sharing one KaTeX surface — asserted apart,
+		// because a `.katex` locator alone stays green when only one of the two stops rendering.
+		await expect(page.locator(".math-block")).toBeVisible();
+		await expect(page.locator(".math-inline").first()).toBeVisible();
 		await expect(
 			page.locator(
 				"img[alt='A worked example showing surds being simplified step by step on a whiteboard']",
