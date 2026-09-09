@@ -59,17 +59,38 @@ test.describe("structured data (VS-07)", () => {
 	});
 });
 
-// TEMPORARY pre-launch guard (docs/DECISIONS.md §27) — asserts the disallow-all robots.txt exists.
-// _headers' matching X-Robots-Tag header is HTTP-layer only, not testable through this suite's
-// local static server (scripts/serve-dist.mjs doesn't apply Pages headers — same caveat as the
-// CSP/security-header tests, see docs/DECISIONS.md §22).
-test.describe("robots.txt (pre-launch guard, §27)", () => {
-	test("disallows all crawling", async ({ page }) => {
+// Post-cutover (docs/DECISIONS.md §13b). This test was the INVERSE until launch: it asserted the
+// pre-launch `Disallow: /` guard existed (§27). Inverted rather than deleted, so the file keeps a
+// test — an accidental revert to `Disallow: /` would otherwise delist the entire site with no
+// symptom anyone would notice for weeks.
+//
+// _headers' X-Robots-Tag is HTTP-layer only and not testable through this suite's local static
+// server (scripts/serve-dist.mjs doesn't apply Pages headers — same caveat as the CSP/security-header
+// tests, docs/DECISIONS.md §22), so its removal is verified by inspection in the cutover PR.
+test.describe("robots.txt (post-cutover, §13b)", () => {
+	test("permits crawling and declares the sitemap", async ({ page }) => {
 		const response = await page.goto("/robots.txt");
 		expect(response?.status()).toBe(200);
 		const body = await response!.text();
 		expect(body).toMatch(/User-agent:\s*\*/i);
-		expect(body).toMatch(/Disallow:\s*\/\s*$/im);
+		expect(body).toMatch(/Allow:\s*\//i);
+		expect(body).toMatch(
+			/Sitemap:\s*https:\/\/mathematicsmalaysia\.com\/sitemap-index\.xml/i,
+		);
+	});
+
+	test("does NOT disallow crawling — the pre-launch guard must not come back", async ({
+		page,
+	}) => {
+		const response = await page.goto("/robots.txt");
+		const body = await response!.text();
+		// Only a bare `Disallow: /` blocks everything; `Disallow:` with a path is fine, and a
+		// commented line is not a directive.
+		const activeDisallowAll = body
+			.split("\n")
+			.filter((line) => !line.trim().startsWith("#"))
+			.some((line) => /^\s*Disallow:\s*\/\s*$/i.test(line));
+		expect(activeDisallowAll).toBe(false);
 	});
 });
 
@@ -218,5 +239,59 @@ test.describe("FAQ accordion", () => {
 		} finally {
 			await context.close();
 		}
+	});
+});
+
+// The portrait is the only photograph on the site, and it carries the page's central claim that a
+// real named person teaches every session (design/ASSETS.md §2). It was MISSING and launch-blocking
+// until 2026-09-08; the page shipped a typographic fallback instead. These assert the image branch,
+// which fixture data now exercises via a synthetic asset ref (same pattern as defaultBlogData, §28).
+test.describe("about portrait (design/ASSETS.md §2)", () => {
+	test("renders the portrait slot, not the typographic fallback", async ({
+		page,
+	}) => {
+		await page.goto("/");
+		await expect(page.locator("#mrkong-portrait")).toBeVisible();
+		await expect(page.locator(".portrait-fallback")).toHaveCount(0);
+	});
+
+	test("is a responsive 4:5 image with a real alt and no layout shift", async ({
+		page,
+	}) => {
+		await page.goto("/");
+		const img = page.locator("#mrkong-portrait img");
+
+		// A non-empty alt: `intent: decorative` would be wrong for this image specifically.
+		const alt = await img.getAttribute("alt");
+		expect(alt?.trim().length).toBeGreaterThan(0);
+
+		// width/height must describe the DELIVERED 4:5 crop, not the source asset's ratio —
+		// otherwise the browser reserves the wrong box and the section shifts on load.
+		const w = Number(await img.getAttribute("width"));
+		const h = Number(await img.getAttribute("height"));
+		expect(h / w).toBeCloseTo(1.25, 2);
+
+		// Sanity must be asked for the crop, so the bytes match the pixels shown.
+		const src = await img.getAttribute("src");
+		expect(src).toContain("fit=crop");
+		expect(src).toContain("auto=format");
+
+		const srcset = await img.getAttribute("srcset");
+		expect(srcset?.split(",").length).toBeGreaterThanOrEqual(3);
+		await expect(img).toHaveAttribute("loading", "lazy");
+	});
+
+	test("the byline renders once, above the heading", async ({ page }) => {
+		await page.goto("/");
+		// Approved copy places it above the heading when the photograph is shown; the fallback
+		// carries it otherwise. Exactly one, never both.
+		await expect(page.locator(".about-byline")).toHaveCount(1);
+		const bylineY = await page
+			.locator(".about-byline")
+			.evaluate((el) => el.getBoundingClientRect().top);
+		const headingY = await page
+			.locator("#about-title")
+			.evaluate((el) => el.getBoundingClientRect().top);
+		expect(bylineY).toBeLessThan(headingY);
 	});
 });

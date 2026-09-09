@@ -264,6 +264,25 @@ export const defaultHomePage: HomePage = {
 		"Standard 1 through Form 5, and IGCSE. Teaching ends at SPM and IGCSE level. No STPM, matrikulasi, foundation or university mathematics, and I would rather tell you that now than take the booking.",
 	about: {
 		byline: "Mr Kong, Just Math Malaysia",
+		/**
+		 * Synthetic asset ref — the SAME deliberate pattern defaultBlogData.ts uses for its
+		 * ImageWithAlt block (docs/DECISIONS.md §28): a well-formed, non-existent cdn.sanity.io id.
+		 * The bytes 404; the MARKUP is what is under test, and without this the image branch of
+		 * AboutPortrait.astro would have no coverage at all, because fixture builds have no Sanity.
+		 * Dimensions mirror the real supplied asset (1040x1153) so getImageDimensions() parses the
+		 * same shape it will see in production.
+		 */
+		portrait: {
+			image: {
+				_type: "image",
+				asset: {
+					_type: "reference",
+					_ref: "image-0000000000000000000000000000000000000000-1040x1153-jpg",
+				},
+			},
+			intent: "informative",
+			alt: "Portrait photo of Mr Kong",
+		},
 		heading: "Can one tutor teach a seven-year-old and an Add Maths student?",
 		body: paragraphs(
 			"It is a fair question, and most tutors cannot. The market splits: primary specialists on one side, SPM and Add Maths specialists on the other. Very few people teach both.",

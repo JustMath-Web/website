@@ -1,5 +1,6 @@
 import { defaultCategories } from "./defaultLandingData";
 import { defaultPosts } from "./defaultBlogData";
+import { isProductionBuild } from "./contentGuards";
 import type {
 	Category,
 	CategoryWithCount,
@@ -21,15 +22,6 @@ import type {
  * - A non-production build (preview/dev) that can't reach Sanity renders the same empty state
  *   instead of failing, since the stakes are lower there — but still never substitutes fixtures.
  */
-
-// One concrete check, used everywhere production/fixture-mode logic needs it, so there is never a
-// second copy of this condition to drift out of sync with this one. DEPLOY_ENV is a host-set
-// production sentinel, configured explicitly in the Cloudflare Pages production environment for
-// this migration. NODE_ENV/import.meta.env.PROD alone cannot distinguish a real production deploy
-// from a preview build, since preview builds also commonly run in production mode.
-function isProductionBuild(): boolean {
-	return import.meta.env.DEPLOY_ENV === "production";
-}
 
 /**
  * The Notes blog's own one-line description. Shared by the archive page and the RSS channel so the

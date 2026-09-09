@@ -518,6 +518,50 @@ which cannot be inspected from outside. **Open item**, carried, not silently clo
 fires no Google request off-host and leaves `dataLayer` undefined; the verification meta is present
 on home, blog archive and category pages; no executable inline script exists.
 
+### 13b. Cutover runbook — the order inside the window matters
+
+`web/astro.config.mjs` hardcodes `site: "https://mathematicsmalaysia.com"`, and `BaseLayout.astro`
+builds every canonical from it. **So every page self-canonicalises to the real domain no matter
+where it is served from**, including `*.workers.dev`. That makes the two cutover steps
+order-dependent in both directions:
+
+| Wrong order | What happens |
+| --- | --- |
+| Guards off **before** the domain is connected | The `workers.dev` build becomes crawlable while canonicalising to `mathematicsmalaysia.com` — which at that moment still serves WordPress. Google sees a canonical pointing at entirely different content, may disregard it, and can index the `workers.dev` URLs instead. |
+| Domain connected **while** guards are still on | The new site serves `noindex` to its first crawls, and that can persist longer than you want. |
+
+**Correct order:**
+
+1. **Connect the domain and verify it serves the new site.** It is still `noindex` at this point,
+   which is harmless — it simply is not crawled.
+2. **Merge the guard-removal PR.** The guards come off only once the domain already resolves to the
+   new site, so the canonical is truthful the first moment crawling is permitted.
+3. **Set the WhatsApp away message on `010` → `019`** in the same window. Independent of the above —
+   it is for people who already have the old number saved (§11a).
+
+Keep the guard-removal PR **prepared and unmerged** beforehand, so the gap between "domain verified"
+and "guards off" is a single merge rather than a work session.
+
+**Both guards must go in that one PR.** `web/public/robots.txt` (`Disallow: /`) and the
+`X-Robots-Tag: noindex, nofollow, noarchive` line in `web/public/_headers`. Removing one and not the
+other leaves the site noindexed **with no obvious symptom** — the surviving control is silent.
+
+**`robots.txt` is REPLACED, not deleted.** Deleting it works — crawlers infer "crawl everything" —
+but an explicit file lets us declare the sitemap, which is the main reason to serve one at all, and
+it keeps the e2e test meaningful. The launch file is `User-agent: * / Allow: / / Sitemap: …
+sitemap-index.xml`.
+
+**The e2e test is INVERTED, not deleted.** `landing.spec.ts` asserted the pre-launch guard existed
+(§27); it now asserts the opposite — crawling permitted, sitemap declared, and **no active
+`Disallow: /` line**. Deleting the test would have left the highest-consequence file on the site
+untested: an accidental revert to `Disallow: /` delists everything, with no symptom anyone notices
+for weeks. The second assertion ignores commented lines and `Disallow:` with a path, so only a real
+block-everything directive fails it.
+
+*Caught by CI, not by review.* The first cut of the cutover PR deleted `robots.txt` and the `web`
+job failed on that pre-launch test — verified with `astro build` locally but not the Playwright
+suite. The test doing exactly what it was written to do.
+
 ## 13. Assets And Launch Conditions
 
 Assets available:
@@ -1350,6 +1394,133 @@ to PR 3, not silently dropped:
 - `ImageWithAlt.astro` is intentionally minimal for now: no `srcset`, explicit width/height, or
   `decoding="async"`. Revisit under image/performance review once PR 3 has a real route to measure
   against, rather than optimizing a component nothing renders yet.
+
+### 22a. `_headers` is now tested as content — 2026-09-08
+
+`web/public/_headers` had **no test of any kind**. The only reference to it anywhere in the suite was
+a comment explaining why it isn't tested — that the HTTP header can't be asserted through
+`scripts/serve-dist.mjs`, which doesn't apply Pages headers (§22).
+
+That reasoning was half right and answered the wrong question. The *header* isn't testable locally.
+The *file content* is, and that is where regression risk lives. The asymmetry was stark: after
+cutover `robots.txt` had two Playwright tests guarding against the block-everything guard coming
+back, while the other half of the same pair — the `X-Robots-Tag` header, which must move with it —
+had none.
+
+**What `pnpm test:headers-guard` asserts**, all as content rather than presence:
+
+| Invariant | Why it is silent if it breaks |
+| --- | --- |
+| No `X-Robots-Tag` directive | Delists the entire site. Every page still renders, nothing errors; you find out from a traffic graph, weeks later. |
+| No `'unsafe-inline'` in `script-src` | Refused deliberately when GTM was added (§12a) — the loader is a same-origin static file so the site ships zero executable inline scripts. Re-adding it re-opens every page to injected script, and nothing looks different. |
+| `img-src` allows `cdn.sanity.io` | Every image, including the only photograph on the site (`ASSETS.md` §2), renders as markup and silently fails to load. Reads as a rendering bug, not a policy one. |
+| `default-src`/`object-src`/`base-uri`/`frame-ancestors` unchanged | Each absence quietly widens the policy. |
+| `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options` present | — |
+
+Commented-out lines are ignored, so a historical note in the file cannot fail the build.
+
+**Verified by deliberately breaking it, eight ways** — reinstating `X-Robots-Tag`, adding
+`'unsafe-inline'`, removing `cdn.sanity.io`, dropping each of `object-src`/`frame-ancestors`/
+`default-src`/`X-Frame-Options`, and deleting the CSP entirely. All eight fail; a commented-out
+header does not; the real file passes.
+
+**A note on that verification, because it is the reason it was done.** The first version of this
+script failed on the *correct* file: its CSP parser required `^` or `;` before a directive name, and
+the first directive follows `Content-Security-Policy:`, so `default-src` always parsed as `null`.
+Had the negative tests been run against a script that always failed, all eight "caught" results would
+have been meaningless — and had the bug gone the other way, every assertion about `default-src` would
+have passed vacuously forever. **A test that has never been observed to fail is not yet a test.**
+
+### 28b. The production sentinel cannot be silently disarmed — 2026-09-06
+
+Every production rule in §28/§29 and §28a is gated on `DEPLOY_ENV === "production"`. **That variable
+is set in the Cloudflare dashboard, not in this repo.** If it is renamed, cleared, or lost in a
+project migration, all of those guards degrade to fallback behaviour at once and **the build still
+reports success** — shipping fixture copy to the live site.
+
+`assert-production-fails-without-sanity.mjs` protects against *code* breaking the detection. Nothing
+protected against the *variable* being absent. That is the same shape as two other problems this
+project has already been bitten by: the Search Console meta tag that was the sole proof of ownership
+(§12a), and a Sanity husk no repo check could see (§28a) — **an unversioned external control the
+repo assumes is present.**
+
+**The cross-check.** Cloudflare Workers Builds injects `WORKERS_CI_BRANCH` on every build, and a
+human cannot forget it because Cloudflare sets it. If Cloudflare says it is building `main` but
+`DEPLOY_ENV` does not say `production`, the two disagree and the build fails. The legacy
+`CF_PAGES_BRANCH` is honoured as a fallback source, since this project migrated from Pages (§32).
+The inverse — production rules on a preview branch — warns rather than fails: odd, not dangerous.
+
+**Why an Astro integration hook rather than a package script.** The Cloudflare build command is
+itself configured in a dashboard, so a check wired into `pnpm build` could be bypassed by editing
+that command — the same class of problem this check exists to catch. `astro:build:start` runs on
+every Astro build regardless of who invoked it.
+
+**Verified rather than reasoned about:** a real `astro build` with `WORKERS_CI_BRANCH=main` and no
+`DEPLOY_ENV` fails with the guard's message; the same build with `DEPLOY_ENV=production` passes the
+guard; an ordinary local build is unaffected. Guardrail: `pnpm test:deploy-env-guard` in CI.
+
+**Known consequence, recorded so it is not mistaken for a bug.** Production builds now fail on
+incomplete or unreachable Sanity (§28a) and on a missing sentinel. A Sanity incident will therefore
+block an unrelated deploy — push a CSS fix mid-incident and the build refuses. That is the guard
+working. The alternative is shipping a page nobody authored and being told it succeeded.
+
+### 28a. Landing content: guard the content, not the document — 2026-09-06
+
+**Root cause, stated once, because it produced four bugs that looked separate:** *presence tested
+where content should be tested.*
+
+| # | Instance | Status |
+| --- | --- | --- |
+| 1 | `post.seo ?? siteSettings.defaultSeo` — object exists, so its empty fields win | Fixed, PR #54 |
+| 2 | `category.seo` projected and never read — the field exists, so nobody noticed | Fixed, PR #54 |
+| 3 | `if (!homePage \|\| !siteSettings \|\| !navigation)` — a **husk is truthy**, so it renders | Fixed here |
+| 4 | `??` chains on user-editable strings — nullish-only, so `""` ships | Fixed here |
+
+**Why #3 mattered.** On 2026-09-06 a `drafts.homePage` holding only Sanity schema defaults — a
+*husk* — was found in production, where it had sat since 2026-08-31. Nothing in this repo could see
+it, because the document existed.
+
+> **Correction, same day.** This entry first said the husk was "one Publish click from blanking the
+> live homepage". **That was wrong, and it overstated the risk.** The Studio could not have published
+> it: `homePage`, `siteSettings` and `navigation` already mark their landing-critical fields
+> `Rule.required()` (8 on `siteSettings` alone, including a digits-only regex on `whatsappNumber`),
+> and Sanity disables Publish on validation errors.
+>
+> The reachable path is an **API write** — a script, a migration, a seed, or an agent tool — none of
+> which run Studio validation. That is not hypothetical: the husk was found precisely because an API
+> client was about to patch and publish it, and would have succeeded. **The exposure is narrower than
+> first stated and entirely real**, and it is the path this guard covers. Schema validation and the
+> build guard are two independent controls over two different paths; neither is redundant. The mechanism that creates husks is "someone opens a singleton in the Studio before it is
+seeded", which is a thing people do; discarding that one draft fixed the data and changed nothing
+about the next one.
+
+**What changed.** `web/src/lib/content/contentGuards.ts` now holds `findMissingLandingContent`,
+which names every required field that is missing *or blank*, plus `hasText` / `firstNonEmpty` for
+string chains. `landingData.ts` consults it and, **in production, throws rather than falling back** —
+previously it had *no* production strictness at all, where `blogData.ts` had four checks. A static
+build that quietly substitutes fixture copy for real copy ships a page nobody authored and reports
+success; §28/§29 already forbade that for the blog, and the landing path simply had no equivalent
+rule. `isProductionBuild()` moved into the shared module so both paths read one definition.
+
+**Why a build failure rather than a warning.** This is a static site: if the build fails, nothing
+ships. That makes the guard itself the standing assertion — no separate scheduled check can be as
+strong, because a scheduled check reports *after* the bad page is already live.
+
+**#4 was checked, not assumed.** The empty `defaultSeo` fields found the same day were **absent
+keys, not empty strings** (`{_type: "seo", noindex: false}`), so `??` caught them and no empty
+`<title>` ever shipped. The class is real and now closed regardless; the specific near-miss did not
+occur.
+
+**Guardrail:** `pnpm test:landing-content-guard` (CI) asserts the production husk shape, null
+documents, empty strings and whitespace-only values are all rejected, and that `firstNonEmpty` skips
+blanks `??` would pass through.
+
+**The remaining gap, stated plainly.** Sanity content is still the only part of this system with no
+review trail — the repo diffs, the dataset does not. Four content defects were found in one manual
+pass on 2026-09-06 ("6 to 8 October", `whatsappMessage: "Test"`, empty `defaultSeo`, the husk), and
+three of the four would have shipped at cutover. This entry closes the two that a build can catch.
+Auditing *editorial correctness* in Sanity remains a human job, and the content-review watchdog
+(§13a) is the nearest thing to a standing check on it.
 
 ## 29. Blog infrastructure PR 2 — archive + category routes, fixture-safe data layer — 2026-08-26
 

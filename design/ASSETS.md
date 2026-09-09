@@ -61,7 +61,7 @@ On the site they must stay monochrome, or green stops meaning *this opens WhatsA
 
 | Slot | Spec | Status |
 | --- | --- | --- |
-| `#mrkong-portrait` (About section) | **4:5 portrait**, sticky at desktop. Serve ~800×1000 @1x and ~1600×2000 @2x. | **MISSING — blocks launch** |
+| `#mrkong-portrait` (About section) | **4:5 portrait**, sticky at desktop. Serve ~800×1000 @1x and ~1600×2000 @2x. | **SUPPLIED 2026-09-08** — see §2a |
 
 This is the only photograph on the entire site, and it carries the page's central claim that a real
 named person teaches every session. Currently an `<image-slot>` placeholder.
@@ -70,6 +70,28 @@ named person teaches every session. Currently an `<image-slot>` placeholder.
 at a desk or teaching position, looking to camera or at work. Not a studio headshot on white, not a
 corporate posed shot, no shallow-depth "founder" portrait. It should look like a photograph of a
 teacher, taken by someone who knows him.
+
+### 2a. Supplied and shipped — 2026-09-08
+
+Uploaded to Sanity (`homePage.about.portrait`), asset
+`image-1e150667…-1040x1153-jpg`, alt "Portrait photo of Mr Kong". Rendered by
+`web/src/components/AboutPortrait.astro`: 4:5 crop requested from Sanity (so the bytes match the
+pixels shown), `srcset` at 300/600/900 matched to the real slot width, sticky at desktop per
+`STATES.md`, `loading="lazy"`.
+
+**The typographic fallback was kept, not deleted.** It remains the correct rendering whenever the
+image is absent, and deleting it would turn "remove the photo" into a crash rather than a graceful
+degrade. Which state renders is driven purely by `about.portrait.image` being present.
+
+**One deviation from the spec above, recorded rather than silently accepted.** The supplied asset is
+**1040×1153**; a 4:5 crop of it is ~922×1153. That is under the "~1600×2000 @2x" this table asks
+for, so on a large phone at 2x — where the slot goes full-width — the image will be slightly soft.
+Desktop is unaffected: the column is 300px, so even 900w is generous. **If a larger original exists,
+re-uploading it needs no code change** — the srcset widths already stop at the source's usable
+width, and would simply have more to work with. Not launch-blocking.
+
+**Crop control:** `imageWithAlt` enables `hotspot: true`, so if the default centre crop cuts badly,
+drag the hotspot in the Studio — the rendered crop follows it, no deploy required.
 
 **Explicitly banned across the whole site:** stock photography of children, classrooms, laptops,
 handshakes, or "diverse team" imagery. Stock children would actively damage the page's argument. If
