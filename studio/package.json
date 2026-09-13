@@ -23,7 +23,7 @@
   "dependencies": {
     "@sanity/client": "8.5.0",
     "@sanity/vision": "6.12.0",
-    "react": "19.2.8",
+    "react": "19.3.0",
     "react-dom": "19.2.8",
     "sanity": "6.12.0",
     "styled-components": "6.5.3"
@@ -31,7 +31,7 @@
   "devDependencies": {
     "@sanity/eslint-config-studio": "7.0.0",
     "@types/node": "26.4.1",
-    "@types/react": "19.2.18",
+    "@types/react": "19.3.0",
     "eslint": "9.39.5",
     "prettier": "3.9.6",
     "tsx": "4.23.13",
