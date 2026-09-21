@@ -514,6 +514,17 @@ chosen target markets") is unresolved — Malaysia's PDPA does not impose a GDPR
 rule for analytics cookies, but this has not been checked against the actual tags in the container,
 which cannot be inspected from outside. **Open item**, carried, not silently closed.
 
+**Consent — accepted for now, advice still to be obtained (2026-09-22).** Charlie, on the owner's
+behalf, chose to keep the site as it is. The Google tag and the advertising-feature requests measured
+in the entries below (for a new visitor, a ping to `stats.g.doubleclick.net` and an image request to
+`www.google.com.my/ads/ga-audiences`) run with no consent step in the loader and no privacy notice
+found (checked 2026-09-22: none in the source or on the home page; `/privacy/`, `/privacy-policy/` and
+`/cookies/` return 404). The other option considered was to add a privacy notice and a consent step now.
+This records an accepted exposure. It is not a finding that there is none: no advice from a qualified
+person is recorded yet, the PDPA remark above is a note and not legal advice, and some pages are written
+for Form 1–3 students, so visitors may include minors. **Revisit when the advice arrives:** if it says a
+notice or consent step is needed, build it. Until then this item stays **open**.
+
 **Tests:** `web/tests/e2e/analytics-host-gate.spec.ts` — the tag ships with its configuration but
 fires no Google request off-host and leaves `dataLayer` undefined; the verification meta is present
 on home, blog archive and category pages; no executable inline script exists.
