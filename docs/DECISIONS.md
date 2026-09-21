@@ -518,6 +518,36 @@ which cannot be inspected from outside. **Open item**, carried, not silently clo
 fires no Google request off-host and leaves `dataLayer` undefined; the verification meta is present
 on home, blog archive and category pages; no executable inline script exists.
 
+**CSP widened for Google measurement hosts — 2026-09-21 (PR #83).** Google's tag diagnostic reported
+the CSP blocking measurement resources. One load of `https://mathematicsmalaysia.com/` from Malaysia
+under the old policy showed the browser refusing the Google requests below (and one Cloudflare
+script, see the open items). Each host is now allowed in `web/public/_headers`:
+
+| Directive | Host added | What it is |
+| --- | --- | --- |
+| `connect-src` | `https://analytics.google.com` | GA4 `/g/collect`. The existing `https://*.analytics.google.com` does **not** match the bare host — a leading `*.` covers subdomains only. |
+| `connect-src` | `https://www.google.com` | GA4 `/g/collect`. Listed in both variants of Google's CSP guide. |
+| `connect-src` | `https://stats.g.doubleclick.net` | GA4 `/g/collect`. A summary of Google's CSP guide lists `*.g.doubleclick.net` only in its advertising-features variant. |
+| `img-src` | `https://www.google.com.my` | The `ga-audiences` image request — the country domain seen from Malaysia. |
+| `img-src` | `https://www.google.com` | Named in Google's diagnostic and guide. Not seen refused from Malaysia. |
+
+Google's diagnostic showed `https://www.google.*`. That is shorthand, not valid CSP: a wildcard is
+allowed only at the start of the host, so each country domain must be listed by name. A visitor in
+another country is sent to their own Google domain, and that image request stays blocked until its
+host is added. Add hosts only when a live console shows them refused — do not guess a list.
+
+**Two open items from the same load, not actioned:**
+
+- **Advertising features and consent.** Allowing `stats.g.doubleclick.net` and the `ga-audiences`
+  image lets Google's advertising-feature requests through. That the tag sends them suggests Google
+  signals or ad features are on for the GA4 property — an inference, since the property's settings
+  cannot be seen from outside. It adds to the consent **Open item** above. Owner decision: keep
+  them, or turn Google signals off in GA4 and drop these hosts.
+- **Cloudflare Web Analytics beacon.** The same live load showed `script-src` refusing
+  `https://static.cloudflareinsights.com/beacon.min.js`, a script Cloudflare injects. This predates
+  the change above. It was not allowed because that would widen `script-src`, which this section
+  keeps minimal. Owner decision: allow it, or turn off Cloudflare's automatic beacon.
+
 ### 13b. Cutover runbook — the order inside the window matters
 
 `web/astro.config.mjs` hardcodes `site: "https://mathematicsmalaysia.com"`, and `BaseLayout.astro`
