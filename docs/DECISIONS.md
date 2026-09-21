@@ -536,17 +536,34 @@ allowed only at the start of the host, so each country domain must be listed by 
 another country is sent to their own Google domain, and that image request stays blocked until its
 host is added. Add hosts only when a live console shows them refused — do not guess a list.
 
-**Two open items from the same load, not actioned:**
+**What the evidence shows and does not show (added 2026-09-21, after the deploy).** Neither live
+check above used real Google replies: the first blocked Google's hit endpoints, and the second
+answered them with empty fake replies. On their own they do not prove the host list complete or
+minimal. What was measured after the deploy: the live header matched `web/public/_headers`; `www`
+answered 301 to the apex; and `/`, `/blog/` and `/blog/level/form-1-3/` loaded under the new policy
+with no Google host refused — only the Cloudflare beacon, once per page. Then the person with GA4
+access made a real visit and reported two things: GA4 Realtime showed the visit, and the browser
+Console showed only the Cloudflare beacon refusal. That is the only evidence from real Google
+traffic, and it cannot be checked from outside. No needed host was missing on that visit. Nothing
+shows that every listed host is needed, so the list is still not proven minimal.
 
-- **Advertising features and consent.** Allowing `stats.g.doubleclick.net` and the `ga-audiences`
-  image lets Google's advertising-feature requests through. That the tag sends them suggests Google
-  signals or ad features are on for the GA4 property — an inference, since the property's settings
-  cannot be seen from outside. It adds to the consent **Open item** above. Owner decision: keep
-  them, or turn Google signals off in GA4 and drop these hosts.
-- **Cloudflare Web Analytics beacon.** The same live load showed `script-src` refusing
-  `https://static.cloudflareinsights.com/beacon.min.js`, a script Cloudflare injects. This predates
-  the change above. It was not allowed because that would widen `script-src`, which this section
-  keeps minimal. Owner decision: allow it, or turn off Cloudflare's automatic beacon.
+**Two open items, not actioned:**
+
+- **Advertising features and consent.** `stats.g.doubleclick.net` and the `ga-audiences` image are
+  advertising-feature hosts. Before the fix they were requested right after the refused
+  `analytics.google.com` call. After the fix the tag called only `analytics.google.com` and did not
+  request them. So those requests may have been a fallback after the first call was refused, not a
+  sign that Google signals is on. This is not proven either way: the property's settings cannot be
+  seen from outside, and neither check used real Google replies. The hosts stay allowed for now, at
+  the cost of a policy a little wider than may be needed. Decide again once a real visit's Network
+  tab shows which hosts are used (the Console lists only refusals, so it cannot show which allowed
+  hosts were called). It still adds to the consent **Open item** above. Owner decision, not urgent: keep
+  them (the current state), or turn Google signals off in GA4 and drop these hosts.
+- **Cloudflare Web Analytics beacon.** Every live load checked, before and after the deploy, showed
+  `script-src` refusing `https://static.cloudflareinsights.com/beacon.min.js`, a script Cloudflare
+  injects. This predates the change above. It was not allowed because that would widen `script-src`,
+  which this section keeps minimal. Owner decision: allow it, or turn off Cloudflare's automatic
+  beacon.
 
 ### 13b. Cutover runbook — the order inside the window matters
 
