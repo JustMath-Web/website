@@ -557,21 +557,21 @@ only the `analytics.google.com` call. No CSP refusal occurred. So the `stats.g.d
 call. `www.google.com` was seen only in that fallback (2026-09-21, old policy) and never in normal
 flow, so it is the listed host least shown to be needed. It stays because Google's CSP guide lists it.
 
-**Two owner decisions, both made:**
+**Two owner decisions, both made by Charlie on the owner's behalf:**
 
-- **Advertising features and consent — keep (owner, 2026-09-22).** `stats.g.doubleclick.net` and the
+- **Advertising features and consent — keep (2026-09-22).** `stats.g.doubleclick.net` and the
   `ga-audiences` image are advertising-feature hosts: Google's CSP guide lists them only in its
   advertising-features variant. The correction above shows the tag uses them for a new visitor. That
   this means Google signals or advertising features are on for the GA4 property is still an
-  inference, because the property's settings cannot be seen from outside. The owner first said keep
+  inference, because the property's settings cannot be seen from outside. Charlie first said keep
   on 2026-09-21, on the earlier reading that the hosts might be unused backups. After the correction,
-  the owner chose keep again on 2026-09-22, the option offered for a site that runs Google Ads or
+  Charlie chose keep again on 2026-09-22, the option offered for a site that runs Google Ads or
   remarketing on purpose. The hosts stay allowed. Removing them while the ad features stay on would
   bring the refusals, and Google's diagnostic warning, back. This does not close the consent **Open
   item** above, which matters more now: these requests fire for a new visitor with no consent step.
-- **Cloudflare Web Analytics beacon — turned off (owner, 2026-09-22).** Every live load checked on
+- **Cloudflare Web Analytics beacon — turned off (2026-09-22).** Every live load checked on
   2026-09-21 showed `script-src` refusing `https://static.cloudflareinsights.com/beacon.min.js`, a
-  script Cloudflare injects at the edge; it is not in the repo. The owner switched Web Analytics off in
+  script Cloudflare injects at the edge; it is not in the repo. Charlie switched Web Analytics off in
   the Cloudflare dashboard (Web Analytics → Manage site → Disable). Measured before: the live HTML,
   fetched with a browser-like request, carried one `beacon.min.js` tag and one `data-cf-beacon` mark.
   After: neither, within about a minute, on the plain and on a cache-busted URL; and `/` and `/blog/`
