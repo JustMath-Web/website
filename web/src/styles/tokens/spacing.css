@@ -8,4 +8,5 @@
   --doc-max:720px;           /* progress report column */
   --control-h:44px;          /* minimum tap target */
   --control-h-sm:36px; --control-h-lg:52px;
+  --mobile-cta-bar-h:77px;   /* fixed bottom WhatsApp bar: 1px border-top + 12px+12px padding + 52px (--control-h-lg) button */
 }
