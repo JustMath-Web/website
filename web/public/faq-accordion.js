@@ -28,7 +28,7 @@
 
 	function cleanup(details) {
 		details.style.height = "";
-		details.style.overflow = "";
+		details.classList.remove("is-collapsing");
 		running.delete(details);
 	}
 
@@ -45,7 +45,6 @@
 			details.open = true;
 			var fullHeight = details.scrollHeight;
 			if (duration === 0) return;
-			details.style.overflow = "hidden";
 			var openAnim = details.animate(
 				{ height: [collapsedHeight + "px", fullHeight + "px"] },
 				{ duration: duration, easing: "cubic-bezier(.2,.6,.3,1)" },
@@ -63,7 +62,10 @@
 				details.open = false;
 				return;
 			}
-			details.style.overflow = "hidden";
+			// Flips the icon back to "+" right now, in sync with the click — [open] itself stays
+			// on until the animation below finishes, so the panel remains visible/measurable
+			// throughout the collapse (see the matching CSS override next to .is-collapsing).
+			details.classList.add("is-collapsing");
 			var closeAnim = details.animate(
 				{ height: [startHeight + "px", collapsedHeight + "px"] },
 				{ duration: duration, easing: "cubic-bezier(.2,.6,.3,1)" },
