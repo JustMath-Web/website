@@ -3,6 +3,7 @@ import "../styles/global.css";
 import Analytics from "../components/Analytics.astro";
 import AnalyticsNoscript from "../components/AnalyticsNoscript.astro";
 import { GSC_VERIFICATION_TOKEN } from "../lib/analytics";
+import { toSafeJsonLdString } from "../lib/content/jsonLd";
 import type { SiteSettings } from "../lib/sanity/types";
 
 interface Props {
@@ -80,7 +81,7 @@ const organizationJsonLd = {
 		<script
 			is:inline
 			type="application/ld+json"
-			set:html={JSON.stringify(organizationJsonLd)}
+			set:html={toSafeJsonLdString(organizationJsonLd)}
 		/>
 		<Analytics />
 	</head>

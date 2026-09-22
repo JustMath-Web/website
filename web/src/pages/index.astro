@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { firstNonEmpty } from "../lib/content/contentGuards";
+import { toSafeJsonLdString } from "../lib/content/jsonLd";
 import GapChart from "../components/GapChart.astro";
 import AboutPortrait from "../components/AboutPortrait.astro";
 import SectionMarker from "../components/SectionMarker.astro";
@@ -83,7 +84,7 @@ const faqPageJsonLd = {
 	<script
 		is:inline
 		type="application/ld+json"
-		set:html={JSON.stringify(faqPageJsonLd)}
+		set:html={toSafeJsonLdString(faqPageJsonLd)}
 	/>
 	<SiteHeader
 		navigation={navigation}
