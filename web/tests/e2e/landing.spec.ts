@@ -80,6 +80,34 @@ test.describe("structured data (VS-07)", () => {
 		for (const url of json.sameAs) {
 			expect(url).toMatch(/^https:\/\//);
 		}
+
+		// logo must be a real, fetchable file, not just a URL string the schema claims exists.
+		// Google's minimum for Organization.logo is 112x112.
+		expect(json.logo["@type"]).toBe("ImageObject");
+		expect(json.logo.url).toMatch(/\/logo\.svg$/);
+		expect(json.logo.width).toBeGreaterThanOrEqual(112);
+		expect(json.logo.height).toBeGreaterThanOrEqual(112);
+
+		const logoResponse = await page.request.get("/logo.svg");
+		expect(logoResponse.status()).toBe(200);
+		const logoBody = await logoResponse.text();
+		expect(logoBody).toContain("<svg");
+		// Not just "parses" -- must render as an actual image, not a blank/broken file. A malformed
+		// XML comment (this project shipped one: a literal "--" inside a comment, invalid per the XML
+		// spec) still returns 200 and contains "<svg", so byte-count alone would have missed it.
+		const rendered = await page.evaluate(async (url) => {
+			const img = new Image();
+			const loaded = new Promise<{ w: number; h: number } | null>((resolve) => {
+				img.onload = () =>
+					resolve({ w: img.naturalWidth, h: img.naturalHeight });
+				img.onerror = () => resolve(null);
+			});
+			img.src = url;
+			return loaded;
+		}, "/logo.svg");
+		expect(rendered, "logo.svg failed to decode as an image").not.toBeNull();
+		expect(rendered!.w).toBeGreaterThan(0);
+		expect(rendered!.h).toBeGreaterThan(0);
 	});
 
 	// The FAQ section is Sanity-sourced (homePage.faqs), so this test doesn't assert fixed content —
