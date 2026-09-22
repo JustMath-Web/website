@@ -50,7 +50,7 @@ const organizationJsonLd = {
 <html lang="en-MY">
 	<head>
 		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, viewport-fit=cover" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
 		<meta name="description" content={description} />
@@ -119,6 +119,14 @@ const organizationJsonLd = {
 	@media print {
 		.skip-link {
 			display: none;
+		}
+	}
+
+	@media (max-width: 640px) {
+		body {
+			padding-block-end: calc(
+				var(--mobile-cta-bar-h) + env(safe-area-inset-bottom)
+			);
 		}
 	}
 </style>
