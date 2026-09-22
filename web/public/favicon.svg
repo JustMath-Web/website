@@ -1,22 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
-	<rect x="22" y="40.5" width="44" height="7"></rect>
-	<rect x="40.5" y="22" width="7" height="44"></rect>
-	<rect x="94" y="40.5" width="44" height="7"></rect>
-	<rect x="22" y="112.5" width="44" height="7" transform="rotate(45 44 116)"></rect>
-	<rect x="22" y="112.5" width="44" height="7" transform="rotate(-45 44 116)"></rect>
-	<rect x="94" y="112.5" width="44" height="7"></rect>
-	<circle cx="116" cy="99" r="4.5"></circle>
-	<circle cx="116" cy="133" r="4.5"></circle>
-	<style>
-		rect,
-		circle {
-			fill: #000;
-		}
-		@media (prefers-color-scheme: dark) {
-			rect,
-			circle {
-				fill: #fff;
-			}
-		}
-	</style>
+	<rect width="160" height="160" fill="#fff"></rect>
+	<rect x="22" y="40.5" width="44" height="7" fill="#000"></rect>
+	<rect x="40.5" y="22" width="7" height="44" fill="#000"></rect>
+	<rect x="94" y="40.5" width="44" height="7" fill="#000"></rect>
+	<rect x="22" y="112.5" width="44" height="7" fill="#000" transform="rotate(45 44 116)"></rect>
+	<rect x="22" y="112.5" width="44" height="7" fill="#000" transform="rotate(-45 44 116)"></rect>
+	<rect x="94" y="112.5" width="44" height="7" fill="#000"></rect>
+	<circle cx="116" cy="99" r="4.5" fill="#000"></circle>
+	<circle cx="116" cy="133" r="4.5" fill="#000"></circle>
 </svg>
