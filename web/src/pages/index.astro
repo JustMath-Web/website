@@ -496,6 +496,13 @@ const faqPageJsonLd = {
 			</div>
 		</section>
 
+		{
+			/* is:inline + a static /public file, not a bundled script — see public/faq-accordion.js
+			   and components/Analytics.astro for why: Astro inlines a bundled chunk this small, which
+			   the CSP's `script-src 'self'` (no 'unsafe-inline') rejects. */
+		}
+		<script is:inline defer src="/faq-accordion.js"></script>
+
 		<section
 			id="start"
 			class="section section--close graph-ground graph-ground--invert"
