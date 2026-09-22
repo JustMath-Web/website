@@ -34,9 +34,7 @@ const absoluteOgImage = new URL(ogImage, baseUrl).toString();
  * Sitewide Organization JSON-LD (guideline §14). Only fields with real, confirmed data — inventing
  * placeholder values would violate the guideline's "no silently invented business-critical content"
  * rule. `sameAs` carries the one verified social profile (owner-supplied 2026-09-22, confirmed live
- * and linking back to this same domain — see the comment on `sameAs` below). No `logo`: no square
- * brand-mark image asset exists at a public URL, only the inline SVG lockup in `LogoLockup.astro` and
- * a 1200x630 Open Graph share image, neither of which is a real logo asset.
+ * and linking back to this same domain — see the comment on `sameAs` below).
  */
 const organizationJsonLd = {
 	"@context": "https://schema.org",
@@ -44,6 +42,21 @@ const organizationJsonLd = {
 	name: siteSettings.siteName,
 	url: siteSettings.domain,
 	telephone: `+${siteSettings.whatsappNumber}`,
+	/**
+	 * `public/logo.svg` is the exact icon `<svg>` from `LogoLockup.astro` (the site's real mark),
+	 * exported standalone with its `fill` hardcoded to the real value of the `ink-900` token (since a
+	 * standalone file has no stylesheet to resolve a CSS variable against). It is the icon glyph only
+	 * — the "Just Math / MALAYSIA" wordmark next to it in the header is plain CSS-styled text, not
+	 * part of this vector. SVG is an explicitly Google-supported image format for structured data
+	 * (developers.google.com/search/docs/appearance/google-images#supported-image-formats), and
+	 * 512x512 clears the documented 112x112 minimum.
+	 */
+	logo: {
+		"@type": "ImageObject",
+		url: new URL("/logo.svg", siteSettings.domain).toString(),
+		width: 512,
+		height: 512,
+	},
 	/**
 	 * Verified live 2026-09-22 (not merely owner-supplied): the page's own "About" info lists
 	 * `mathematicsmalaysia.com` and `kongsf@yahoo.com`, confirming it's this same business's profile.
