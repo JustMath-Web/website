@@ -489,14 +489,19 @@ const faqPageJsonLd = {
 							))
 						}
 					</ul>
-					<WhatsAppCta
-						href={heroCta.href}
-						label={heroCta.label}
-						align="center"
-					/>
 				</div>
 			</div>
+			<div class="faq-cta container">
+				<WhatsAppCta href={heroCta.href} label={heroCta.label} align="center" />
+			</div>
 		</section>
+
+		{
+			/* is:inline + a static /public file, not a bundled script — see public/faq-accordion.js
+			   and components/Analytics.astro for why: Astro inlines a bundled chunk this small, which
+			   the CSP's `script-src 'self'` (no 'unsafe-inline') rejects. */
+		}
+		<script is:inline defer src="/faq-accordion.js"></script>
 
 		<section
 			id="start"
@@ -642,6 +647,10 @@ const faqPageJsonLd = {
 
 	.hero-copy :global(.cta-wrap) {
 		margin-top: clamp(30px, 3.6vw, 44px);
+	}
+
+	.faq-cta {
+		margin-top: clamp(var(--space-6), 6vw, var(--space-9));
 	}
 
 	.spine-panel {
@@ -1318,6 +1327,15 @@ const faqPageJsonLd = {
 		border-bottom: 1px solid var(--rule);
 	}
 
+	/* Permanent, not JS-toggled: keeping this always on means the height faq-accordion.js measures
+	   (details.scrollHeight) is always measured in the same margin-collapsing context it then
+	   animates and settles in. Measuring it without this and only adding it for the animation
+	   caused a jitter at the end of "open" — the panel's <p> bottom margin gets contained by this
+	   (stops collapsing through), so a measurement taken before this was applied came up short. */
+	.faq-list details {
+		overflow: hidden;
+	}
+
 	.faq-list summary {
 		display: flex;
 		align-items: flex-start;
@@ -1379,6 +1397,18 @@ const faqPageJsonLd = {
 
 	.faq-list details[open] i::after {
 		transform: translate(-50%, -50%) rotate(270deg);
+	}
+
+	/* faq-accordion.js keeps [open] set until the slide-close animation finishes, so the panel
+	   stays visible/measurable throughout — but that delays this icon's [open]-keyed rotation
+	   until the same late moment. .is-collapsing forces it back to closed immediately on click,
+	   decoupled from when [open] actually comes off. One extra class = more specific, so it wins. */
+	.faq-list details[open].is-collapsing i::before {
+		transform: translate(-50%, -50%);
+	}
+
+	.faq-list details[open].is-collapsing i::after {
+		transform: translate(-50%, -50%);
 	}
 
 	.faq-list__panel p {
