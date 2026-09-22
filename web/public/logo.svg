@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Just Math Malaysia icon mark, standalone. The exact svg body from
+  src/components/LogoLockup.astro (the site's single source of truth for the mark), with its fill
+  hardcoded to the real value of the ink900 design token (see design/tokens/colors.css) since a
+  standalone file has no page stylesheet to resolve a CSS variable against. Icon only, the
+  Just Math / MALAYSIA wordmark next to it in the header is plain CSS styled text, not part of
+  this vector, so it is not included here.
+-->
+<svg
+	xmlns="http://www.w3.org/2000/svg"
+	viewBox="0 0 160 160"
+	width="512"
+	height="512"
+	fill="#14161a"
+	role="img"
+>
+	<title>Just Math Malaysia icon mark</title>
+	<rect x="22" y="40.5" width="44" height="7"></rect>
+	<rect x="40.5" y="22" width="7" height="44"></rect>
+	<rect x="94" y="40.5" width="44" height="7"></rect>
+	<rect x="22" y="112.5" width="44" height="7" transform="rotate(45 44 116)"></rect>
+	<rect x="22" y="112.5" width="44" height="7" transform="rotate(-45 44 116)"></rect>
+	<rect x="94" y="112.5" width="44" height="7"></rect>
+	<circle cx="116" cy="99" r="4.5"></circle>
+	<circle cx="116" cy="133" r="4.5"></circle>
+</svg>

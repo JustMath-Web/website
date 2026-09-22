@@ -39,23 +39,104 @@ for (const viewport of VIEWPORTS) {
 	});
 }
 
+/**
+ * The home page carries two independent `application/ld+json` scripts (sitewide Organization from
+ * BaseLayout, page-specific FAQPage from index.astro), so tests select by parsed `@type` rather than
+ * assuming there is only one script on the page.
+ */
+async function getJsonLdByType(
+	page: import("@playwright/test").Page,
+	type: string,
+) {
+	const rawScripts = await page
+		.locator('script[type="application/ld+json"]')
+		.allTextContents();
+	const parsed = rawScripts.map((raw) => JSON.parse(raw));
+	const match = parsed.find((json) => json["@type"] === type);
+	expect(
+		match,
+		`no JSON-LD script found with @type "${type}"`,
+	).not.toBeUndefined();
+	return match;
+}
+
 test.describe("structured data (VS-07)", () => {
 	test("sitewide Organization JSON-LD is present and valid", async ({
 		page,
 	}) => {
 		await page.goto("/");
-		const raw = await page
-			.locator('script[type="application/ld+json"]')
-			.textContent();
-		expect(raw).not.toBeNull();
+		const json = await getJsonLdByType(page, "Organization");
 
-		const json = JSON.parse(raw!);
 		expect(json["@context"]).toBe("https://schema.org");
-		expect(json["@type"]).toBe("Organization");
 		expect(typeof json.name).toBe("string");
 		expect(json.name.length).toBeGreaterThan(0);
 		expect(json.url).toMatch(/^https:\/\//);
 		expect(json.telephone).toMatch(/^\+\d+$/);
+
+		// sameAs (owner-supplied, verified live 2026-09-22) must stay a real https URL list, not
+		// silently regress into an invented placeholder.
+		expect(Array.isArray(json.sameAs)).toBe(true);
+		expect(json.sameAs.length).toBeGreaterThan(0);
+		for (const url of json.sameAs) {
+			expect(url).toMatch(/^https:\/\//);
+		}
+
+		// logo must be a real, fetchable file, not just a URL string the schema claims exists.
+		// Google's minimum for Organization.logo is 112x112.
+		expect(json.logo["@type"]).toBe("ImageObject");
+		expect(json.logo.url).toMatch(/\/logo\.svg$/);
+		expect(json.logo.width).toBeGreaterThanOrEqual(112);
+		expect(json.logo.height).toBeGreaterThanOrEqual(112);
+
+		const logoResponse = await page.request.get("/logo.svg");
+		expect(logoResponse.status()).toBe(200);
+		const logoBody = await logoResponse.text();
+		expect(logoBody).toContain("<svg");
+		// Not just "parses" -- must render as an actual image, not a blank/broken file. A malformed
+		// XML comment (this project shipped one: a literal "--" inside a comment, invalid per the XML
+		// spec) still returns 200 and contains "<svg", so byte-count alone would have missed it.
+		const rendered = await page.evaluate(async (url) => {
+			const img = new Image();
+			const loaded = new Promise<{ w: number; h: number } | null>((resolve) => {
+				img.onload = () =>
+					resolve({ w: img.naturalWidth, h: img.naturalHeight });
+				img.onerror = () => resolve(null);
+			});
+			img.src = url;
+			return loaded;
+		}, "/logo.svg");
+		expect(rendered, "logo.svg failed to decode as an image").not.toBeNull();
+		expect(rendered!.w).toBeGreaterThan(0);
+		expect(rendered!.h).toBeGreaterThan(0);
+	});
+
+	// The FAQ section is Sanity-sourced (homePage.faqs), so this test doesn't assert fixed content —
+	// only that the schema mirrors whatever is actually rendered, item for item. Google's structured
+	// data rules require FAQPage markup to match visible page content exactly.
+	test("FAQPage JSON-LD mirrors the visible FAQ list exactly", async ({
+		page,
+	}) => {
+		await page.goto("/");
+		const json = await getJsonLdByType(page, "FAQPage");
+
+		expect(json["@context"]).toBe("https://schema.org");
+		expect(Array.isArray(json.mainEntity)).toBe(true);
+		expect(json.mainEntity.length).toBeGreaterThan(0);
+
+		const visibleItems = page.locator(".faq-list li");
+		await expect(visibleItems).toHaveCount(json.mainEntity.length);
+
+		for (let i = 0; i < json.mainEntity.length; i++) {
+			const entry = json.mainEntity[i];
+			expect(entry["@type"]).toBe("Question");
+			expect(entry.acceptedAnswer["@type"]).toBe("Answer");
+
+			const item = visibleItems.nth(i);
+			await expect(item.locator("summary span")).toHaveText(entry.name);
+			await expect(item.locator(".faq-list__panel p")).toHaveText(
+				entry.acceptedAnswer.text,
+			);
+		}
 	});
 });
 
@@ -293,5 +374,71 @@ test.describe("about portrait (design/ASSETS.md §2)", () => {
 			.locator("#about-title")
 			.evaluate((el) => el.getBoundingClientRect().top);
 		expect(bylineY).toBeLessThan(headingY);
+	});
+});
+
+test.describe("mobile CTA bar (640px)", () => {
+	test.use({ viewport: { width: 390, height: 844 } });
+
+	test("shows the fixed WhatsApp bar and hides the header's own CTA", async ({
+		page,
+	}) => {
+		await page.goto("/");
+		const bar = page.locator(".mobile-cta-bar");
+		await expect(bar).toBeVisible();
+		const position = await bar.evaluate((el) => getComputedStyle(el).position);
+		expect(position).toBe("fixed");
+		await expect(page.locator(".site-header__cta")).toBeHidden();
+	});
+
+	// Regression test for the bug Bob's review found: --mobile-cta-bar-h drifted 1px short
+	// of the bar's real rendered height, so the fixed bar clipped the bottom of the page.
+	// Comparing the two directly (instead of asserting a hardcoded pixel number) means this
+	// keeps catching the same class of drift if the button size or padding change later.
+	test("body reserves at least as much bottom space as the bar is tall", async ({
+		page,
+	}) => {
+		await page.goto("/");
+		const barHeight = await page
+			.locator(".mobile-cta-bar")
+			.evaluate((el) => el.getBoundingClientRect().height);
+		const bodyPaddingBottom = await page.evaluate(() =>
+			parseFloat(getComputedStyle(document.body).paddingBottom),
+		);
+		expect(bodyPaddingBottom).toBeGreaterThanOrEqual(barHeight);
+	});
+});
+
+test.describe("pricing table cards (640px)", () => {
+	test.use({ viewport: { width: 390, height: 844 } });
+
+	test("stacks pricing rows as cards and keeps column headers in the accessibility tree", async ({
+		page,
+	}) => {
+		await page.goto("/");
+		const table = page.locator("#pricing table");
+		await expect(table).toHaveCSS("display", "block");
+
+		const firstRow = table.locator("tbody tr").first();
+		await expect(firstRow).toHaveCSS("display", "block");
+
+		// thead is visually clipped (clip-path), not display:none, so its columnheader
+		// roles must still reach screen readers even though sighted mobile users can't see it.
+		const headers = page.locator("#pricing").getByRole("columnheader");
+		await expect(headers).toHaveCount(4);
+	});
+
+	test("each data cell shows its column label for sighted mobile users", async ({
+		page,
+	}) => {
+		await page.goto("/");
+		const firstCell = page
+			.locator("#pricing tbody tr")
+			.first()
+			.locator('td[data-label="Per month"]');
+		const label = await firstCell.evaluate(
+			(el) => getComputedStyle(el, "::before").content,
+		);
+		expect(label).toBe('"Per month"');
 	});
 });

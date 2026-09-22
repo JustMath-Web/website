@@ -514,9 +514,80 @@ chosen target markets") is unresolved — Malaysia's PDPA does not impose a GDPR
 rule for analytics cookies, but this has not been checked against the actual tags in the container,
 which cannot be inspected from outside. **Open item**, carried, not silently closed.
 
+**Consent — accepted for now, advice still to be obtained (2026-09-22).** Charlie, on the owner's
+behalf, chose to keep the site as it is. The Google tag and the advertising-feature requests measured
+in the entries below (for a new visitor, a ping to `stats.g.doubleclick.net` and an image request to
+`www.google.com.my/ads/ga-audiences`) run with no consent step in the loader and no privacy notice
+found (checked 2026-09-22: none in the source or on the home page; `/privacy/`, `/privacy-policy/` and
+`/cookies/` return 404). The other option considered was to add a privacy notice and a consent step now.
+This records an accepted exposure. It is not a finding that there is none: no advice from a qualified
+person is recorded yet, the PDPA remark above is a note and not legal advice, and some pages are written
+for Form 1–3 students, so visitors may include minors. **Revisit when the advice arrives:** if it says a
+notice or consent step is needed, build it. Until then this item stays **open**.
+
 **Tests:** `web/tests/e2e/analytics-host-gate.spec.ts` — the tag ships with its configuration but
 fires no Google request off-host and leaves `dataLayer` undefined; the verification meta is present
 on home, blog archive and category pages; no executable inline script exists.
+
+**CSP widened for Google measurement hosts — 2026-09-21 (PR #83).** Google's tag diagnostic reported
+the CSP blocking measurement resources. One load of `https://mathematicsmalaysia.com/` from Malaysia
+under the old policy showed the browser refusing the Google requests below (and one Cloudflare
+script, see the open items). Each host is now allowed in `web/public/_headers`:
+
+| Directive | Host added | What it is |
+| --- | --- | --- |
+| `connect-src` | `https://analytics.google.com` | GA4 `/g/collect`. The existing `https://*.analytics.google.com` does **not** match the bare host — a leading `*.` covers subdomains only. |
+| `connect-src` | `https://www.google.com` | GA4 `/g/collect`. Listed in both variants of Google's CSP guide. |
+| `connect-src` | `https://stats.g.doubleclick.net` | GA4 `/g/collect`. A summary of Google's CSP guide lists `*.g.doubleclick.net` only in its advertising-features variant. |
+| `img-src` | `https://www.google.com.my` | The `ga-audiences` image request — the country domain seen from Malaysia. |
+| `img-src` | `https://www.google.com` | Named in Google's diagnostic and guide. Not seen refused from Malaysia. |
+
+Google's diagnostic showed `https://www.google.*`. That is shorthand, not valid CSP: a wildcard is
+allowed only at the start of the host, so each country domain must be listed by name. A visitor in
+another country is sent to their own Google domain, and that image request stays blocked until its
+host is added. Add hosts only when a live console shows them refused — do not guess a list.
+
+**What the evidence shows and does not show (added 2026-09-21, after the deploy).** Neither live
+check above used real Google replies: the first blocked Google's hit endpoints, and the second
+answered them with empty fake replies. On their own they do not prove the host list complete or
+minimal. What was measured after the deploy: the live header matched `web/public/_headers`; `www`
+answered 301 to the apex; and `/`, `/blog/` and `/blog/level/form-1-3/` loaded under the new policy
+with no Google host refused — only the Cloudflare beacon, once per page. Then the person with GA4
+access made a real visit and reported two things: GA4 Realtime showed the visit, and the browser
+Console showed only the Cloudflare beacon refusal. That is the only evidence from real Google
+traffic, and it cannot be checked from outside. No needed host was missing on that visit. Nothing
+shows that every listed host is needed, so the list is still not proven minimal.
+
+**Correction, 2026-09-22.** The two live checks above ran in a browser profile that kept its cookies
+between runs, so they behaved like a returning visitor. A first visit with cookies cleared (Google's
+replies faked, so nothing reached GA4) made three kinds of Google call: `POST
+https://analytics.google.com/g/collect`, `POST https://stats.g.doubleclick.net/g/collect` (a ping),
+and `GET https://www.google.com.my/ads/ga-audiences` (an image). Later pages in the same session made
+only the `analytics.google.com` call. No CSP refusal occurred. So the `stats.g.doubleclick.net` and
+`www.google.com.my` requests are normal first-visit traffic, not only a fallback after a refused first
+call. `www.google.com` was seen only in that fallback (2026-09-21, old policy) and never in normal
+flow, so it is the listed host least shown to be needed. It stays because Google's CSP guide lists it.
+
+**Two owner decisions, both made by Charlie on the owner's behalf:**
+
+- **Advertising features and consent — keep (2026-09-22).** `stats.g.doubleclick.net` and the
+  `ga-audiences` image are advertising-feature hosts: Google's CSP guide lists them only in its
+  advertising-features variant. The correction above shows the tag uses them for a new visitor. That
+  this means Google signals or advertising features are on for the GA4 property is still an
+  inference, because the property's settings cannot be seen from outside. Charlie first said keep
+  on 2026-09-21, on the earlier reading that the hosts might be unused backups. After the correction,
+  Charlie chose keep again on 2026-09-22, the option offered for a site that runs Google Ads or
+  remarketing on purpose. The hosts stay allowed. Removing them while the ad features stay on would
+  bring the refusals, and Google's diagnostic warning, back. This does not close the consent **Open
+  item** above, which matters more now: these requests fire for a new visitor with no consent step.
+- **Cloudflare Web Analytics beacon — turned off (2026-09-22).** Every live load checked on
+  2026-09-21 showed `script-src` refusing `https://static.cloudflareinsights.com/beacon.min.js`, a
+  script Cloudflare injects at the edge; it is not in the repo. Charlie switched Web Analytics off in
+  the Cloudflare dashboard (Web Analytics → Manage site → Disable). Measured before: the live HTML,
+  fetched with a browser-like request, carried one `beacon.min.js` tag and one `data-cf-beacon` mark.
+  After: neither, within about a minute, on the plain and on a cache-busted URL; and `/` and `/blog/`
+  loaded with zero CSP refusals. The CSP was not changed for it. If Web Analytics is ever switched back
+  on, the refusal returns unless `script-src` is widened on purpose.
 
 ### 13b. Cutover runbook — the order inside the window matters
 

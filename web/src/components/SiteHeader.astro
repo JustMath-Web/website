@@ -34,9 +34,23 @@ const { navigation, siteSettings, ctaHref } = Astro.props;
 				}
 			</ul>
 		</nav>
-		<WhatsAppCta href={ctaHref} label={siteSettings.headerCtaLabel} size="md" />
+		<div class="site-header__cta">
+			<WhatsAppCta
+				href={ctaHref}
+				label={siteSettings.headerCtaLabel}
+				size="md"
+			/>
+		</div>
 	</div>
 </header>
+<div class="mobile-cta-bar">
+	<WhatsAppCta
+		href={ctaHref}
+		label={siteSettings.headerCtaLabel}
+		size="lg"
+		full
+	/>
+</div>
 
 <style>
 	.site-header {
@@ -107,6 +121,32 @@ const { navigation, siteSettings, ctaHref } = Astro.props;
 	@media (max-width: 560px) {
 		.site-header__inner {
 			gap: var(--space-3);
+		}
+	}
+
+	.mobile-cta-bar {
+		display: none;
+	}
+
+	@media (max-width: 640px) {
+		.site-header__cta {
+			display: none;
+		}
+
+		.mobile-cta-bar {
+			display: block;
+			position: fixed;
+			inset-inline: 0;
+			inset-block-end: 0;
+			z-index: 20;
+			border-top: 1px solid var(--rule);
+			background: var(--paper);
+			padding: var(--space-3) var(--space-4);
+			padding-block-end: calc(var(--space-3) + env(safe-area-inset-bottom));
+		}
+
+		.mobile-cta-bar :global(.cta-wrap) {
+			max-width: none;
 		}
 	}
 </style>
