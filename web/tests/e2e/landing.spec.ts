@@ -72,6 +72,14 @@ test.describe("structured data (VS-07)", () => {
 		expect(json.name.length).toBeGreaterThan(0);
 		expect(json.url).toMatch(/^https:\/\//);
 		expect(json.telephone).toMatch(/^\+\d+$/);
+
+		// sameAs (owner-supplied, verified live 2026-09-22) must stay a real https URL list, not
+		// silently regress into an invented placeholder.
+		expect(Array.isArray(json.sameAs)).toBe(true);
+		expect(json.sameAs.length).toBeGreaterThan(0);
+		for (const url of json.sameAs) {
+			expect(url).toMatch(/^https:\/\//);
+		}
 	});
 
 	// The FAQ section is Sanity-sourced (homePage.faqs), so this test doesn't assert fixed content —
