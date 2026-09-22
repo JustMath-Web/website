@@ -52,6 +52,24 @@ function categoryHref(level: LevelBlock) {
 		? `/blog/level/${category.slug.current}/`
 		: undefined;
 }
+
+/**
+ * Built from `homePage.faqs`, the same array the FAQ section below renders — so this can never drift
+ * from what a visitor actually sees, matching Google's requirement that FAQPage markup mirror visible
+ * page content. No separate copy of the questions/answers is kept anywhere.
+ */
+const faqPageJsonLd = {
+	"@context": "https://schema.org",
+	"@type": "FAQPage",
+	mainEntity: homePage.faqs.map((item) => ({
+		"@type": "Question",
+		name: item.question,
+		acceptedAnswer: {
+			"@type": "Answer",
+			text: item.answer,
+		},
+	})),
+};
 ---
 
 <BaseLayout
@@ -62,6 +80,11 @@ function categoryHref(level: LevelBlock) {
 	noindex={homePage.seo?.noindex ?? false}
 	ogImageAlt={homePage.seo?.ogImageAlt}
 >
+	<script
+		is:inline
+		type="application/ld+json"
+		set:html={JSON.stringify(faqPageJsonLd)}
+	/>
 	<SiteHeader
 		navigation={navigation}
 		siteSettings={siteSettings}

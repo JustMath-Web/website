@@ -39,23 +39,68 @@ for (const viewport of VIEWPORTS) {
 	});
 }
 
+/**
+ * The home page carries two independent `application/ld+json` scripts (sitewide Organization from
+ * BaseLayout, page-specific FAQPage from index.astro), so tests select by parsed `@type` rather than
+ * assuming there is only one script on the page.
+ */
+async function getJsonLdByType(
+	page: import("@playwright/test").Page,
+	type: string,
+) {
+	const rawScripts = await page
+		.locator('script[type="application/ld+json"]')
+		.allTextContents();
+	const parsed = rawScripts.map((raw) => JSON.parse(raw));
+	const match = parsed.find((json) => json["@type"] === type);
+	expect(
+		match,
+		`no JSON-LD script found with @type "${type}"`,
+	).not.toBeUndefined();
+	return match;
+}
+
 test.describe("structured data (VS-07)", () => {
 	test("sitewide Organization JSON-LD is present and valid", async ({
 		page,
 	}) => {
 		await page.goto("/");
-		const raw = await page
-			.locator('script[type="application/ld+json"]')
-			.textContent();
-		expect(raw).not.toBeNull();
+		const json = await getJsonLdByType(page, "Organization");
 
-		const json = JSON.parse(raw!);
 		expect(json["@context"]).toBe("https://schema.org");
-		expect(json["@type"]).toBe("Organization");
 		expect(typeof json.name).toBe("string");
 		expect(json.name.length).toBeGreaterThan(0);
 		expect(json.url).toMatch(/^https:\/\//);
 		expect(json.telephone).toMatch(/^\+\d+$/);
+	});
+
+	// The FAQ section is Sanity-sourced (homePage.faqs), so this test doesn't assert fixed content —
+	// only that the schema mirrors whatever is actually rendered, item for item. Google's structured
+	// data rules require FAQPage markup to match visible page content exactly.
+	test("FAQPage JSON-LD mirrors the visible FAQ list exactly", async ({
+		page,
+	}) => {
+		await page.goto("/");
+		const json = await getJsonLdByType(page, "FAQPage");
+
+		expect(json["@context"]).toBe("https://schema.org");
+		expect(Array.isArray(json.mainEntity)).toBe(true);
+		expect(json.mainEntity.length).toBeGreaterThan(0);
+
+		const visibleItems = page.locator(".faq-list li");
+		await expect(visibleItems).toHaveCount(json.mainEntity.length);
+
+		for (let i = 0; i < json.mainEntity.length; i++) {
+			const entry = json.mainEntity[i];
+			expect(entry["@type"]).toBe("Question");
+			expect(entry.acceptedAnswer["@type"]).toBe("Answer");
+
+			const item = visibleItems.nth(i);
+			await expect(item.locator("summary span")).toHaveText(entry.name);
+			await expect(item.locator(".faq-list__panel p")).toHaveText(
+				entry.acceptedAnswer.text,
+			);
+		}
 	});
 });
 
