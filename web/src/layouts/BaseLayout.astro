@@ -32,10 +32,12 @@ const canonical =
 const absoluteOgImage = new URL(ogImage, baseUrl).toString();
 
 /**
- * Sitewide Organization JSON-LD (guideline §14). Only fields with real, confirmed data —
- * no `logo`/`sameAs`: no image asset or social profile URLs exist in siteSettings to source them
- * from, and inventing placeholder values would violate the guideline's "no silently invented
- * business-critical content" rule.
+ * Sitewide Organization JSON-LD (guideline §14). Only fields with real, confirmed data — inventing
+ * placeholder values would violate the guideline's "no silently invented business-critical content"
+ * rule. `sameAs` carries the one verified social profile (owner-supplied 2026-09-22, confirmed live
+ * and linking back to this same domain — see the comment on `sameAs` below). No `logo`: no square
+ * brand-mark image asset exists at a public URL, only the inline SVG lockup in `LogoLockup.astro` and
+ * a 1200x630 Open Graph share image, neither of which is a real logo asset.
  */
 const organizationJsonLd = {
 	"@context": "https://schema.org",
@@ -43,6 +45,15 @@ const organizationJsonLd = {
 	name: siteSettings.siteName,
 	url: siteSettings.domain,
 	telephone: `+${siteSettings.whatsappNumber}`,
+	/**
+	 * Verified live 2026-09-22 (not merely owner-supplied): the page's own "About" info lists
+	 * `mathematicsmalaysia.com` and `kongsf@yahoo.com`, confirming it's this same business's profile.
+	 * Its "Intro" and phone number are stale (pre-rebrand pricing, and the `010-658 0242` number
+	 * retired per docs/DECISIONS.md §11a) — worth the owner updating on Facebook itself, but doesn't
+	 * affect the correctness of this link: `sameAs` asserts identity, not that the linked page's own
+	 * content is current.
+	 */
+	sameAs: ["https://www.facebook.com/JustMathMalaysia"],
 };
 ---
 
