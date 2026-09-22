@@ -348,3 +348,69 @@ test.describe("about portrait (design/ASSETS.md §2)", () => {
 		expect(bylineY).toBeLessThan(headingY);
 	});
 });
+
+test.describe("mobile CTA bar (640px)", () => {
+	test.use({ viewport: { width: 390, height: 844 } });
+
+	test("shows the fixed WhatsApp bar and hides the header's own CTA", async ({
+		page,
+	}) => {
+		await page.goto("/");
+		const bar = page.locator(".mobile-cta-bar");
+		await expect(bar).toBeVisible();
+		const position = await bar.evaluate((el) => getComputedStyle(el).position);
+		expect(position).toBe("fixed");
+		await expect(page.locator(".site-header__cta")).toBeHidden();
+	});
+
+	// Regression test for the bug Bob's review found: --mobile-cta-bar-h drifted 1px short
+	// of the bar's real rendered height, so the fixed bar clipped the bottom of the page.
+	// Comparing the two directly (instead of asserting a hardcoded pixel number) means this
+	// keeps catching the same class of drift if the button size or padding change later.
+	test("body reserves at least as much bottom space as the bar is tall", async ({
+		page,
+	}) => {
+		await page.goto("/");
+		const barHeight = await page
+			.locator(".mobile-cta-bar")
+			.evaluate((el) => el.getBoundingClientRect().height);
+		const bodyPaddingBottom = await page.evaluate(() =>
+			parseFloat(getComputedStyle(document.body).paddingBottom),
+		);
+		expect(bodyPaddingBottom).toBeGreaterThanOrEqual(barHeight);
+	});
+});
+
+test.describe("pricing table cards (640px)", () => {
+	test.use({ viewport: { width: 390, height: 844 } });
+
+	test("stacks pricing rows as cards and keeps column headers in the accessibility tree", async ({
+		page,
+	}) => {
+		await page.goto("/");
+		const table = page.locator("#pricing table");
+		await expect(table).toHaveCSS("display", "block");
+
+		const firstRow = table.locator("tbody tr").first();
+		await expect(firstRow).toHaveCSS("display", "block");
+
+		// thead is visually clipped (clip-path), not display:none, so its columnheader
+		// roles must still reach screen readers even though sighted mobile users can't see it.
+		const headers = page.locator("#pricing").getByRole("columnheader");
+		await expect(headers).toHaveCount(4);
+	});
+
+	test("each data cell shows its column label for sighted mobile users", async ({
+		page,
+	}) => {
+		await page.goto("/");
+		const firstCell = page
+			.locator("#pricing tbody tr")
+			.first()
+			.locator('td[data-label="Per month"]');
+		const label = await firstCell.evaluate(
+			(el) => getComputedStyle(el, "::before").content,
+		);
+		expect(label).toBe('"Per month"');
+	});
+});

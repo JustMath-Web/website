@@ -3,6 +3,7 @@ import "../styles/global.css";
 import Analytics from "../components/Analytics.astro";
 import AnalyticsNoscript from "../components/AnalyticsNoscript.astro";
 import { GSC_VERIFICATION_TOKEN } from "../lib/analytics";
+import { toSafeJsonLdString } from "../lib/content/jsonLd";
 import type { SiteSettings } from "../lib/sanity/types";
 
 interface Props {
@@ -60,7 +61,7 @@ const organizationJsonLd = {
 <html lang="en-MY">
 	<head>
 		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, viewport-fit=cover" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
 		<meta name="description" content={description} />
@@ -91,7 +92,7 @@ const organizationJsonLd = {
 		<script
 			is:inline
 			type="application/ld+json"
-			set:html={JSON.stringify(organizationJsonLd)}
+			set:html={toSafeJsonLdString(organizationJsonLd)}
 		/>
 		<Analytics />
 	</head>
@@ -129,6 +130,14 @@ const organizationJsonLd = {
 	@media print {
 		.skip-link {
 			display: none;
+		}
+	}
+
+	@media (max-width: 640px) {
+		body {
+			padding-block-end: calc(
+				var(--mobile-cta-bar-h) + env(safe-area-inset-bottom)
+			);
 		}
 	}
 </style>

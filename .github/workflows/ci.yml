@@ -62,6 +62,12 @@ jobs:
       # and CSP drift — specifically 'unsafe-inline' in script-src, which was refused when GTM was
       # added (§12a), and cdn.sanity.io in img-src, without which every image silently fails to load.
       - run: pnpm test:headers-guard
+      # Guardrail for lib/content/jsonLd.ts's toSafeJsonLdString, used by all three
+      # application/ld+json blocks. Plain JSON.stringify never escapes `<`, so a Sanity-authored
+      # field containing the literal text `</script>` would close the script tag early (Bob review,
+      # PR #86). Asserts the escape neutralises it, survives a JSON.parse round trip unchanged, and
+      # leaves ordinary content byte-identical to plain JSON.stringify.
+      - run: pnpm test:json-ld-escaping
 
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e

@@ -12,6 +12,7 @@ import {
 	getBlogPostSlugs,
 } from "../../lib/content/blogData";
 import { firstNonEmpty } from "../../lib/content/contentGuards";
+import { toSafeJsonLdString } from "../../lib/content/jsonLd";
 import { getLandingPageData } from "../../lib/content/landingData";
 import { resolveValidPosts } from "../../lib/content/resolveValidPosts";
 import { buildWhatsAppUrl } from "../../lib/content/whatsappUrl";
@@ -99,7 +100,7 @@ const blogPostingJsonLd = {
 	<script
 		is:inline
 		type="application/ld+json"
-		set:html={JSON.stringify(blogPostingJsonLd)}
+		set:html={toSafeJsonLdString(blogPostingJsonLd)}
 	/>
 	<SiteHeader
 		navigation={navigation}
