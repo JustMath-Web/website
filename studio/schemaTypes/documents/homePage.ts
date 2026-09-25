@@ -24,6 +24,9 @@ export const homePage = defineType({
       readOnly: true,
     }),
 
+    // SEO first: the page's own title/description, which override Site settings' default SEO.
+    defineField({name: 'seo', title: 'SEO', type: 'seo'}),
+
     // 1. Hero
     defineField({
       name: 'hero',
@@ -370,7 +373,6 @@ export const homePage = defineType({
       ],
     }),
 
-    defineField({name: 'seo', title: 'SEO', type: 'seo'}),
   ],
   preview: {
     prepare: () => ({title: 'Home page'}),
