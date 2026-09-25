@@ -28,7 +28,7 @@ const seo = {
 	metaTitle:
 		"Personalised online maths tuition and learning | Just Math Malaysia",
 	metaDescription:
-		"Online maths tuition and learning for Standard 1 to Form 5 and IGCSE, taught in English and Bahasa Melayu.",
+		"Online maths & additional maths tuition and learning for Standard 1 to Form 5 and IGCSE, taught in English and Bahasa Melayu.",
 	noindex: false,
 };
 
