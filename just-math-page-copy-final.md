@@ -271,8 +271,8 @@ Some can, many cannot, and I would rather say that plainly. For younger primary 
 **Do you follow the school syllabus and textbook?**
 Yes. Teaching follows the national KSSR and KSSM syllabus, and I also teach the IGCSE syllabus for students in international schools. We work from your child's own school textbook and exercise book so what we do in a session lines up with what they see in class the next day. Where a gap from an earlier year is causing the current problem, we go back and fix that first, then return to the current chapter.
 
-**Do you teach STPM or pre-university maths?**
-No. Teaching goes up to SPM and IGCSE. After that you want someone who specialises in it, and I would rather say so than take the booking.
+**Do you teach above SPM or IGCSE level?**
+I only teach up to SPM and IGCSE. STPM and pre-university maths are not within my teaching scope.
 
 **What actually happens in the free assessment?**
 Thirty minutes on Google Meet, your child and me. I give them problems starting slightly below their current level and work upward until we find where it breaks. I am watching their method, not just the answer, because a wrong method that happens to produce a right answer is the thing that causes trouble later. There is no test paper, no score, and nothing for your child to prepare.

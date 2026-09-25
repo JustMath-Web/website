@@ -436,9 +436,9 @@ export const defaultHomePage: HomePage = {
 		},
 		{
 			_key: "faq-stpm",
-			question: "Do you teach STPM or pre-university maths?",
+			question: "Do you teach above SPM or IGCSE level?",
 			answer:
-				"No. Teaching goes up to SPM and IGCSE. After that you want someone who specialises in it, and I would rather say so than take the booking.",
+				"I only teach up to SPM and IGCSE. STPM and pre-university maths are not within my teaching scope.",
 		},
 		{
 			_key: "faq-assessment",
