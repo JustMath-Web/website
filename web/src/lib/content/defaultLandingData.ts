@@ -25,7 +25,8 @@ const paragraphs = (...items: string[]) => items.join("\n\n");
  * unoptimised category actually looks like, so the route's derived title is what gets exercised.
  */
 const seo = {
-	metaTitle: "Personalised online maths tuition and learning | Just Math Malaysia",
+	metaTitle:
+		"Personalised online maths tuition and learning | Just Math Malaysia",
 	metaDescription:
 		"Online maths tuition and learning for Standard 1 to Form 5 and IGCSE, taught in English and Bahasa Melayu.",
 	noindex: false,
