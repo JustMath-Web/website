@@ -68,6 +68,7 @@ jobs:
       # PR #86). Asserts the escape neutralises it, survives a JSON.parse round trip unchanged, and
       # leaves ordinary content byte-identical to plain JSON.stringify.
       - run: pnpm test:json-ld-escaping
+      - run: pnpm test:post-heading-ids
 
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e

@@ -2393,3 +2393,70 @@ vulnerabilities found" in both `web` and `studio`. `path-to-regexp` left with th
 
 **CI pointer fixed.** The audit comments in `.github/workflows/ci.yml` pointed to §21
 (accessibility). They now point to §23 and this section.
+
+## 42. Blog post table of contents — 2026-09-26
+
+**What.** Blog posts get a floating table of contents for H2–H4, modelled on
+nickarce.com/component/table-of-contents (Charlie's reference; he asked for H4 as well as H2–H3).
+
+- **≥1024px:** a slim rail of short lines on the right edge (length shows the level). A dot marks
+  the current section. Hover or keyboard focus opens the full list over the rail.
+- **<1024px:** a "Contents" pill at the bottom right, with a ring that fills as you read. It opens
+  the list as a sheet. At ≤640px the pill and sheet sit above the fixed WhatsApp bar.
+- Shown only when a post has 2 or more headings.
+
+**Why 1024px, not the reference's 768px.** At 768px the 64ch text column leaves ~58px of margin, and
+the rail touched the text (measured in a screenshot). At 1024px the margin is ~186px.
+
+**Works with no JavaScript (FE-32).** Links are plain in-page anchors. The rail opens on `:hover` and
+`:focus-within`. The sheet is a native `popover` (Esc and tap-outside close it). `public/blog-toc.js`
+only adds the current-section highlight (`aria-current="location"`), the sliding markers, the
+progress ring and closing the sheet after a tap. It is a static same-origin file because the CSP has
+no `'unsafe-inline'` (same reason as `public/faq-accordion.js`). **No CSP change.**
+
+**Anchor ids.** `web/src/lib/content/postHeadings.ts` slugs each heading's text in one pass and
+returns both the ids and the TOC list, so a link can never point at an id the page did not render.
+Repeated text gets `-2`, `-3`… (`worked-example`, `worked-example-2`). Headings get
+`scroll-margin-top` so a jump lands below the 62px sticky header.
+
+**Studio.** `h4` added to the post body's block styles (`studio/schemaTypes/objects/portableTextObjects.ts`)
+and to `PortableTextBlock["style"]`. Needs a Studio deploy after merge.
+
+**Tests.** 6 new e2e tests in `web/tests/e2e/blog.spec.ts` (ids and links match, desktop jump + current
+marker, mobile sheet, pill above the WhatsApp bar, no-JS, no TOC on a post without headings). The
+fixture surds post gained H2–H4 headings for them.
+
+**Flaky no-JS test — cause found by Bob.** Without reduced motion, the test hung ~1 run in 5 inside
+the test runner (Bob: 6 of 30) on the sheet-link click, with Playwright saying "element is not stable"
+until the timeout. Bob sampled the sheet during the hang: fully open, box identical in every sample.
+So Playwright's own stability check stalls; the site has no bug. The test runs with
+`reducedMotion: "reduce"` (it checks the no-JS mechanics, not the animation) and passed 50 of 50 in
+Bob's runs. Note CI retries a failed test twice, which could hide a real flake — check the CI log for
+"flaky" if this area changes.
+
+### 42a. Bob's review of PR #100 — fixes — 2026-09-26
+
+- **P1, Escape closes the desktop panel (WCAG 1.4.13).** The open panel is 320px wide and covers the
+  text column below ~1366px (Bob measured 150px of text covered at 1024px, 22px at 1280px). Escape now
+  hides it (`is-dismissed` in `public/blog-toc.js`) until focus moves or the pointer leaves the rail.
+  **Re-review correction:** the first fix kept it hidden while focus moved between links, so Tab
+  walked through invisible links (WCAG 2.4.7 — Bob's re-review; his first advice said "until the
+  pointer or focus leaves", which 1.4.13 does not require, and Claude followed it without checking
+  the rule). Now any `focusin` inside the rail shows it again; the test asserts that. Checked with keyboard (e2e test at 1024px) and with the mouse (hover → Esc
+  hides → leave and re-hover opens). The first version un-dismissed on `focusout` after a 0ms timer;
+  the new test caught it (1 fail in 30): focus that left and came straight back stayed dismissed.
+  It now reads `event.relatedTarget` synchronously — 40 of 40 repeats pass.
+- **P2, duplicate ids.** "Example", "Example 2", "Example" gave `example`, `example-2`, `example-2`.
+  Ids now take the next free suffix against every id already given out and against `RESERVED_IDS`
+  (`main`, `post-title`, `toc-sheet`). New guard `pnpm test:post-heading-ids`, also run in CI.
+- **P2, faint rail lines.** `--rule-strong` measured 1.58:1 on paper. Now `--ink-400`: 3.72:1
+  (current line `--ochre-500`: 3.47:1), meeting 1.4.11's 3:1. Charlie had not chosen yet; Bob and
+  Claude both recommended darker, so this went in as the default. e2e test asserts ≥3:1.
+- **P3, maths in headings.** The TOC label used to drop inline maths ("Derivative of x²" →
+  "Derivative of"). Labels now keep it, rendered with the same KaTeX component as the body.
+- **P3, header height.** `62px` was copied into the post page. Now one token, `--site-header-h`
+  (`styles/tokens/spacing.css`), used by `SiteHeader.astro` and the heading `scroll-margin-top`
+  (+1px for the header's border).
+- **P3, accepted: without JS the sheet stays open after a tap.** A native popover cannot close itself
+  when a link inside it is followed; closing needs a script. It closes on tap-outside or Esc. JS
+  users (nearly everyone) get it closed on tap.

@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { assertMinTapTarget } from "./helpers";
+import { assertMinTapTarget, assertNoHorizontalOverflow } from "./helpers";
 
 // This suite runs against the fixture-mode build (playwright.config.ts's webServer sets
 // USE_BLOG_FIXTURES=true) — real content from web/src/lib/content/defaultBlogData.ts, not live
@@ -262,5 +262,179 @@ test.describe("KaTeX self-hosting and CSS scoping (VS-KaTeX)", () => {
 			const css = await (await page.request.get(href)).text();
 			expect(css).not.toContain(".katex");
 		}
+	});
+});
+
+// The fixture surds post has 6 headings over three levels (H2–H4), including "Worked example"
+// twice; the indices post has none. See components/blog/TableOfContents.astro.
+test.describe("blog post table of contents", () => {
+	const POST = "/blog/why-surds-trip-up-students/";
+	const EXPECTED_IDS = [
+		"split-the-number-into-square-factors",
+		"worked-example",
+		"where-students-go-wrong",
+		"worked-example-2",
+		"adding-under-the-root",
+		"see-it-step-by-step",
+	];
+
+	test("every H2–H4 gets a unique id, and each TOC link points at one", async ({
+		page,
+	}) => {
+		await page.goto(POST);
+		const ids = await page
+			.locator(".prose :is(h2, h3, h4)")
+			.evaluateAll((els) => els.map((el) => el.id));
+		expect(ids).toEqual(EXPECTED_IDS);
+
+		const toc = page.getByRole("navigation", { name: "Table of contents" });
+		const hrefs = await toc
+			.getByRole("link")
+			.evaluateAll((links) => links.map((a) => a.getAttribute("href")));
+		expect(hrefs).toEqual(EXPECTED_IDS.map((id) => `#${id}`));
+	});
+
+	test("desktop: a rail link lands the heading below the sticky header and marks it current", async ({
+		page,
+	}) => {
+		await page.goto(POST);
+		await expect(page.locator(".toc-pill")).toBeHidden();
+		const toc = page.getByRole("navigation", { name: "Table of contents" });
+		const link = toc.getByRole("link", { name: "See it step by step" });
+		// Keyboard focus opens the panel (:focus-within), the same path a keyboard user takes.
+		await link.focus();
+		await expect(page.locator(".toc-panel")).toHaveCSS("opacity", "1");
+		await link.press("Enter");
+		await expect(page).toHaveURL(/#see-it-step-by-step$/);
+		await expect(link).toHaveAttribute("aria-current", "location");
+		const top = await page
+			.locator("#see-it-step-by-step")
+			.evaluate((el) => el.getBoundingClientRect().top);
+		const headerHeight = await page
+			.locator(".site-header")
+			.evaluate((el) => el.getBoundingClientRect().height);
+		expect(top).toBeGreaterThanOrEqual(headerHeight);
+	});
+
+	test("desktop 1024px: Escape closes the open panel until focus moves (WCAG 1.4.13, 2.4.7)", async ({
+		page,
+	}) => {
+		// At 1024px the open panel covers ~150px of the text column, so it must be dismissible.
+		await page.setViewportSize({ width: 1024, height: 800 });
+		await page.goto(POST);
+		const panel = page.locator(".toc-panel");
+		const toc = page.getByRole("navigation", { name: "Table of contents" });
+		await toc.getByRole("link").first().focus();
+		await expect(panel).toHaveCSS("opacity", "1");
+
+		await page.keyboard.press("Escape");
+		await expect(panel).toHaveCSS("opacity", "0");
+		// Moving focus to the next link shows the panel again — a keyboard user must never tab
+		// through invisible links (WCAG 2.4.7). Bob, PR #100 re-review.
+		await page.keyboard.press("Tab");
+		await expect(toc.getByRole("link").nth(1)).toBeFocused();
+		await expect(panel).toHaveCSS("opacity", "1");
+
+		await page.keyboard.press("Escape");
+		await expect(panel).toHaveCSS("opacity", "0");
+
+		// Focus leaves the rail, then comes back: the panel opens again.
+		await page.locator("#post-title").evaluate((el) => {
+			el.setAttribute("tabindex", "-1");
+			(el as HTMLElement).focus();
+		});
+		await toc.getByRole("link").first().focus();
+		await expect(panel).toHaveCSS("opacity", "1");
+	});
+
+	test("desktop: the rail lines meet 3:1 contrast against the page (WCAG 1.4.11)", async ({
+		page,
+	}) => {
+		await page.goto(POST);
+		const ratio = await page
+			.locator(".toc-rail__line")
+			.first()
+			.evaluate((el) => {
+				const rgb = (value: string) =>
+					(value.match(/\d+(\.\d+)?/g) ?? []).slice(0, 3).map(Number);
+				const lum = ([r, g, b]: number[]) => {
+					const c = [r, g, b].map((v) => {
+						const s = v / 255;
+						return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+					});
+					return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+				};
+				const line = lum(rgb(getComputedStyle(el).backgroundColor));
+				const page = lum(rgb(getComputedStyle(document.body).backgroundColor));
+				const [hi, lo] = line > page ? [line, page] : [page, line];
+				return (hi + 0.05) / (lo + 0.05);
+			});
+		expect(ratio).toBeGreaterThanOrEqual(3);
+	});
+
+	test("mobile: the Contents pill opens a sheet, and tapping a link closes it", async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto(POST);
+		const pill = page.getByRole("button", { name: "Contents" });
+		await expect(pill).toBeVisible();
+		await expect(page.locator(".toc-rail")).toBeHidden();
+		await assertMinTapTarget(page, ".toc-pill");
+
+		await pill.click();
+		const sheet = page.locator(".toc-sheet");
+		await expect(sheet).toBeVisible();
+		await assertMinTapTarget(page, ".toc-sheet .toc-link");
+		await assertMinTapTarget(page, ".toc-sheet__close");
+
+		await sheet.getByRole("link", { name: "Where students go wrong" }).click();
+		await expect(sheet).toBeHidden();
+		await expect(page).toHaveURL(/#where-students-go-wrong$/);
+		await assertNoHorizontalOverflow(page);
+	});
+
+	test("mobile: the pill sits above the fixed WhatsApp bar", async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto(POST);
+		const pill = await page.locator(".toc-pill").boundingBox();
+		const bar = await page.locator(".mobile-cta-bar").boundingBox();
+		expect(pill!.y + pill!.height).toBeLessThanOrEqual(bar!.y);
+	});
+
+	test("works with JavaScript disabled: plain anchors and a native popover sheet", async ({
+		browser,
+	}) => {
+		// Reduced motion keeps this test deterministic. Without it, ~1 run in 5 inside the test runner
+		// hung on the sheet-link click with "element is not stable" until the timeout — while the sheet
+		// was fully open and its box identical in every sample (Bob, PR #100). So it is Playwright's
+		// own stability check stalling, not movement on the page; the site has no bug here. This test
+		// checks the no-JS mechanics (anchors + native popover), not the slide-in or smooth scroll.
+		const context = await browser.newContext({
+			javaScriptEnabled: false,
+			reducedMotion: "reduce",
+			viewport: { width: 390, height: 844 },
+		});
+		const page = await context.newPage();
+		try {
+			await page.goto(POST);
+			await page.getByRole("button", { name: "Contents" }).click();
+			const sheet = page.locator(".toc-sheet");
+			await expect(sheet).toBeVisible();
+			await sheet.getByRole("link", { name: "Adding under the root" }).click();
+			await expect(page).toHaveURL(/#adding-under-the-root$/);
+		} finally {
+			await context.close();
+		}
+	});
+
+	test("a post with no headings renders no TOC and loads no TOC script", async ({
+		page,
+	}) => {
+		await page.goto("/blog/indices-rules-in-order/");
+		await expect(page.locator("[data-toc]")).toHaveCount(0);
+		await expect(page.locator('script[src="/blog-toc.js"]')).toHaveCount(0);
 	});
 });

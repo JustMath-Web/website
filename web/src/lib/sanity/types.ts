@@ -104,7 +104,7 @@ export interface MathInline {
 export interface PortableTextBlock {
 	_key: string;
 	_type: "block";
-	style: "normal" | "h2" | "h3" | "blockquote";
+	style: "normal" | "h2" | "h3" | "h4" | "blockquote";
 	listItem?: "bullet" | "number";
 	level?: number;
 	markDefs: PortableTextLinkMark[];

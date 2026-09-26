@@ -1,0 +1,478 @@
+---
+import MathInline from "../portabletext/MathInline.astro";
+import type { PostHeading } from "../../lib/content/postHeadings";
+
+/**
+ * Floating table of contents for a blog post (H2–H4), after nickarce.com/component/table-of-contents.
+ *
+ * - ≥1024px: a slim rail of short lines on the right edge, one per heading. Hover or keyboard focus
+ *   opens the full list over it; Escape closes it until focus moves or the pointer leaves (WCAG
+ *   1.4.13 — below ~1366px the open panel covers part of the text column).
+ * - <1024px: a "Contents" pill at the bottom of the screen with a reading-progress ring. It opens the
+ *   list as a native popover sheet (Esc and tap-outside close it, no JS needed).
+ *
+ * Works with no JavaScript: every link is a plain in-page anchor, the rail opens on :hover and
+ * :focus-within, and the sheet is a native popover. public/blog-toc.js only adds the current-section
+ * highlight, the sliding markers, the progress ring, and closing the sheet after a tap. It is a
+ * static same-origin file for the CSP reason documented in public/faq-accordion.js.
+ *
+ * Renders nothing for fewer than 2 headings — a one-item contents list is noise.
+ */
+interface Props {
+	headings: PostHeading[];
+}
+
+const { headings } = Astro.props as Props;
+const show = headings.length >= 2;
+---
+
+{
+	show && (
+		<div class="toc" data-toc>
+			<nav class="toc-rail" aria-label="Table of contents">
+				<div class="toc-rail__lines" aria-hidden="true">
+					{headings.map((heading) => (
+						<span
+							class={`toc-rail__line toc-level-${heading.level}`}
+							data-toc-target={heading.id}
+						/>
+					))}
+					<span class="toc-marker toc-marker--line" data-toc-marker />
+				</div>
+				<div class="toc-panel">
+					<p class="toc-title">Contents</p>
+					<div class="toc-track">
+						<ol class="toc-list">
+							{headings.map((heading) => (
+								<li class={`toc-level-${heading.level}`}>
+									<a
+										class="toc-link"
+										href={`#${heading.id}`}
+										data-toc-target={heading.id}
+									>
+										{heading.parts.map((part, index) =>
+											"text" in part ? (
+												part.text
+											) : (
+												<MathInline
+													node={{
+														_key: `${heading.id}-${index}`,
+														_type: "mathInline",
+														latex: part.latex,
+													}}
+												/>
+											),
+										)}
+									</a>
+								</li>
+							))}
+						</ol>
+						<span class="toc-marker toc-marker--glow" data-toc-marker />
+					</div>
+				</div>
+			</nav>
+
+			<button class="toc-pill" type="button" popovertarget="toc-sheet">
+				<svg class="toc-pill__ring" viewBox="0 0 20 20" aria-hidden="true">
+					<circle class="toc-pill__track" cx="10" cy="10" r="8" />
+					<circle class="toc-pill__progress" cx="10" cy="10" r="8" />
+				</svg>
+				Contents
+			</button>
+
+			<div id="toc-sheet" class="toc-sheet" popover>
+				<nav aria-label="Table of contents">
+					<div class="toc-sheet__head">
+						<p class="toc-title">Contents</p>
+						<button
+							class="toc-sheet__close"
+							type="button"
+							popovertarget="toc-sheet"
+							popovertargetaction="hide"
+							aria-label="Close contents"
+						>
+							<svg viewBox="0 0 16 16" aria-hidden="true">
+								<path d="M3 3l10 10M13 3L3 13" />
+							</svg>
+						</button>
+					</div>
+					<div class="toc-track">
+						<ol class="toc-list">
+							{headings.map((heading) => (
+								<li class={`toc-level-${heading.level}`}>
+									<a
+										class="toc-link"
+										href={`#${heading.id}`}
+										data-toc-target={heading.id}
+									>
+										{heading.parts.map((part, index) =>
+											"text" in part ? (
+												part.text
+											) : (
+												<MathInline
+													node={{
+														_key: `${heading.id}-${index}`,
+														_type: "mathInline",
+														latex: part.latex,
+													}}
+												/>
+											),
+										)}
+									</a>
+								</li>
+							))}
+						</ol>
+						<span class="toc-marker toc-marker--glow" data-toc-marker />
+					</div>
+				</nav>
+			</div>
+		</div>
+	)
+}
+{show && <script is:inline defer src="/blog-toc.js" />}
+
+<style>
+	/* ---------- shared ---------- */
+
+	@media (prefers-reduced-motion: no-preference) {
+		:global(html:has([data-toc])) {
+			scroll-behavior: smooth;
+		}
+	}
+
+	.toc-list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.toc-track,
+	.toc-rail__lines {
+		position: relative;
+	}
+
+	.toc-title {
+		margin: 0;
+		color: var(--text-muted);
+		font: var(--type-label);
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	.toc-link {
+		position: relative;
+		z-index: 1;
+		display: flex;
+		align-items: center;
+		min-height: var(--control-h);
+		padding: var(--space-1) var(--space-3);
+		border-radius: var(--radius-md);
+		color: var(--text-body);
+		font: var(--type-small);
+		text-decoration: none;
+		transition: var(--transition-control);
+	}
+
+	.toc-level-3 .toc-link {
+		padding-inline-start: calc(var(--space-3) + var(--space-4));
+	}
+
+	.toc-level-4 .toc-link {
+		padding-inline-start: calc(var(--space-3) + var(--space-4) * 2);
+		color: var(--text-muted);
+	}
+
+	@media (hover: hover) {
+		.toc-link:hover {
+			color: var(--ink-900);
+			text-decoration: underline;
+		}
+	}
+
+	.toc-link[aria-current] {
+		color: var(--ink-900);
+		font-weight: var(--weight-semibold);
+	}
+
+	.toc-link:focus-visible {
+		outline: 2px solid var(--focus-ring);
+		outline-offset: -2px;
+	}
+
+	/* The sliding markers exist only once public/blog-toc.js has placed them. */
+	.toc-marker {
+		position: absolute;
+		top: 0;
+		display: none;
+		pointer-events: none;
+		transition:
+			transform var(--dur-3) var(--ease-standard),
+			height var(--dur-3) var(--ease-standard),
+			opacity var(--dur-2) var(--ease-standard);
+	}
+
+	.toc-marker.is-placed {
+		display: block;
+	}
+
+	.toc-marker--glow {
+		inset-inline: 0;
+		border-radius: var(--radius-md);
+		background: var(--ochre-100);
+	}
+
+	/* ---------- desktop rail ---------- */
+
+	.toc-rail {
+		position: fixed;
+		top: 50%;
+		right: var(--space-4);
+		z-index: 15;
+		transform: translateY(-50%);
+	}
+
+	.toc-rail__lines {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		gap: var(--space-2);
+		padding: var(--space-3) var(--space-2);
+	}
+
+	.toc-rail__line {
+		height: 2px;
+		width: 20px;
+		border-radius: 1px;
+		/* ink-400: 3:1+ on paper (WCAG 1.4.11). On desktop these lines are the only sign the TOC is there. */
+		background: var(--ink-400);
+		transition: background-color var(--dur-2) var(--ease-standard);
+	}
+
+	.toc-rail__line.toc-level-3 {
+		width: 14px;
+	}
+
+	.toc-rail__line.toc-level-4 {
+		width: 9px;
+	}
+
+	.toc-rail__line.is-active {
+		background: var(--ochre-500);
+	}
+
+	.toc-marker--line {
+		right: calc(var(--space-2) + 26px);
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--ochre-500);
+	}
+
+	/*
+	 * The panel sits over the lines, inside the same hover target, so moving the pointer from the
+	 * rail into the list never crosses a gap. It stays laid out (opacity, not display) so its links
+	 * remain keyboard-focusable — tabbing into one opens it via :focus-within.
+	 */
+	.toc-panel {
+		position: absolute;
+		top: 50%;
+		right: 0;
+		width: min(320px, calc(100vw - 2 * var(--space-4)));
+		max-height: calc(100vh - 160px);
+		overflow-y: auto;
+		padding: var(--space-4) var(--space-2) var(--space-2);
+		border: 1px solid var(--rule);
+		border-radius: var(--radius-lg);
+		background: var(--surface-card);
+		box-shadow: var(--shadow-lift);
+		opacity: 0;
+		pointer-events: none;
+		transform: translate(var(--space-2), -50%);
+		transition:
+			opacity var(--dur-2) var(--ease-standard),
+			transform var(--dur-2) var(--ease-standard);
+	}
+
+	.toc-panel .toc-title {
+		padding: 0 var(--space-3) var(--space-2);
+	}
+
+	.toc-rail:hover .toc-panel,
+	.toc-rail:focus-within .toc-panel {
+		opacity: 1;
+		pointer-events: auto;
+		transform: translate(0, -50%);
+	}
+
+	/* Escape (public/blog-toc.js) hides the panel until focus moves or the pointer leaves the rail. */
+	.toc-rail.is-dismissed:hover .toc-panel,
+	.toc-rail.is-dismissed:focus-within .toc-panel {
+		opacity: 0;
+		pointer-events: none;
+		transform: translate(var(--space-2), -50%);
+	}
+
+	/* ---------- mobile pill + sheet ---------- */
+
+	.toc-pill {
+		position: fixed;
+		right: var(--space-4);
+		bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+		z-index: 15;
+		display: none;
+		align-items: center;
+		gap: var(--space-2);
+		min-height: var(--control-h);
+		padding: 0 var(--space-4) 0 var(--space-3);
+		border: 1px solid var(--rule-strong);
+		border-radius: var(--radius-pill);
+		background: var(--surface-card);
+		box-shadow: var(--shadow-2);
+		color: var(--ink-900);
+		font: var(--weight-semibold) var(--size-xs) / 1 var(--font-sans);
+		cursor: pointer;
+		transition: var(--transition-control);
+	}
+
+	.toc-pill:hover {
+		border-color: var(--ink-900);
+	}
+
+	.toc-pill:focus-visible {
+		outline: 2px solid var(--focus-ring);
+		outline-offset: 2px;
+	}
+
+	.toc-pill__ring {
+		width: 20px;
+		height: 20px;
+		transform: rotate(-90deg);
+	}
+
+	.toc-pill__ring circle {
+		fill: none;
+		stroke-width: 2.5;
+	}
+
+	.toc-pill__track {
+		stroke: var(--rule);
+	}
+
+	/* 2πr = 50.27 for r=8; --toc-progress (0–1) is set by public/blog-toc.js. */
+	.toc-pill__progress {
+		stroke: var(--ochre-500);
+		stroke-dasharray: 50.27;
+		stroke-dashoffset: calc(50.27 * (1 - var(--toc-progress, 0)));
+		stroke-linecap: round;
+	}
+
+	.toc-sheet {
+		position: fixed;
+		inset: auto var(--space-3)
+			calc(var(--space-3) + env(safe-area-inset-bottom));
+		width: auto;
+		max-height: 70vh;
+		margin: 0;
+		overflow-y: auto;
+		padding: var(--space-3) var(--space-2) var(--space-2);
+		border: 1px solid var(--rule);
+		border-radius: var(--radius-lg);
+		background: var(--surface-card);
+		box-shadow: var(--shadow-lift);
+		color: var(--text-body);
+		opacity: 0;
+		transform: translateY(var(--space-4));
+		transition:
+			opacity var(--dur-3) var(--ease-out),
+			transform var(--dur-3) var(--ease-out),
+			overlay var(--dur-3) allow-discrete,
+			display var(--dur-3) allow-discrete;
+	}
+
+	.toc-sheet:popover-open {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	@starting-style {
+		.toc-sheet:popover-open {
+			opacity: 0;
+			transform: translateY(var(--space-4));
+		}
+	}
+
+	.toc-sheet::backdrop {
+		background: rgba(20, 22, 26, 0.18);
+	}
+
+	.toc-sheet__head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding-inline-start: var(--space-3);
+		margin-bottom: var(--space-1);
+	}
+
+	.toc-sheet__close {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: var(--control-h);
+		height: var(--control-h);
+		border: 0;
+		border-radius: var(--radius-md);
+		background: transparent;
+		color: var(--text-muted);
+		cursor: pointer;
+	}
+
+	.toc-sheet__close:hover {
+		color: var(--ink-900);
+	}
+
+	.toc-sheet__close:focus-visible {
+		outline: 2px solid var(--focus-ring);
+		outline-offset: -2px;
+	}
+
+	.toc-sheet__close svg {
+		width: 16px;
+		height: 16px;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 1.75;
+		stroke-linecap: round;
+	}
+
+	/* Below 1024px the margin beside the 64ch column is too narrow for the rail. */
+	@media (max-width: 1023px) {
+		.toc-rail {
+			display: none;
+		}
+
+		.toc-pill {
+			display: inline-flex;
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.toc-sheet {
+			display: none;
+		}
+	}
+
+	/* Clear the fixed WhatsApp bar (SiteHeader.astro's .mobile-cta-bar, ≤640px). */
+	@media (max-width: 640px) {
+		.toc-pill {
+			bottom: calc(
+				var(--mobile-cta-bar-h) + var(--space-3) + env(safe-area-inset-bottom)
+			);
+		}
+
+		.toc-sheet {
+			bottom: calc(
+				var(--mobile-cta-bar-h) + var(--space-3) + env(safe-area-inset-bottom)
+			);
+		}
+	}
+</style>
