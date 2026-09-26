@@ -316,7 +316,7 @@ test.describe("blog post table of contents", () => {
 		expect(top).toBeGreaterThanOrEqual(headerHeight);
 	});
 
-	test("desktop 1024px: Escape closes the open panel until focus leaves it (WCAG 1.4.13)", async ({
+	test("desktop 1024px: Escape closes the open panel until focus moves (WCAG 1.4.13, 2.4.7)", async ({
 		page,
 	}) => {
 		// At 1024px the open panel covers ~150px of the text column, so it must be dismissible.
@@ -329,8 +329,13 @@ test.describe("blog post table of contents", () => {
 
 		await page.keyboard.press("Escape");
 		await expect(panel).toHaveCSS("opacity", "0");
-		// Still dismissed while focus moves within the list.
+		// Moving focus to the next link shows the panel again — a keyboard user must never tab
+		// through invisible links (WCAG 2.4.7). Bob, PR #100 re-review.
 		await page.keyboard.press("Tab");
+		await expect(toc.getByRole("link").nth(1)).toBeFocused();
+		await expect(panel).toHaveCSS("opacity", "1");
+
+		await page.keyboard.press("Escape");
 		await expect(panel).toHaveCSS("opacity", "0");
 
 		// Focus leaves the rail, then comes back: the panel opens again.

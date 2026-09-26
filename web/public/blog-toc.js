@@ -11,8 +11,9 @@
  *   - the markers that slide to the current section,
  *   - the reading-progress ring on the mobile pill (`--toc-progress`, 0–1),
  *   - closing the mobile sheet after a link is tapped,
- *   - Escape closing the desktop panel (WCAG 1.4.13: it covers text below ~1366px) until the
- *     pointer and focus have both left the rail.
+ *   - Escape closing the desktop panel (WCAG 1.4.13: it covers text below ~1366px) until focus
+ *     moves or the pointer leaves the rail. Moving focus to another link shows it again, so a
+ *     keyboard user never tabs through invisible links (WCAG 2.4.7).
  * Marker motion uses the --dur-* tokens, which styles/tokens/motion.css zeroes under
  * prefers-reduced-motion, so this file needs no reduced-motion check of its own.
  */
@@ -136,6 +137,11 @@
 			if (!rail.contains(document.activeElement)) {
 				rail.classList.remove("is-dismissed");
 			}
+		});
+		// Any focus move ends the dismissal: into another link here (so focus stays visible), or out
+		// of the rail. Escape itself moves no focus, so this never undoes the key press.
+		rail.addEventListener("focusin", function () {
+			rail.classList.remove("is-dismissed");
 		});
 		// relatedTarget is where focus is going, known synchronously — no timer, so focus that leaves
 		// and comes straight back can never leave the panel stuck dismissed.

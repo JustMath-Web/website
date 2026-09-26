@@ -2438,8 +2438,11 @@ Bob's runs. Note CI retries a failed test twice, which could hide a real flake �
 
 - **P1, Escape closes the desktop panel (WCAG 1.4.13).** The open panel is 320px wide and covers the
   text column below ~1366px (Bob measured 150px of text covered at 1024px, 22px at 1280px). Escape now
-  hides it until the pointer and focus have both left the rail (`is-dismissed` in
-  `public/blog-toc.js`). Checked with keyboard (e2e test at 1024px) and with the mouse (hover → Esc
+  hides it (`is-dismissed` in `public/blog-toc.js`) until focus moves or the pointer leaves the rail.
+  **Re-review correction:** the first fix kept it hidden while focus moved between links, so Tab
+  walked through invisible links (WCAG 2.4.7 — Bob's re-review; his first advice said "until the
+  pointer or focus leaves", which 1.4.13 does not require, and Claude followed it without checking
+  the rule). Now any `focusin` inside the rail shows it again; the test asserts that. Checked with keyboard (e2e test at 1024px) and with the mouse (hover → Esc
   hides → leave and re-hover opens). The first version un-dismissed on `focusout` after a 0ms timer;
   the new test caught it (1 fail in 30): focus that left and came straight back stayed dismissed.
   It now reads `event.relatedTarget` synchronously — 40 of 40 repeats pass.

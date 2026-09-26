@@ -6,8 +6,8 @@ import type { PostHeading } from "../../lib/content/postHeadings";
  * Floating table of contents for a blog post (H2–H4), after nickarce.com/component/table-of-contents.
  *
  * - ≥1024px: a slim rail of short lines on the right edge, one per heading. Hover or keyboard focus
- *   opens the full list over it; Escape closes it until the pointer and focus leave (WCAG 1.4.13 —
- *   below ~1366px the open panel covers part of the text column).
+ *   opens the full list over it; Escape closes it until focus moves or the pointer leaves (WCAG
+ *   1.4.13 — below ~1366px the open panel covers part of the text column).
  * - <1024px: a "Contents" pill at the bottom of the screen with a reading-progress ring. It opens the
  *   list as a native popover sheet (Esc and tap-outside close it, no JS needed).
  *
@@ -304,7 +304,7 @@ const show = headings.length >= 2;
 		transform: translate(0, -50%);
 	}
 
-	/* Escape (public/blog-toc.js) hides the panel until the pointer and focus leave the rail. */
+	/* Escape (public/blog-toc.js) hides the panel until focus moves or the pointer leaves the rail. */
 	.toc-rail.is-dismissed:hover .toc-panel,
 	.toc-rail.is-dismissed:focus-within .toc-panel {
 		opacity: 0;
