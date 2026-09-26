@@ -2393,3 +2393,42 @@ vulnerabilities found" in both `web` and `studio`. `path-to-regexp` left with th
 
 **CI pointer fixed.** The audit comments in `.github/workflows/ci.yml` pointed to §21
 (accessibility). They now point to §23 and this section.
+
+## 42. Blog post table of contents — 2026-09-26
+
+**What.** Blog posts get a floating table of contents for H2–H4, modelled on
+nickarce.com/component/table-of-contents (Charlie's reference; he asked for H4 as well as H2–H3).
+
+- **≥1024px:** a slim rail of short lines on the right edge (length shows the level). A dot marks
+  the current section. Hover or keyboard focus opens the full list over the rail.
+- **<1024px:** a "Contents" pill at the bottom right, with a ring that fills as you read. It opens
+  the list as a sheet. At ≤640px the pill and sheet sit above the fixed WhatsApp bar.
+- Shown only when a post has 2 or more headings.
+
+**Why 1024px, not the reference's 768px.** At 768px the 64ch text column leaves ~58px of margin, and
+the rail touched the text (measured in a screenshot). At 1024px the margin is ~186px.
+
+**Works with no JavaScript (FE-32).** Links are plain in-page anchors. The rail opens on `:hover` and
+`:focus-within`. The sheet is a native `popover` (Esc and tap-outside close it). `public/blog-toc.js`
+only adds the current-section highlight (`aria-current="location"`), the sliding markers, the
+progress ring and closing the sheet after a tap. It is a static same-origin file because the CSP has
+no `'unsafe-inline'` (same reason as `public/faq-accordion.js`). **No CSP change.**
+
+**Anchor ids.** `web/src/lib/content/postHeadings.ts` slugs each heading's text in one pass and
+returns both the ids and the TOC list, so a link can never point at an id the page did not render.
+Repeated text gets `-2`, `-3`… (`worked-example`, `worked-example-2`). Headings get
+`scroll-margin-top` so a jump lands below the 62px sticky header.
+
+**Studio.** `h4` added to the post body's block styles (`studio/schemaTypes/objects/portableTextObjects.ts`)
+and to `PortableTextBlock["style"]`. Needs a Studio deploy after merge.
+
+**Tests.** 6 new e2e tests in `web/tests/e2e/blog.spec.ts` (ids and links match, desktop jump + current
+marker, mobile sheet, pill above the WhatsApp bar, no-JS, no TOC on a post without headings). The
+fixture surds post gained H2–H4 headings for them.
+
+**Open: one flaky run, cause not proven.** The no-JS test failed 3 times in about 10 runs inside the test
+runner: Playwright said the sheet link was "not stable" until the 30s timeout. In standalone scripts
+it failed 1 of the first 6 runs (same "not stable" message), then 0 of 46 more (warm and cold browser). The test now runs with `reducedMotion: "reduce"` (no
+slide-in, no smooth scroll), and passed 10 of 10 repeats. If it flakes again, look at the sheet's
+`@starting-style` transition and `scroll-behavior: smooth` first.
+

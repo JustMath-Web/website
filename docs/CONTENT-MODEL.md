@@ -68,7 +68,10 @@ Allowed block styles:
 - Normal paragraph
 - `h2`
 - `h3`
+- `h4`
 - Blockquote
+
+`h2`–`h4` get anchor ids and feed the blog post table of contents (`docs/DECISIONS.md` §42).
 
 Allowed list styles:
 

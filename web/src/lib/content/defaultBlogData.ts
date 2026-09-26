@@ -33,6 +33,25 @@ const indicesCategory = {
 	slug: { current: "form-1-3" },
 };
 
+/**
+ * A plain heading or paragraph block. The surds post's H2–H4 headings exercise the table of
+ * contents (components/blog/TableOfContents.astro): three levels, and one repeated heading
+ * ("Worked example") to prove duplicate text still gets a unique anchor id.
+ */
+function textBlock(
+	key: string,
+	style: "normal" | "h2" | "h3" | "h4",
+	text: string,
+): PostBodyBlock {
+	return {
+		_key: key,
+		_type: "block",
+		style,
+		markDefs: [],
+		children: [{ _key: `${key}s1`, _type: "span", text }],
+	};
+}
+
 const surdsBody: PostBodyBlock[] = [
 	{
 		_key: "b1",
@@ -53,6 +72,13 @@ const surdsBody: PostBodyBlock[] = [
 			},
 		],
 	},
+	textBlock("h-split", "h2", "Split the number into square factors"),
+	textBlock(
+		"p-split",
+		"normal",
+		"Look for the largest perfect square that divides the number under the root. That square comes out of the root as a whole number, and what is left stays inside.",
+	),
+	textBlock("h-example-1", "h3", "Worked example"),
 	{
 		_key: "b2",
 		_type: "mathBlock",
@@ -70,6 +96,14 @@ const surdsBody: PostBodyBlock[] = [
 			"= 11\\sqrt{2}",
 		],
 	},
+	textBlock("h-wrong", "h2", "Where students go wrong"),
+	textBlock(
+		"p-wrong",
+		"normal",
+		"Most mistakes come from treating a surd like an ordinary number and adding what is under the root.",
+	),
+	textBlock("h-example-2", "h3", "Worked example"),
+	textBlock("h-adding", "h4", "Adding under the root"),
 	{
 		_key: "b4",
 		_type: "commonMistake",
@@ -84,6 +118,7 @@ const surdsBody: PostBodyBlock[] = [
 		tone: "tip",
 		body: "If the number under the root has no perfect-square factor greater than 1, the surd is already in simplest form.",
 	},
+	textBlock("h-steps", "h2", "See it step by step"),
 	{
 		_key: "b6",
 		_type: "imageWithAlt",

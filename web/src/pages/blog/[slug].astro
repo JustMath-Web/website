@@ -5,6 +5,7 @@ import SiteFooter from "../../components/SiteFooter.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
 import WhatsAppCta from "../../components/WhatsAppCta.astro";
 import Meta from "../../components/blog/Meta.astro";
+import TableOfContents from "../../components/blog/TableOfContents.astro";
 import { postBodyComponents } from "../../components/portabletext";
 import {
 	BLOG_DESCRIPTION,
@@ -14,6 +15,7 @@ import {
 import { firstNonEmpty } from "../../lib/content/contentGuards";
 import { toSafeJsonLdString } from "../../lib/content/jsonLd";
 import { getLandingPageData } from "../../lib/content/landingData";
+import { withHeadingIds } from "../../lib/content/postHeadings";
 import { resolveValidPosts } from "../../lib/content/resolveValidPosts";
 import { buildWhatsAppUrl } from "../../lib/content/whatsappUrl";
 import type { Post } from "../../lib/sanity/types";
@@ -49,6 +51,8 @@ if (!post) {
 
 const { siteSettings, navigation } = await getLandingPageData();
 const category = post.categories[0]?.title ?? "";
+// H2–H4 get anchor ids here, once, so the rendered headings and the TOC links always agree.
+const { body, headings } = withHeadingIds(post.body);
 
 /**
  * Per-FIELD SEO resolution, deliberately not `post.seo ?? siteSettings.defaultSeo`.
@@ -137,7 +141,7 @@ const blogPostingJsonLd = {
 		<section class="section section--ruled">
 			<div class="container">
 				<div class="prose">
-					<PortableText value={post.body} components={postBodyComponents} />
+					<PortableText value={body} components={postBodyComponents} />
 				</div>
 				<div class="post-cta">
 					<WhatsAppCta
@@ -147,6 +151,7 @@ const blogPostingJsonLd = {
 				</div>
 			</div>
 		</section>
+		<TableOfContents headings={headings} />
 	</main>
 	<SiteFooter navigation={navigation} siteSettings={siteSettings} />
 </BaseLayout>
@@ -233,6 +238,17 @@ const blogPostingJsonLd = {
 		font: var(--weight-semibold) clamp(19px, 2.2vw, 23px) / 1.3
 			var(--font-serif);
 		color: var(--ink-900);
+	}
+
+	.prose :global(h4) {
+		margin-top: var(--space-5);
+		font: var(--weight-semibold) var(--size-md) / 1.35 var(--font-sans);
+		color: var(--ink-900);
+	}
+
+	/* Anchor jumps (TOC links) land below the 62px sticky header, not under it. */
+	.prose :global(:is(h2, h3, h4)[id]) {
+		scroll-margin-top: calc(62px + var(--space-5));
 	}
 
 	.prose :global(p) {

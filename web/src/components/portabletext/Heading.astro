@@ -1,0 +1,15 @@
+---
+import type { BlockProps } from "astro-portabletext/types";
+import type { HeadingBlock } from "../../lib/content/postHeadings";
+
+/**
+ * H2–H4 in a post body, with the anchor id lib/content/postHeadings.ts assigned — the same id the
+ * table of contents links to. A heading with no id (empty text) renders plain, never `id=""`.
+ */
+type Props = BlockProps;
+
+const node = Astro.props.node as unknown as HeadingBlock;
+const Tag = node.style as "h2" | "h3" | "h4";
+---
+
+<Tag id={node._headingId || undefined}><slot /></Tag>
