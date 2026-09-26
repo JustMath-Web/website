@@ -316,6 +316,57 @@ test.describe("blog post table of contents", () => {
 		expect(top).toBeGreaterThanOrEqual(headerHeight);
 	});
 
+	test("desktop 1024px: Escape closes the open panel until focus leaves it (WCAG 1.4.13)", async ({
+		page,
+	}) => {
+		// At 1024px the open panel covers ~150px of the text column, so it must be dismissible.
+		await page.setViewportSize({ width: 1024, height: 800 });
+		await page.goto(POST);
+		const panel = page.locator(".toc-panel");
+		const toc = page.getByRole("navigation", { name: "Table of contents" });
+		await toc.getByRole("link").first().focus();
+		await expect(panel).toHaveCSS("opacity", "1");
+
+		await page.keyboard.press("Escape");
+		await expect(panel).toHaveCSS("opacity", "0");
+		// Still dismissed while focus moves within the list.
+		await page.keyboard.press("Tab");
+		await expect(panel).toHaveCSS("opacity", "0");
+
+		// Focus leaves the rail, then comes back: the panel opens again.
+		await page.locator("#post-title").evaluate((el) => {
+			el.setAttribute("tabindex", "-1");
+			(el as HTMLElement).focus();
+		});
+		await toc.getByRole("link").first().focus();
+		await expect(panel).toHaveCSS("opacity", "1");
+	});
+
+	test("desktop: the rail lines meet 3:1 contrast against the page (WCAG 1.4.11)", async ({
+		page,
+	}) => {
+		await page.goto(POST);
+		const ratio = await page
+			.locator(".toc-rail__line")
+			.first()
+			.evaluate((el) => {
+				const rgb = (value: string) =>
+					(value.match(/\d+(\.\d+)?/g) ?? []).slice(0, 3).map(Number);
+				const lum = ([r, g, b]: number[]) => {
+					const c = [r, g, b].map((v) => {
+						const s = v / 255;
+						return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+					});
+					return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+				};
+				const line = lum(rgb(getComputedStyle(el).backgroundColor));
+				const page = lum(rgb(getComputedStyle(document.body).backgroundColor));
+				const [hi, lo] = line > page ? [line, page] : [page, line];
+				return (hi + 0.05) / (lo + 0.05);
+			});
+		expect(ratio).toBeGreaterThanOrEqual(3);
+	});
+
 	test("mobile: the Contents pill opens a sheet, and tapping a link closes it", async ({
 		page,
 	}) => {
@@ -351,8 +402,11 @@ test.describe("blog post table of contents", () => {
 	test("works with JavaScript disabled: plain anchors and a native popover sheet", async ({
 		browser,
 	}) => {
-		// Reduced motion: this checks the no-JS mechanics (anchors + native popover), not the sheet's
-		// slide-in or smooth scrolling, which made the tap target briefly "not stable" in CI runs.
+		// Reduced motion keeps this test deterministic. Without it, ~1 run in 5 inside the test runner
+		// hung on the sheet-link click with "element is not stable" until the timeout — while the sheet
+		// was fully open and its box identical in every sample (Bob, PR #100). So it is Playwright's
+		// own stability check stalling, not movement on the page; the site has no bug here. This test
+		// checks the no-JS mechanics (anchors + native popover), not the slide-in or smooth scroll.
 		const context = await browser.newContext({
 			javaScriptEnabled: false,
 			reducedMotion: "reduce",

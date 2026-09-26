@@ -10,7 +10,9 @@
  *   - the current-section highlight (`aria-current="location"` on the matching links),
  *   - the markers that slide to the current section,
  *   - the reading-progress ring on the mobile pill (`--toc-progress`, 0–1),
- *   - closing the mobile sheet after a link is tapped.
+ *   - closing the mobile sheet after a link is tapped,
+ *   - Escape closing the desktop panel (WCAG 1.4.13: it covers text below ~1366px) until the
+ *     pointer and focus have both left the rail.
  * Marker motion uses the --dur-* tokens, which styles/tokens/motion.css zeroes under
  * prefers-reduced-motion, so this file needs no reduced-motion check of its own.
  */
@@ -120,6 +122,29 @@
 		if (queued) return;
 		queued = true;
 		window.requestAnimationFrame(update);
+	}
+
+	var rail = root.querySelector(".toc-rail");
+	if (rail) {
+		document.addEventListener("keydown", function (event) {
+			if (event.key !== "Escape") return;
+			if (rail.matches(":hover") || rail.contains(document.activeElement)) {
+				rail.classList.add("is-dismissed");
+			}
+		});
+		rail.addEventListener("mouseleave", function () {
+			if (!rail.contains(document.activeElement)) {
+				rail.classList.remove("is-dismissed");
+			}
+		});
+		// relatedTarget is where focus is going, known synchronously — no timer, so focus that leaves
+		// and comes straight back can never leave the panel stuck dismissed.
+		rail.addEventListener("focusout", function (event) {
+			var leaving = !event.relatedTarget || !rail.contains(event.relatedTarget);
+			if (leaving && !rail.matches(":hover")) {
+				rail.classList.remove("is-dismissed");
+			}
+		});
 	}
 
 	window.addEventListener("scroll", queue, { passive: true });

@@ -2,11 +2,21 @@ import type { PortableTextBlock, PostBodyBlock } from "../sanity/types";
 
 export type HeadingLevel = 2 | 3 | 4;
 
+/** A heading's label, in order: plain text runs and inline maths (rendered with KaTeX in the TOC). */
+export type HeadingPart = { text: string } | { latex: string };
+
 export interface PostHeading {
 	id: string;
-	text: string;
+	parts: HeadingPart[];
 	level: HeadingLevel;
 }
+
+/**
+ * Ids the post page already uses outside the body (BaseLayout's skip-link target, the post title,
+ * the TOC sheet). A heading slug must never take one, or its TOC link would jump somewhere else.
+ * Keep in sync if the post page gains another id.
+ */
+export const RESERVED_IDS = ["main", "post-title", "toc-sheet"];
 
 /** A heading block with the anchor id the renderer and the table of contents both use. */
 export type HeadingBlock = PortableTextBlock & { _headingId?: string };
@@ -17,26 +27,29 @@ function isHeadingBlock(block: PostBodyBlock): block is PortableTextBlock {
 	return block._type === "block" && block.style in HEADING_LEVELS;
 }
 
-/**
- * Plain text of a heading. Spans only — an inline maths node's raw LaTeX would read as noise in a
- * contents list — falling back to that LaTeX only when the heading has no span text at all.
- */
-function headingText(block: PortableTextBlock): string {
-	const spans = block.children
-		.map((child) => (child._type === "span" ? child.text : ""))
+/** Label parts of a heading, keeping inline maths in place instead of dropping it. */
+function headingParts(block: PortableTextBlock): HeadingPart[] {
+	const parts: HeadingPart[] = [];
+	for (const child of block.children) {
+		if (child._type === "span" && child.text) parts.push({ text: child.text });
+		else if (child._type === "mathInline" && child.latex.trim())
+			parts.push({ latex: child.latex });
+	}
+	return parts;
+}
+
+/** Slug source: the text runs, plus the LaTeX (so a maths-only heading still gets a real slug). */
+function slugSource(parts: HeadingPart[]): string {
+	return parts
+		.map((part) => ("text" in part ? part.text : ` ${part.latex} `))
 		.join("")
-		.trim();
-	if (spans) return spans;
-	return block.children
-		.map((child) => (child._type === "mathInline" ? child.latex : ""))
-		.join(" ")
 		.trim();
 }
 
 export function slugifyHeading(text: string): string {
 	const slug = text
 		.normalize("NFKD")
-		.replace(/[̀-ͯ]/g, "")
+		.replace(/[\u0300-\u036f]/g, "")
 		.toLowerCase()
 		.replace(/[^a-z0-9]+/g, "-")
 		.replace(/^-+|-+$/g, "");
@@ -46,26 +59,29 @@ export function slugifyHeading(text: string): string {
 /**
  * One pass over a post body: gives every H2–H4 a unique, readable anchor id and returns the list
  * the table of contents renders. Both come from the same pass, so a TOC link can never point at an
- * id the page did not render. Duplicate heading text gets `-2`, `-3`… in document order.
+ * id the page did not render. A taken id — an earlier heading's, or one in RESERVED_IDS — gets the
+ * next free `-2`, `-3`… suffix, so "Example", "Example 2", "Example" become `example`,
+ * `example-2`, `example-3`.
  */
 export function withHeadingIds(body: PostBodyBlock[]): {
 	body: PostBodyBlock[];
 	headings: PostHeading[];
 } {
-	const used = new Map<string, number>();
+	const taken = new Set<string>(RESERVED_IDS);
 	const headings: PostHeading[] = [];
 
 	const withIds = body.map((block) => {
 		if (!isHeadingBlock(block)) return block;
-		const text = headingText(block);
-		if (!text) return block;
+		const parts = headingParts(block);
+		const source = slugSource(parts);
+		if (!source) return block;
 
-		const base = slugifyHeading(text);
-		const seen = used.get(base) ?? 0;
-		used.set(base, seen + 1);
-		const id = seen === 0 ? base : `${base}-${seen + 1}`;
+		const base = slugifyHeading(source);
+		let id = base;
+		for (let n = 2; taken.has(id); n += 1) id = `${base}-${n}`;
+		taken.add(id);
 
-		headings.push({ id, text, level: HEADING_LEVELS[block.style] });
+		headings.push({ id, parts, level: HEADING_LEVELS[block.style] });
 		return { ...block, _headingId: id } satisfies HeadingBlock;
 	});
 

@@ -246,9 +246,9 @@ const blogPostingJsonLd = {
 		color: var(--ink-900);
 	}
 
-	/* Anchor jumps (TOC links) land below the 62px sticky header, not under it. */
+	/* Anchor jumps (TOC links) land below the sticky header (height + 1px border), not under it. */
 	.prose :global(:is(h2, h3, h4)[id]) {
-		scroll-margin-top: calc(62px + var(--space-5));
+		scroll-margin-top: calc(var(--site-header-h) + 1px + var(--space-5));
 	}
 
 	.prose :global(p) {

@@ -2426,9 +2426,34 @@ and to `PortableTextBlock["style"]`. Needs a Studio deploy after merge.
 marker, mobile sheet, pill above the WhatsApp bar, no-JS, no TOC on a post without headings). The
 fixture surds post gained H2–H4 headings for them.
 
-**Open: one flaky run, cause not proven.** The no-JS test failed 3 times in about 10 runs inside the test
-runner: Playwright said the sheet link was "not stable" until the 30s timeout. In standalone scripts
-it failed 1 of the first 6 runs (same "not stable" message), then 0 of 46 more (warm and cold browser). The test now runs with `reducedMotion: "reduce"` (no
-slide-in, no smooth scroll), and passed 10 of 10 repeats. If it flakes again, look at the sheet's
-`@starting-style` transition and `scroll-behavior: smooth` first.
+**Flaky no-JS test — cause found by Bob.** Without reduced motion, the test hung ~1 run in 5 inside
+the test runner (Bob: 6 of 30) on the sheet-link click, with Playwright saying "element is not stable"
+until the timeout. Bob sampled the sheet during the hang: fully open, box identical in every sample.
+So Playwright's own stability check stalls; the site has no bug. The test runs with
+`reducedMotion: "reduce"` (it checks the no-JS mechanics, not the animation) and passed 50 of 50 in
+Bob's runs. Note CI retries a failed test twice, which could hide a real flake — check the CI log for
+"flaky" if this area changes.
 
+### 42a. Bob's review of PR #100 — fixes — 2026-09-26
+
+- **P1, Escape closes the desktop panel (WCAG 1.4.13).** The open panel is 320px wide and covers the
+  text column below ~1366px (Bob measured 150px of text covered at 1024px, 22px at 1280px). Escape now
+  hides it until the pointer and focus have both left the rail (`is-dismissed` in
+  `public/blog-toc.js`). Checked with keyboard (e2e test at 1024px) and with the mouse (hover → Esc
+  hides → leave and re-hover opens). The first version un-dismissed on `focusout` after a 0ms timer;
+  the new test caught it (1 fail in 30): focus that left and came straight back stayed dismissed.
+  It now reads `event.relatedTarget` synchronously — 40 of 40 repeats pass.
+- **P2, duplicate ids.** "Example", "Example 2", "Example" gave `example`, `example-2`, `example-2`.
+  Ids now take the next free suffix against every id already given out and against `RESERVED_IDS`
+  (`main`, `post-title`, `toc-sheet`). New guard `pnpm test:post-heading-ids`, also run in CI.
+- **P2, faint rail lines.** `--rule-strong` measured 1.58:1 on paper. Now `--ink-400`: 3.72:1
+  (current line `--ochre-500`: 3.47:1), meeting 1.4.11's 3:1. Charlie had not chosen yet; Bob and
+  Claude both recommended darker, so this went in as the default. e2e test asserts ≥3:1.
+- **P3, maths in headings.** The TOC label used to drop inline maths ("Derivative of x²" →
+  "Derivative of"). Labels now keep it, rendered with the same KaTeX component as the body.
+- **P3, header height.** `62px` was copied into the post page. Now one token, `--site-header-h`
+  (`styles/tokens/spacing.css`), used by `SiteHeader.astro` and the heading `scroll-margin-top`
+  (+1px for the header's border).
+- **P3, accepted: without JS the sheet stays open after a tap.** A native popover cannot close itself
+  when a link inside it is followed; closing needs a script. It closes on tap-outside or Esc. JS
+  users (nearly everyone) get it closed on tap.
