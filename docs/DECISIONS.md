@@ -1078,6 +1078,9 @@ still fails CI immediately; only these two already-triaged, non-critical finding
 and they remain visible in every CI run's log rather than silenced. Verified locally before wiring
 in: `pnpm audit --audit-level=critical` exits `0` in both `web` and `studio` as of this commit.
 
+**Update 2026-09-25:** both rows above are closed. See §41. `pnpm audit` now finds nothing in
+either package, so this table no longer lists any accepted finding.
+
 ### VS-12 — vertical-slice FE self-check
 
 Never existed before this PR (Bob's own 2026-08-15 review flagged its absence as VS-12, and did its
@@ -2361,3 +2364,32 @@ suggested — Charlie's own call, not something re-litigated here.
 **§38's cutover is now fully closed out.** The only remaining open items from that section — the
 unconfirmed underlying Cloudflare-side root cause, and the untouched custom domain connection gated
 on §13 — are unrelated to this deletion and remain as they were.
+
+## 41. Dependabot alerts cleared with pnpm overrides — 2026-09-25
+
+**What.** PR #98 adds `overrides` to `studio/pnpm-workspace.yaml` and `web/pnpm-workspace.yaml`.
+They force vulnerable transitive packages up to patched versions. This clears all 15 open
+Dependabot alerts (#1–#5, #11, #13–#21): 11 in `studio`, 4 in `web`.
+
+| Where | Package | Before → after | Pulled in by |
+| --- | --- | --- | --- |
+| `studio` | `adm-zip` | 0.6.0 → 0.6.1 | `@sanity/cli` → `@module-federation/dts-plugin` |
+| `studio` | `smol-toml` | 1.5.2 → 1.8.0 | `@sanity/cli` → `@vercel/frameworks` |
+| `studio` | `js-yaml` | 3.13.1 → 3.15.2, 4.x → 4.3.2 | `@sanity/cli` → `@vercel/frameworks` |
+| `studio` | `uuid` | 10.0.0 → 11.1.1 | `@sanity/cli` → `typeid-js` |
+| `web` (dev) | `fast-uri` | 3.1.5 → 3.1.8 | `@astrojs/check` → `ajv` |
+
+**Why overrides.** No parent package has a release that pulls in the fixed versions yet. All five
+run only in tooling (the Sanity CLI, and `astro check`). None ship in the static site.
+
+**Risk.** `uuid` 10 → 11 is a major bump inside `typeid-js`. The Studio build and the CLI still work.
+Bob checked the lockfile diff: apart from these packages, only pnpm peer-dep keys changed.
+
+**§23's accepted findings are closed.** `pnpm audit` on the PR branch reports "No known
+vulnerabilities found" in both `web` and `studio`. `path-to-regexp` left with the Vercel adapter
+(§32). `undici` is still installed but no longer flagged.
+
+**Remove each override** once its parent package ships the fix. Check with `pnpm why <package>`.
+
+**CI pointer fixed.** The audit comments in `.github/workflows/ci.yml` pointed to §21
+(accessibility). They now point to §23 and this section.

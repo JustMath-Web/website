@@ -3,3 +3,7 @@ allowBuilds:
   sharp: true
 minimumReleaseAgeExclude:
   - astro@7.2.2
+# Security fix for a package pulled in by @astrojs/check (dev only; Dependabot alerts #13-16).
+# Remove once @astrojs/check ships a version that no longer needs it.
+overrides:
+  fast-uri@>=3.0.0 <3.1.6: ^3.1.6
