@@ -6,6 +6,8 @@ interface Props {
 const { invert = false } = Astro.props;
 const fill = invert ? "var(--paper)" : "var(--ink-900)";
 const muted = invert ? "var(--ink-300)" : "var(--ink-500)";
+// Header and footer both render a lockup on the same page, so each variant gets its own mask id.
+const cutId = invert ? "logo-cut-invert" : "logo-cut";
 ---
 
 <span
@@ -13,24 +15,46 @@ const muted = invert ? "var(--ink-300)" : "var(--ink-500)";
 	aria-label="Just Math Malaysia"
 	style={`color:${fill}`}
 >
+	{
+		/*
+		 * The mark: a square-root sign. Its lowest point is cut away in a circle (the gap from an
+		 * earlier year) and the ochre dot sits in the cut (the fix). Geometry from the approved logo
+		 * canvas (claude.ai design artifact, "The mark" board). public/logo.svg and
+		 * public/favicon.svg carry the same shape as standalone files.
+		 */
+	}
 	<svg
-		viewBox="0 0 160 160"
-		width="2.05em"
-		height="2.05em"
-		fill={fill}
+		viewBox="0 -4 124 108"
+		width="2.6em"
+		height="2.26em"
 		aria-hidden="true"
 		focusable="false"
 	>
-		<rect x="22" y="40.5" width="44" height="7"></rect>
-		<rect x="40.5" y="22" width="7" height="44"></rect>
-		<rect x="94" y="40.5" width="44" height="7"></rect>
-		<rect x="22" y="112.5" width="44" height="7" transform="rotate(45 44 116)"
-		></rect>
-		<rect x="22" y="112.5" width="44" height="7" transform="rotate(-45 44 116)"
-		></rect>
-		<rect x="94" y="112.5" width="44" height="7"></rect>
-		<circle cx="116" cy="99" r="4.5"></circle>
-		<circle cx="116" cy="133" r="4.5"></circle>
+		<defs>
+			<mask
+				id={cutId}
+				maskUnits="userSpaceOnUse"
+				x="0"
+				y="-4"
+				width="124"
+				height="108"
+			>
+				<rect x="0" y="-4" width="124" height="108" fill="#fff"></rect>
+				<circle cx="40" cy="92" r="13.5" fill="#000"></circle>
+			</mask>
+		</defs>
+		<g
+			mask={`url(#${cutId})`}
+			fill="none"
+			stroke="currentColor"
+			stroke-width="9"
+			stroke-linejoin="round"
+			stroke-linecap="round"
+		>
+			<path d="M6 55 L22 46 L40 92"></path>
+			<path d="M40 92 L62 8 L118 8"></path>
+		</g>
+		<circle cx="40" cy="92" r="7.5" fill="var(--ochre-500)"></circle>
 	</svg>
 	<span class="logo-lockup__type">
 		<span class="logo-lockup__name">Just Math</span>
@@ -44,7 +68,7 @@ const muted = invert ? "var(--ink-300)" : "var(--ink-500)";
 	.logo-lockup {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.6em;
+		gap: 0.45em;
 		font-size: clamp(1rem, 2vw, 1.25rem);
 		text-decoration: none;
 	}
@@ -70,7 +94,7 @@ const muted = invert ? "var(--ink-300)" : "var(--ink-500)";
 	}
 
 	.logo-lockup__country {
-		font: var(--weight-semibold) 0.6em/1 var(--font-sans);
+		font: var(--weight-medium) 0.6em/1 var(--font-sans);
 		letter-spacing: 0.24em;
 	}
 </style>

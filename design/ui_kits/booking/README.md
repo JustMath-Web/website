@@ -7,5 +7,5 @@ The only booking surface. There is no calendar app, no account, no confirmation 
 
 Notes:
 - This is a **stylised representation** of the conversation, not a pixel recreation of the WhatsApp client. Generic thread chrome, brand ink header, `--wa-green-100` on the parent's own bubbles only.
-- The tutor's avatar is `assets/monogram-operators-square.svg` at 40px — the size the mark was designed to survive.
+- The tutor's avatar is the retired operator mark (historical) — superseded 2026-09-29, see `ASSETS.md` §1c. It is `assets/monogram-operators-invert.svg` at 40px, the size the old mark was designed to survive.
 - Message copy is the tone reference for anything written in the thread: a time, a price, what happens next.

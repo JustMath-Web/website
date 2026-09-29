@@ -9,39 +9,37 @@ const __ds_scope = {};
 (__ds_ns.__errors = __ds_ns.__errors || []);
 
 // components/brand/Logo.jsx
+// Hand-patched from source and spliced in 2026-09-29 (no bundler available for this package —
+// same practice as the earlier PageHeader patch, see STATES.md §2) after the mark changed to the
+// cut root sign, ASSETS.md §1c. sourceHashes above is stale for this entry; it is not regenerated
+// by a hand splice.
 try { (() => {
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
-const WORDMARK = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "0.42em",
-  lineHeight: 1,
-  whiteSpace: "nowrap"
-};
-function OperatorMark({ size = 40, title, ...rest }) {
-  return /* @__PURE__ */ React.createElement(
-    "svg",
-    {
-      viewBox: "0 0 160 160",
-      width: size,
-      height: size,
-      fill: "currentColor",
-      role: title ? "img" : void 0,
-      "aria-label": title,
-      "aria-hidden": title ? void 0 : "true",
-      focusable: "false",
-      style: { display: "block", flex: "none" },
-      ...rest
-    },
-    /* @__PURE__ */ React.createElement("rect", { x: "22", y: "40.5", width: "44", height: "7" }),
-    /* @__PURE__ */ React.createElement("rect", { x: "40.5", y: "22", width: "7", height: "44" }),
-    /* @__PURE__ */ React.createElement("rect", { x: "94", y: "40.5", width: "44", height: "7" }),
-    /* @__PURE__ */ React.createElement("rect", { x: "22", y: "112.5", width: "44", height: "7", transform: "rotate(45 44 116)" }),
-    /* @__PURE__ */ React.createElement("rect", { x: "22", y: "112.5", width: "44", height: "7", transform: "rotate(-45 44 116)" }),
-    /* @__PURE__ */ React.createElement("rect", { x: "94", y: "112.5", width: "44", height: "7" }),
-    /* @__PURE__ */ React.createElement("circle", { cx: "116", cy: "99", r: "4.5" }),
-    /* @__PURE__ */ React.createElement("circle", { cx: "116", cy: "133", r: "4.5" })
-  );
+function RootMark({ size = 40, title, ...rest }) {
+  const cutId = `logo-mark-cut-${React.useId()}`;
+  return /* @__PURE__ */ React.createElement("svg", _extends({
+    viewBox: "0 -4 124 108",
+    width: size,
+    role: title ? "img" : undefined,
+    "aria-label": title,
+    "aria-hidden": title ? undefined : "true",
+    focusable: "false",
+    style: { display: "block", flex: "none", aspectRatio: "124 / 108" }
+  }, rest), /* @__PURE__ */ React.createElement("defs", null, /* @__PURE__ */ React.createElement("mask", {
+    id: cutId,
+    maskUnits: "userSpaceOnUse",
+    x: "0",
+    y: "-4",
+    width: "124",
+    height: "108"
+  }, /* @__PURE__ */ React.createElement("rect", { x: "0", y: "-4", width: "124", height: "108", fill: "#fff" }), /* @__PURE__ */ React.createElement("circle", { cx: "40", cy: "92", r: "13.5", fill: "#000" }))), /* @__PURE__ */ React.createElement("g", {
+    mask: `url(#${cutId})`,
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "9",
+    strokeLinejoin: "round",
+    strokeLinecap: "round"
+  }, /* @__PURE__ */ React.createElement("path", { d: "M6 55 L22 46 L40 92" }), /* @__PURE__ */ React.createElement("path", { d: "M40 92 L62 8 L118 8" })), /* @__PURE__ */ React.createElement("circle", { cx: "40", cy: "92", r: "7.5", fill: "var(--ochre-500)" }));
 }
 function Wordmark({ size }) {
   return /* @__PURE__ */ React.createElement("span", { style: { display: "inline-flex", flexDirection: "column", alignItems: "stretch", fontSize: size, gap: "0.45em" } }, /* @__PURE__ */ React.createElement("span", { style: { font: "var(--weight-semibold) 1em/1 var(--font-serif)", letterSpacing: "-0.02em" } }, "Just Math"), /* @__PURE__ */ React.createElement("span", { className: "lockup-fill", style: { font: "var(--weight-semibold) 0.6em/1 var(--font-sans)", letterSpacing: "0.24em", opacity: 0.72 } }, "MALAYSIA"));
@@ -49,32 +47,25 @@ function Wordmark({ size }) {
 function Logo({ variant = "lockup", size = 24, color, reversed = false, title = "Just Math Malaysia", style, ...rest }) {
   const ink = color || (reversed ? "var(--paper)" : "var(--ink-900)");
   if (variant === "monogram" || variant === "mark") {
-    return /* @__PURE__ */ React.createElement(
-      "span",
-      {
-        role: "img",
-        "aria-label": title,
-        title,
-        style: { display: "inline-flex", color: ink, ...style },
-        ...rest
-      },
-      /* @__PURE__ */ React.createElement(OperatorMark, { size: size * 2 })
-    );
-  }
-  if (variant === "wordmark" || variant === "stacked") {
-    return /* @__PURE__ */ React.createElement("span", { role: "img", "aria-label": title, style: { display: "inline-flex", color: ink, ...style }, ...rest }, /* @__PURE__ */ React.createElement(Wordmark, { size }));
-  }
-  return /* @__PURE__ */ React.createElement(
-    "span",
-    {
+    return /* @__PURE__ */ React.createElement("span", _extends({
       role: "img",
       "aria-label": title,
-      style: { display: "inline-flex", alignItems: "center", gap: "0.6em", fontSize: size, color: ink, ...style },
-      ...rest
-    },
-    /* @__PURE__ */ React.createElement(OperatorMark, { size: "2.05em" }),
-    /* @__PURE__ */ React.createElement(Wordmark, { size: "1em" })
-  );
+      title: title,
+      style: { display: "inline-flex", color: ink, ...style }
+    }, rest), /* @__PURE__ */ React.createElement(RootMark, { size: size * 2 }));
+  }
+  if (variant === "wordmark" || variant === "stacked") {
+    return /* @__PURE__ */ React.createElement("span", _extends({
+      role: "img",
+      "aria-label": title,
+      style: { display: "inline-flex", color: ink, ...style }
+    }, rest), /* @__PURE__ */ React.createElement(Wordmark, { size: size }));
+  }
+  return /* @__PURE__ */ React.createElement("span", _extends({
+    role: "img",
+    "aria-label": title,
+    style: { display: "inline-flex", alignItems: "center", gap: "0.6em", fontSize: size, color: ink, ...style }
+  }, rest), /* @__PURE__ */ React.createElement(RootMark, { size: "2.05em" }), /* @__PURE__ */ React.createElement(Wordmark, { size: "1em" }));
 }
 
 Object.assign(__ds_scope, { Logo });
@@ -1224,6 +1215,7 @@ function Thread() {
       color: "var(--paper)"
     }
   }, /*#__PURE__*/React.createElement("img", {
+    // Retired operator mark (historical) — superseded 2026-09-29, see ASSETS.md §1c.
     src: "../../assets/monogram-operators-square.svg",
     width: "40",
     height: "40",

@@ -19,17 +19,23 @@ No codebase, Figma file, deck or font binaries were supplied. This system was bu
 
 ## The mark
 
+**Superseded 2026-09-29 — read `ASSETS.md` §1c first.** The owner replaced the operator-cluster mark
+below with a new one: a square-root sign cut away at its lowest point, with the ochre dot — the
+fix — in the cut. `<Logo />` and its variants (below) draw the *new* mark as of this date; the
+operator-cluster description that follows is kept as the historical record of the earlier decision,
+matching how this file already treats the retired equals-sign proposal.
+
 Three deliverables, all built from live type or plain geometry — no drawn imagery anywhere.
 
 | Deliverable | File / component | Notes |
 | --- | --- | --- |
 | Lockup | `<Logo />` | The mark, then **Just Math** in serif with **MALAYSIA** justified beneath to the name's exact width |
-| Mark | `assets/monogram-operators.svg` (+ `-invert`, `-square`) · `<Logo variant="monogram" />` | The **2×2 operator cluster**: + − × ÷ |
+| Mark | `assets/monogram-operators.svg` (+ `-invert`, `-square`) · `<Logo variant="monogram" />` | **Historical.** The old **2×2 operator cluster**: + − × ÷. The SVG files still draw it — see §1c — `<Logo>` no longer does |
 | Reversed | `<Logo reversed />` · `-invert.svg` | Paper on ink, for the dark footer and the ink bands |
 
-**Why the operators.** The mark is **carried over from the live site**, not invented: `mathematicsmalaysia.com` has run a 2×2 operator cluster beside the name for years, and parents may already recognise it. Redrawing it in ink keeps that recognition while dropping the child-facing red/cyan/green/yellow. Four operators also say *arithmetic across every level* — the page's actual argument — where a single symbol says only one thing. It is pure geometry: eight rectangles and two circles, no drawn imagery, and it survives a 40px circular WhatsApp avatar.
+**Why the operators (historical).** The mark was **carried over from the live site**, not invented: `mathematicsmalaysia.com` had run a 2×2 operator cluster beside the name for years, and parents may already recognise it. Redrawing it in ink kept that recognition while dropping the child-facing red/cyan/green/yellow. Four operators also said *arithmetic across every level* — the page's argument at the time — where a single symbol says only one thing. It was pure geometry: eight rectangles and two circles, no drawn imagery, and it survived a 40px circular WhatsApp avatar.
 
-**The equals sign was the earlier proposal and is retired.** It was authored from the written brief on the belief that no prior mark existed. That was wrong — see `ASSETS.md` §1b — and discarding a mark parents already know is an equity decision, not a style one. `1:1` was tested and rejected long before either: at 40px, a colon between two identical numerals reads as a clock time. It survives as a copy device (`<Stat value="1:1" />`), never as a mark.
+**The equals sign was an earlier proposal and was retired.** It was authored from the written brief on the belief that no prior mark existed. That was wrong — see `ASSETS.md` §1b — and discarding a mark parents already know is an equity decision, not a style one. `1:1` was tested and rejected long before either: at 40px, a colon between two identical numerals reads as a clock time. It survives as a copy device (`<Stat value="1:1" />`), never as a mark.
 
 **Hierarchy.** The mark leads; **Just Math** is dominant; MALAYSIA is subordinate — smaller, wide-tracked, justified to the name's width beneath it. The name is Just Math. Malaysia is the market. The mark is sized to the type block's full height (2.05em) so the two align optically at any scale.
 
@@ -94,16 +100,22 @@ Icons are rare and functional. There is no icon font and no illustration system.
 
 - **Set:** Lucide (CDN, `stroke-width: 1.5`), ink-900, 20–26px, never coloured, never in a circle or badge, never decorative. Typical usage: `calendar`, `clock`, `file-text`, `check`, `arrow-right`.
 - **WhatsApp glyph:** `assets/icons/whatsapp.svg` (Simple Icons, official path) and `<WhatsAppGlyph />`. Only inside a control that opens WhatsApp.
-- **The operator mark** is the only brand symbol. It is geometry (eight rectangles, two circles), not an icon — do not restyle it, outline it, recolour it, or animate it.
+- **The brand mark** (`ASSETS.md` §1c) is the only brand symbol. It is geometry, not an icon — do not restyle it, outline it, recolour it, or animate it.
 - **Emoji:** never. **Unicode as icons** (→, ·, ×): the middot is used as a separator in meta lines; nothing else.
-- **Banned imagery** (every competitor uses them): pencils, graduation caps, lightbulbs, open books, owls, brains, abacuses, π, √, ∑, ∞, x². Also out: trophies, confetti, cartoon children, mascots.
+- **Banned imagery**, as *decorative* iconography — a small glyph dropped into copy or a bullet, not the brand's own commissioned mark (every competitor uses these): pencils, graduation caps, lightbulbs, open books, owls, brains, abacuses, π, ∑, ∞, x². Also out: trophies, confetti, cartoon children, mascots. (√ is not on this list as of 2026-09-29 — it is the brand mark itself; see `ASSETS.md` §1c/§4.)
 
 ## Index
 
 **Foundations** — `styles.css` (the only file consumers link) imports:
 `tokens/fonts.css` · `tokens/colors.css` · `tokens/typography.css` · `tokens/spacing.css` · `tokens/shape.css` · `tokens/motion.css` · `tokens/base.css`
 
-**Assets** — `assets/monogram-operators.svg`, `monogram-operators-invert.svg`, `monogram-operators-square.svg` (favicon/avatar), `icons/whatsapp.svg`. Decision record: `assets/mark-options.html`
+**Assets** — the current mark lives in `<Logo />` (component geometry) and the live site's own
+`public/logo.svg`/`favicon.svg` (`ASSETS.md` §1c), not as an SVG file in this package.
+`assets/monogram-operators.svg`, `monogram-operators-invert.svg`, `monogram-operators-square.svg`
+draw the **historical** mark (still linked from several `ui_kits/` mockups and
+`guidelines/brand-monogram.card.html`, not yet updated — `ASSETS.md` §1c), `icons/whatsapp.svg`.
+Decision record: `assets/mark-options.html` (superseded banner added, original comparison kept as
+history)
 
 **Specimen cards** — `guidelines/*.card.html` (Brand, Colors, Type, Spacing groups)
 

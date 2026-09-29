@@ -1,16 +1,16 @@
 /**
  * The Just Math Malaysia lockup.
  *
- * The mark is the 2×2 operator cluster (+ − × ÷), carried over from the live site
- * (`mathematicsmalaysia.com`) and redrawn as pure geometry in brand ink — see `ASSETS.md` §1b.
- * It is drawn with `currentColor`, so `reversed` (or any `color`) recolours it without a second
- * asset. The mark is **never** green: green is reserved for controls that open WhatsApp.
+ * The mark is a square-root sign cut away at its lowest point, with the ochre dot in the cut —
+ * adopted 2026-09-29, see `ASSETS.md` §1c. (It supersedes an earlier 2×2 operator cluster,
+ * `ASSETS.md` §1/§1b — historical only.) It is drawn with `currentColor`, so `reversed` (or any
+ * `color`) recolours the stroke without a second asset; the dot stays ochre-500 on either ground.
  */
 export interface LogoProps {
   /**
    * `lockup` (default) — mark + stacked type, the full signature.
-   * `monogram` / `mark` — the operator cluster alone, for favicons, avatars, and anywhere the
-   *   lockup would fall below its minimum width.
+   * `monogram` / `mark` — the mark alone, for favicons, avatars, and anywhere the lockup would
+   *   fall below its minimum width.
    * `wordmark` / `stacked` — type alone, for contexts where the mark already appears nearby.
    */
   variant?: "lockup" | "monogram" | "mark" | "wordmark" | "stacked";

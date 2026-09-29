@@ -1,11 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
-	<rect width="160" height="160" fill="#fff"></rect>
-	<rect x="22" y="40.5" width="44" height="7" fill="#000"></rect>
-	<rect x="40.5" y="22" width="7" height="44" fill="#000"></rect>
-	<rect x="94" y="40.5" width="44" height="7" fill="#000"></rect>
-	<rect x="22" y="112.5" width="44" height="7" fill="#000" transform="rotate(45 44 116)"></rect>
-	<rect x="22" y="112.5" width="44" height="7" fill="#000" transform="rotate(-45 44 116)"></rect>
-	<rect x="94" y="112.5" width="44" height="7" fill="#000"></rect>
-	<circle cx="116" cy="99" r="4.5" fill="#000"></circle>
-	<circle cx="116" cy="133" r="4.5" fill="#000"></circle>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+	<!--
+		Just Math Malaysia favicon: the mark in paper on an ink rounded square, ochre dot. Uses the
+		thickened small-size geometry from the logo canvas (32px board: stroke 13, cut r17, dot r11,
+		shorter tail) so it stays legible at 16px. Scaled 0.74 and centred on the mark's visible ink box.
+	-->
+	<rect width="128" height="128" rx="28" fill="#14161a"/>
+	<defs>
+		<mask id="cut" maskUnits="userSpaceOnUse" x="0" y="0" width="128" height="128">
+			<rect width="128" height="128" fill="#fff"/>
+			<circle cx="40" cy="92" r="17" fill="#000" transform="translate(15.2 25.3) scale(0.74)"/>
+		</mask>
+	</defs>
+	<g mask="url(#cut)">
+		<g transform="translate(15.2 25.3) scale(0.74)" fill="none" stroke="#fbfaf7" stroke-width="13" stroke-linejoin="round" stroke-linecap="round">
+			<path d="M14 50 L22 46 L40 92"/>
+			<path d="M40 92 L62 8 L118 8"/>
+		</g>
+	</g>
+	<circle cx="40" cy="92" r="11" fill="#b47b22" transform="translate(15.2 25.3) scale(0.74)"/>
 </svg>

@@ -2477,3 +2477,123 @@ Found while checking the TOC live (§42). Both show on pages without a TOC too, 
    under the current CSP it cannot count visits. (Its dashboard showed 0 page views for the last 24
    hours on 2026-09-29; that says nothing about earlier periods — Bob, PR #109.) Google Analytics (GTM) is the site's analytics, so the choice was to
    turn Cloudflare's automatic setup off rather than widen the CSP for a second, unused counter.
+
+## 44. New logo mark — 2026-09-29
+
+**What.** Replaced the `+ − × ÷` operator-grid mark (all boards in `LogoLockup.astro`, `public/logo.svg`,
+`public/favicon.svg`) with a new mark: a square-root sign whose lowest point is cut away in a circle
+(the gap from an earlier year) with the ochre dot in the cut (the fix, and the single student — the
+long top bar is one tutor over the whole Std 1–F5 span). From a Claude design canvas
+(claude.ai design artifact `f0c587cb-…`; Charlie's link), already recoloured in that canvas to this
+site's own tokens (`--ink-900` `#14161A`, `--ochre-500` `#B47B22`, `--paper` `#FBFAF7`) — no colour
+decision made here.
+
+**Files.**
+- `src/components/LogoLockup.astro`: new mark, both light and dark (`invert`) variants, `currentColor`
+  stroke so light/dark reuse one path. `MALAYSIA` moved from semibold to `--weight-medium` (500,
+  already self-hosted — `styles/tokens/fonts.css`), matching the canvas.
+- `public/logo.svg`: the mark alone, 512×512, colours hardcoded (same reason as before — no
+  stylesheet for a standalone file). Used by `BaseLayout.astro`'s `Organization.logo` JSON-LD;
+  comment there already described "the exact icon svg", so it needed no wording change.
+- `public/favicon.svg`, `public/favicon.ico`: **dark background, light mark** (Charlie's choice over
+  the canvas's light-background default) — an ink rounded square (`rx` 28/128, matching the site's
+  `--radius-lg` proportion), paper stroke, ochre dot. Uses the canvas's thickened 32px-board geometry
+  (stroke 13 not 9, wider cut and dot) so the hook survives at 16px; confirmed in a rendered
+  comparison at 16/32/64px against both a light and a dark browser-chrome background — Chrome's own
+  favicon.ico slot needed no separate simplification. `favicon.ico` regenerated as a 32×32 PNG
+  (matches the prior file's own format — `.ico` extension, PNG data).
+
+**Not changed.** `public/og-default.png`: shows only the "Just Math MALAYSIA" wordmark, no icon, so
+it still matches. `favicon.svg`'s own dark background does not affect it.
+
+**Checked.** Full Playwright suite (60 passed, including the JSON-LD `logo.svg` fetch/shape test).
+`astro check`, `format:check`. Screenshots: header and footer, light and dark, desktop and 390px —
+no horizontal overflow. Favicon rendered at 16/32/64px on light and dark browser-chrome colours
+before committing to the geometry.
+
+### 44a. Bob's re-review of PR #110 — fixes — 2026-09-29
+
+- **Fixed:** `ASSETS.md`'s link to the design canvas was truncated (`c6055e5b-…`) — now the full URL.
+- **Fixed:** the attached favicon-size comparison PNG was entirely white. Cause: an after-the-fact
+  `sips -c` crop, which crops from the image's centre — the real content sat in the top-left, so the
+  crop kept blank space instead. Redone with a Pillow bounding-box crop of the actual non-white
+  pixels, and the result was read back and visually confirmed (16/32/64px, light and dark) before
+  committing. `sips -c` is unreliable for this; use `PIL.Image.crop` with a computed content bbox
+  instead, or clip directly in the Playwright screenshot call.
+- **Fixed — the wider design-package guidance Bob named:** `design/readme.md` (mark table, the
+  "why the operators" section, the iconography and banned-imagery lines, the assets list),
+  `design/BRAND-INTAKE.md` §4, and `design/components/brand/Logo.{jsx,d.ts,prompt.md}` — the
+  reusable component now draws the new mark's actual geometry (same viewBox/mask/stroke as
+  `LogoLockup.astro`), keeping its existing API (`variant`/`size`/`color`/`reversed`) so no caller
+  needs to change. **Verified it actually renders**, not just read: a standalone Babel/React page in
+  scratch rendered all five call shapes (light lockup, dark lockup, monogram, small mark, dark
+  monogram) with zero console/page errors, screenshotted and visually checked.
+  `design/assets/mark-options.html` (the old A/B/C comparison) keeps its original content — matching
+  this package's own habit of not deleting decision history — with a superseded banner added at the
+  top, screenshotted and checked.
+- **Not fixed, flagged instead — surfaced beyond what Bob named:** `design/_ds_bundle.js` still
+  contains the old `OperatorMark` (it is a generated/compiled bundle with no build step available
+  here — hand-editing 4,728 lines of compiled output would be the wrong fix); several
+  `design/ui_kits/*` mockups and `design/guidelines/brand-monogram.card.html` still link the retired
+  `monogram-operators*.svg` files directly (not through `<Logo />`, so updating the component did not
+  fix them). None of this is read by the live site. Separate pass if wanted.
+
+### 44b. Bob's third review of PR #110 — fixes — 2026-09-29
+
+- **Fixed — P3, duplicate SVG mask IDs:** `design/components/brand/Logo.jsx`'s `RootMark` derived
+  its `<mask id>` from the `reversed` boolean (`id={reversed ? "reversed" : "default"}`), so any two
+  `<Logo>` instances on one page with the same `reversed` value got the identical, invalid duplicate
+  id. **Reproduced first**, before fixing: a standalone two-instance render showed
+  `['logo-mark-cut-default', 'logo-mark-cut-default']`. Fixed by switching to React's `useId()` for a
+  guaranteed-unique id per component instance, dropping the `id` prop entirely. **Re-verified against
+  the same reproduction**: two unique ids (`logo-mark-cut-:r0:`, `logo-mark-cut-:r1:`), both marks
+  render correctly.
+- **Fixed — "is live" overclaim:** `design/BRAND-INTAKE.md` §4 said the new mark was "approved and
+  live" while PR #110 was still open. Reworded to say it is on PR #110, not yet merged.
+- **Fixed — the remaining old-mark entry points Bob named**, choosing to update rather than only
+  label where the tooling allowed it:
+  - `design/_ds_bundle.js`: hand-patched the compiled `Logo` block to the new mark (same practice as
+    the earlier `PageHeader` patch, §2 of `STATES.md`) instead of only flagging it as before. The
+    replacement was not hand-typed — the real, already-fixed `Logo.jsx` was compiled through the same
+    Babel toolchain the rest of this session's browser tests use, so the spliced code is a byte-real
+    compile of the shipped source, not an approximation. **Verified by loading the actual patched
+    file** in a browser (not a copy): `window.JustMathDesignSystem_270e96.Logo` rendered both a
+    monogram and a full lockup with zero bundle/console errors and unique mask ids. The one old-mark
+    reference the bundle can't remove — the `Booking.jsx` mockup's WhatsApp-avatar image path, a
+    static asset reference, not a `<Logo />` call — got the same historical comment as its source
+    file instead. `sourceHashes` in the bundle header is now stale for the `Logo.jsx` entry; noted
+    inline, not silently left wrong.
+  - `design/ui_kits/booking/{Booking.jsx,README.md}`, `design/ui_kits/website/index.html`,
+    `design/ui_kits/blog/{index,post}.html`, `design/guidelines/brand-monogram.card.html`: each
+    still needs the actual old-mark SVG file (favicon or mockup avatar) since none of them import
+    `<Logo />` — labeled with a historical/superseded comment or banner at each reference instead,
+    pointing to `ASSETS.md` §1c. The `brand-monogram.card.html` guideline card also got a visible
+    on-page banner (matching `mark-options.html`'s pattern) and its `@dsCard` title/subtitle
+    retitled "(historical)", since it's a rendered reference card someone could otherwise mistake for
+    current guidance. Booking README's asset filename was also corrected in passing
+    (`-square.svg` → the `-invert.svg` the component actually uses — a pre-existing, unrelated typo
+    found while adding the note).
+
+### 44c. Bob's fourth review of PR #110 — fix — 2026-09-29
+
+- **Fixed — the website kit header drew the old mark:** `design/ui_kits/website/index.html`'s
+  favicon got the historical label in §44b, but the page's own `PageHeader` (in `LandingShell.jsx`)
+  draws its lockup inline rather than importing `<Logo />` (bespoke sizing — documented, correctly,
+  in `design/ui_kits/website/README.md`), and that inline SVG still had the old operator cluster's
+  exact geometry (`viewBox="0 0 160 160"`, the eight-rectangle-two-circle grid) — the HTML comment
+  on the favicon was invisible here because there was no comment on this SVG at all. **Verified
+  before fixing**, not assumed from the review comment: grepped for `160 160` across the kit and
+  found only this one spot; read the surrounding `PageHeader` code directly.
+  Replaced the inline SVG with the real new-mark geometry — same viewBox, mask, paths and dot as
+  `web/src/components/LogoLockup.astro` and `design/components/brand/Logo.jsx`'s `RootMark` — kept
+  as inline markup rather than switched to `<Logo />`, matching this file's own stated reason for
+  not using the component (bespoke sizing). Also updated `README.md`'s §"The lockup is the operator
+  mark…" paragraph and the stale in-file comments, which both still named the retired mark.
+  **Verified by rendering the real multi-file mockup**, not a copy: the page's own Babel-in-browser
+  loader can't `XMLHttpRequest` sibling `.jsx` files over `file://` (a pre-existing CORS limitation
+  of this package, unrelated to this fix — confirmed by first getting the same "Cta is undefined"
+  errors, then re-running over a local `python3 -m http.server` and seeing them disappear). Over
+  HTTP: zero console errors, header screenshot shows the cut root-sign mark correctly aligned with
+  the type block, and `document.querySelectorAll("mask")` returns exactly the header's one id
+  (single instance on this page, so a static id is correct here — unlike the multi-instance
+  `<Logo />` component, which needs `useId()`).
