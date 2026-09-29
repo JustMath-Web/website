@@ -57,6 +57,34 @@ booking kit avatar, `readme.md`, and the compiled bundle.
 **Not decided here:** whether the operators ever appear in colour off-web (print, WhatsApp avatar).
 On the site they must stay monochrome, or green stops meaning *this opens WhatsApp*.
 
+## 1c. Superseded 2026-09-29: the operator mark is replaced
+
+**The owner chose a new mark**, from a Claude design canvas (`claude.ai/share/c6055e5b-…`), and
+approved it for the live site (PR #110). §1 and §1b above are now **historical record, not current
+guidance** — kept for the reasoning, not for what ships. Do not build from the operator-mark files.
+
+**The new mark:** a square-root sign whose lowest point is cut away in a circle — the gap from an
+earlier year — with the ochre dot in the cut, the fix. The long top bar reads as one continuous
+tutor across Std 1–F5.
+
+| File | Use | Status |
+| --- | --- | --- |
+| `web/src/components/LogoLockup.astro` | The mark, inline — header and footer (light/dark via `invert`) | **Adopted 2026-09-29** |
+| `web/public/logo.svg` | The mark alone, 512×512, for `Organization.logo` structured data | **Adopted** |
+| `web/public/favicon.svg`, `favicon.ico` | Dark background, light mark, thickened for 16px (owner's choice over the canvas's light-background default) | **Adopted** |
+| `assets/monogram-operators.svg`, `-invert.svg`, `-square.svg` | The 2×2 operator cluster | **Superseded** — left in place as the historical record §1b describes, not deleted |
+
+**This directly conflicts with §4's banned-imagery list, which names √ by name.** That line was
+written for a different case — a generic icon glyph borrowed from a competitor's visual clichés
+(open book, lightbulb, √, ∑, …), not a mark commissioned and approved as this brand's own identity.
+The owner's mark decision is the one that ships; §4's line needs updating to say so explicitly
+rather than leave the two contradicting each other. See the note there.
+
+**Not done in PR #110** — a separate pass, if wanted: `design/readme.md`, `design/BRAND-INTAKE.md`
+and the `design/assets/mark-options.html` comparison still describe the operator mark as current.
+They are the design-package deliverable, not something the live site reads, so PR #110 left them as
+they were rather than rewrite the whole package for one section's sake.
+
 ## 2. Photography — one image, and it does not exist yet
 
 | Slot | Spec | Status |
@@ -130,11 +158,13 @@ production**; render at build time so no maths JS ships to the browser. It is th
 blog adds, and the only one that brings fonts other than IBM Plex.
 
 One icon family only. Icons are never coloured, never in a circle or badge, never decorative. The
-operator mark is geometry, not an icon — do not restyle, recolour or animate it.
+brand mark (§1c) is geometry, not an icon — do not restyle, recolour or animate it.
 
-**Emoji are never used as iconography.** Banned imagery, all of which competitors use: pencils,
-graduation caps, lightbulbs, open books, owls, brains, abacuses, π, √, ∑, ∞, x², trophies, confetti,
-cartoon children, mascots.
+**Emoji are never used as iconography.** Banned as decorative iconography (a small glyph dropped
+into copy or a bullet), all of which competitors use: pencils, graduation caps, lightbulbs, open
+books, owls, brains, abacuses, π, ∑, ∞, x², trophies, confetti, cartoon children, mascots. **√ is not
+on this list** — it is the brand's own mark (§1c), not a borrowed decorative glyph, and does not fall
+under this rule.
 
 ### WhatsApp trademark — checked against the official guidelines 2026-08-11
 
