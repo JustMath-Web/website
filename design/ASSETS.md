@@ -59,7 +59,8 @@ On the site they must stay monochrome, or green stops meaning *this opens WhatsA
 
 ## 1c. Superseded 2026-09-29: the operator mark is replaced
 
-**The owner chose a new mark**, from a Claude design canvas (`claude.ai/share/c6055e5b-…`), and
+**The owner chose a new mark**, from a Claude design canvas
+(`https://claude.ai/share/c6055e5b-25c4-4665-a15b-825da02f64e1`), and
 approved it for the live site (PR #110). §1 and §1b above are now **historical record, not current
 guidance** — kept for the reasoning, not for what ships. Do not build from the operator-mark files.
 

@@ -2510,3 +2510,30 @@ it still matches. `favicon.svg`'s own dark background does not affect it.
 `astro check`, `format:check`. Screenshots: header and footer, light and dark, desktop and 390px —
 no horizontal overflow. Favicon rendered at 16/32/64px on light and dark browser-chrome colours
 before committing to the geometry.
+
+### 44a. Bob's re-review of PR #110 — fixes — 2026-09-29
+
+- **Fixed:** `ASSETS.md`'s link to the design canvas was truncated (`c6055e5b-…`) — now the full URL.
+- **Fixed:** the attached favicon-size comparison PNG was entirely white. Cause: an after-the-fact
+  `sips -c` crop, which crops from the image's centre — the real content sat in the top-left, so the
+  crop kept blank space instead. Redone with a Pillow bounding-box crop of the actual non-white
+  pixels, and the result was read back and visually confirmed (16/32/64px, light and dark) before
+  committing. `sips -c` is unreliable for this; use `PIL.Image.crop` with a computed content bbox
+  instead, or clip directly in the Playwright screenshot call.
+- **Fixed — the wider design-package guidance Bob named:** `design/readme.md` (mark table, the
+  "why the operators" section, the iconography and banned-imagery lines, the assets list),
+  `design/BRAND-INTAKE.md` §4, and `design/components/brand/Logo.{jsx,d.ts,prompt.md}` — the
+  reusable component now draws the new mark's actual geometry (same viewBox/mask/stroke as
+  `LogoLockup.astro`), keeping its existing API (`variant`/`size`/`color`/`reversed`) so no caller
+  needs to change. **Verified it actually renders**, not just read: a standalone Babel/React page in
+  scratch rendered all five call shapes (light lockup, dark lockup, monogram, small mark, dark
+  monogram) with zero console/page errors, screenshotted and visually checked.
+  `design/assets/mark-options.html` (the old A/B/C comparison) keeps its original content — matching
+  this package's own habit of not deleting decision history — with a superseded banner added at the
+  top, screenshotted and checked.
+- **Not fixed, flagged instead — surfaced beyond what Bob named:** `design/_ds_bundle.js` still
+  contains the old `OperatorMark` (it is a generated/compiled bundle with no build step available
+  here — hand-editing 4,728 lines of compiled output would be the wrong fix); several
+  `design/ui_kits/*` mockups and `design/guidelines/brand-monogram.card.html` still link the retired
+  `monogram-operators*.svg` files directly (not through `<Logo />`, so updating the component did not
+  fix them). None of this is read by the live site. Separate pass if wanted.

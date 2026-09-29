@@ -46,18 +46,20 @@ No font binaries were supplied. **IBM Plex Serif / Sans / Mono** (SIL OFL 1.1) s
 licence-clean, so the package can ship as-is. If a licensed serif is intended, supply it — it swaps
 in `tokens/fonts.css` alone. Full detail in `ASSETS.md` §3.
 
-## 4. Marks — derived, unapproved
+## 4. Marks — superseded 2026-09-29, see `ASSETS.md` §1c
+
+**This section is historical.** The operator-cluster mark it describes shipped from 2026-08-11
+until 2026-09-29, when the owner replaced it with a new mark (a cut square-root sign) from a
+Claude design canvas — approved and live. `ASSETS.md` §1c has the current record; this section is
+kept for how the operator mark was reasoned through, not as current guidance.
 
 **Three SVG marks exist** — `monogram-operators.svg`, `-invert.svg`, `-square.svg`. They are a
 **redraw of the client's own live mark** (the 2×2 operator cluster on `mathematicsmalaysia.com`),
 not an invention: adopted by owner decision 2026-08-11. The six earlier marks — three type-only
 wordmarks and three equals monograms — were deleted; see `ASSETS.md` §1.
 
-**The redraw is still derived, and not brand-official.** The direction is the client's; this
-execution needs the brand owner's sign-off.
-
-The landing page and the report letterhead draw the mark **inline** rather than importing `<Logo />`,
-because their sizing is bespoke. All three draw the same geometry — change one, change the others.
+The landing page and the report letterhead drew the mark **inline** rather than importing `<Logo />`,
+because their sizing is bespoke — the same is true of the new mark now.
 
 ## 5. Third-party marks
 

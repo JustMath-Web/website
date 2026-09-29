@@ -1,25 +1,30 @@
 import React from "react";
 
-/* The mark: the 2×2 operator cluster (+ − × ÷), carried over from the live site and redrawn as
-   pure geometry so it scales, reverses and survives a 40px avatar. Drawn with currentColor so a
-   single component serves ink-on-paper and paper-on-ink without a second asset. */
-function OperatorMark({ size = 40, title, ...rest }) {
+/* The mark (ASSETS.md §1c, adopted 2026-09-29): a square-root sign whose lowest point is cut away
+   in a circle — the gap from an earlier year — with the ochre dot in the cut, the fix. Superseded
+   the 2×2 operator cluster (still in this file's git history, and in the retired
+   monogram-operators*.svg files — ASSETS.md §1/§1b). The stroke uses currentColor so a single
+   component serves ink-on-paper and paper-on-ink; the dot is always ochre-500, on either ground. */
+function RootMark({ size = 40, title, id, ...rest }) {
+  // aspect-ratio (not a computed height) so `size` can be a number or a CSS length like "2.05em" —
+  // callers below pass both.
+  const cutId = `logo-mark-cut-${id || "default"}`;
   return (
-    <svg viewBox="0 0 160 160" width={size} height={size} fill="currentColor"
+    <svg viewBox="0 -4 124 108" width={size}
       role={title ? "img" : undefined} aria-label={title} aria-hidden={title ? undefined : "true"}
-      focusable="false" style={{ display: "block", flex: "none" }} {...rest}>
-      {/* plus */}
-      <rect x="22" y="40.5" width="44" height="7" />
-      <rect x="40.5" y="22" width="7" height="44" />
-      {/* minus */}
-      <rect x="94" y="40.5" width="44" height="7" />
-      {/* multiply */}
-      <rect x="22" y="112.5" width="44" height="7" transform="rotate(45 44 116)" />
-      <rect x="22" y="112.5" width="44" height="7" transform="rotate(-45 44 116)" />
-      {/* divide */}
-      <rect x="94" y="112.5" width="44" height="7" />
-      <circle cx="116" cy="99" r="4.5" />
-      <circle cx="116" cy="133" r="4.5" />
+      focusable="false" style={{ display: "block", flex: "none", aspectRatio: "124 / 108" }} {...rest}>
+      <defs>
+        <mask id={cutId} maskUnits="userSpaceOnUse" x="0" y="-4" width="124" height="108">
+          <rect x="0" y="-4" width="124" height="108" fill="#fff" />
+          <circle cx="40" cy="92" r="13.5" fill="#000" />
+        </mask>
+      </defs>
+      <g mask={`url(#${cutId})`} fill="none" stroke="currentColor" strokeWidth="9"
+        strokeLinejoin="round" strokeLinecap="round">
+        <path d="M6 55 L22 46 L40 92" />
+        <path d="M40 92 L62 8 L118 8" />
+      </g>
+      <circle cx="40" cy="92" r="7.5" fill="var(--ochre-500)" />
     </svg>
   );
 }
@@ -43,7 +48,7 @@ export function Logo({ variant = "lockup", size = 24, color, reversed = false, t
     return (
       <span role="img" aria-label={title} title={title}
         style={{ display: "inline-flex", color: ink, ...style }} {...rest}>
-        <OperatorMark size={size * 2} />
+        <RootMark size={size * 2} id={reversed ? "reversed" : "default"} />
       </span>
     );
   }
@@ -62,7 +67,7 @@ export function Logo({ variant = "lockup", size = 24, color, reversed = false, t
   return (
     <span role="img" aria-label={title}
       style={{ display: "inline-flex", alignItems: "center", gap: "0.6em", fontSize: size, color: ink, ...style }} {...rest}>
-      <OperatorMark size="2.05em" />
+      <RootMark size="2.05em" id={reversed ? "reversed" : "default"} />
       <Wordmark size="1em" />
     </span>
   );
