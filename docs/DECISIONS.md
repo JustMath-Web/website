@@ -2473,6 +2473,7 @@ Found while checking the TOC live (§42). Both show on pages without a TOC too, 
    `data:` was the other option, rejected because the fonts are same-origin files anyway. e2e test:
    no post stylesheet contains `url(data:font`; it fails without the config change.
 2. **Cloudflare Web Analytics beacon blocked (dashboard, not code).** Cloudflare's automatic Web
-   Analytics injects `static.cloudflareinsights.com/beacon.min.js`, which `script-src` blocks — so it
-   has been counting nothing. Google Analytics (GTM) is the site's analytics, so the choice was to
+   Analytics injects `static.cloudflareinsights.com/beacon.min.js`, which `script-src` blocks, so
+   under the current CSP it cannot count visits. (Its dashboard showed 0 page views for the last 24
+   hours on 2026-09-29; that says nothing about earlier periods — Bob, PR #109.) Google Analytics (GTM) is the site's analytics, so the choice was to
    turn Cloudflare's automatic setup off rather than widen the CSP for a second, unused counter.
