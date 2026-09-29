@@ -2477,3 +2477,36 @@ Found while checking the TOC live (§42). Both show on pages without a TOC too, 
    under the current CSP it cannot count visits. (Its dashboard showed 0 page views for the last 24
    hours on 2026-09-29; that says nothing about earlier periods — Bob, PR #109.) Google Analytics (GTM) is the site's analytics, so the choice was to
    turn Cloudflare's automatic setup off rather than widen the CSP for a second, unused counter.
+
+## 44. New logo mark — 2026-09-29
+
+**What.** Replaced the `+ − × ÷` operator-grid mark (all boards in `LogoLockup.astro`, `public/logo.svg`,
+`public/favicon.svg`) with a new mark: a square-root sign whose lowest point is cut away in a circle
+(the gap from an earlier year) with the ochre dot in the cut (the fix, and the single student — the
+long top bar is one tutor over the whole Std 1–F5 span). From a Claude design canvas
+(claude.ai design artifact `f0c587cb-…`; Charlie's link), already recoloured in that canvas to this
+site's own tokens (`--ink-900` `#14161A`, `--ochre-500` `#B47B22`, `--paper` `#FBFAF7`) — no colour
+decision made here.
+
+**Files.**
+- `src/components/LogoLockup.astro`: new mark, both light and dark (`invert`) variants, `currentColor`
+  stroke so light/dark reuse one path. `MALAYSIA` moved from semibold to `--weight-medium` (500,
+  already self-hosted — `styles/tokens/fonts.css`), matching the canvas.
+- `public/logo.svg`: the mark alone, 512×512, colours hardcoded (same reason as before — no
+  stylesheet for a standalone file). Used by `BaseLayout.astro`'s `Organization.logo` JSON-LD;
+  comment there already described "the exact icon svg", so it needed no wording change.
+- `public/favicon.svg`, `public/favicon.ico`: **dark background, light mark** (Charlie's choice over
+  the canvas's light-background default) — an ink rounded square (`rx` 28/128, matching the site's
+  `--radius-lg` proportion), paper stroke, ochre dot. Uses the canvas's thickened 32px-board geometry
+  (stroke 13 not 9, wider cut and dot) so the hook survives at 16px; confirmed in a rendered
+  comparison at 16/32/64px against both a light and a dark browser-chrome background — Chrome's own
+  favicon.ico slot needed no separate simplification. `favicon.ico` regenerated as a 32×32 PNG
+  (matches the prior file's own format — `.ico` extension, PNG data).
+
+**Not changed.** `public/og-default.png`: shows only the "Just Math MALAYSIA" wordmark, no icon, so
+it still matches. `favicon.svg`'s own dark background does not affect it.
+
+**Checked.** Full Playwright suite (60 passed, including the JSON-LD `logo.svg` fetch/shape test).
+`astro check`, `format:check`. Screenshots: header and footer, light and dark, desktop and 390px —
+no horizontal overflow. Favicon rendered at 16/32/64px on light and dark browser-chrome colours
+before committing to the geometry.

@@ -1,27 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Just Math Malaysia icon mark, standalone. The exact svg body from
-  src/components/LogoLockup.astro (the site's single source of truth for the mark), with its fill
-  hardcoded to the real value of the ink900 design token (see design/tokens/colors.css) since a
-  standalone file has no page stylesheet to resolve a CSS variable against. Icon only, the
-  Just Math / MALAYSIA wordmark next to it in the header is plain CSS styled text, not part of
-  this vector, so it is not included here.
+  Just Math Malaysia mark, standalone: a square-root sign whose lowest point is cut away in a circle,
+  with the ochre dot in the cut. Same geometry as src/components/LogoLockup.astro, with colours
+  hardcoded to the ink-900 and ochre-500 token values, since a standalone file has no page
+  stylesheet. Square 512x512 for Organization.logo (BaseLayout.astro JSON-LD). Mark only; the
+  "Just Math / MALAYSIA" wordmark in the header is CSS-styled text, not part of this file.
 -->
-<svg
-	xmlns="http://www.w3.org/2000/svg"
-	viewBox="0 0 160 160"
-	width="512"
-	height="512"
-	fill="#14161a"
-	role="img"
->
-	<title>Just Math Malaysia icon mark</title>
-	<rect x="22" y="40.5" width="44" height="7"></rect>
-	<rect x="40.5" y="22" width="7" height="44"></rect>
-	<rect x="94" y="40.5" width="44" height="7"></rect>
-	<rect x="22" y="112.5" width="44" height="7" transform="rotate(45 44 116)"></rect>
-	<rect x="22" y="112.5" width="44" height="7" transform="rotate(-45 44 116)"></rect>
-	<rect x="94" y="112.5" width="44" height="7"></rect>
-	<circle cx="116" cy="99" r="4.5"></circle>
-	<circle cx="116" cy="133" r="4.5"></circle>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -12 124 124" width="512" height="512" role="img">
+	<title>Just Math Malaysia mark</title>
+	<defs>
+		<mask id="cut" maskUnits="userSpaceOnUse" x="0" y="-12" width="124" height="124">
+			<rect x="0" y="-12" width="124" height="124" fill="#fff"/>
+			<circle cx="40" cy="92" r="13.5" fill="#000"/>
+		</mask>
+	</defs>
+	<g mask="url(#cut)" fill="none" stroke="#14161a" stroke-width="9" stroke-linejoin="round" stroke-linecap="round">
+		<path d="M6 55 L22 46 L40 92"/>
+		<path d="M40 92 L62 8 L118 8"/>
+	</g>
+	<circle cx="40" cy="92" r="7.5" fill="#b47b22"/>
 </svg>
