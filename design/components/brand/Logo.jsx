@@ -5,10 +5,12 @@ import React from "react";
    the 2×2 operator cluster (still in this file's git history, and in the retired
    monogram-operators*.svg files — ASSETS.md §1/§1b). The stroke uses currentColor so a single
    component serves ink-on-paper and paper-on-ink; the dot is always ochre-500, on either ground. */
-function RootMark({ size = 40, title, id, ...rest }) {
+function RootMark({ size = 40, title, ...rest }) {
   // aspect-ratio (not a computed height) so `size` can be a number or a CSS length like "2.05em" —
   // callers below pass both.
-  const cutId = `logo-mark-cut-${id || "default"}`;
+  // useId (not a prop) so two <Logo>s on one page never collide — a prop derived from `reversed`
+  // gave every non-reversed instance the same id, an invalid duplicate SVG <mask id>.
+  const cutId = `logo-mark-cut-${React.useId()}`;
   return (
     <svg viewBox="0 -4 124 108" width={size}
       role={title ? "img" : undefined} aria-label={title} aria-hidden={title ? undefined : "true"}
@@ -48,7 +50,7 @@ export function Logo({ variant = "lockup", size = 24, color, reversed = false, t
     return (
       <span role="img" aria-label={title} title={title}
         style={{ display: "inline-flex", color: ink, ...style }} {...rest}>
-        <RootMark size={size * 2} id={reversed ? "reversed" : "default"} />
+        <RootMark size={size * 2} />
       </span>
     );
   }
@@ -67,7 +69,7 @@ export function Logo({ variant = "lockup", size = 24, color, reversed = false, t
   return (
     <span role="img" aria-label={title}
       style={{ display: "inline-flex", alignItems: "center", gap: "0.6em", fontSize: size, color: ink, ...style }} {...rest}>
-      <RootMark size="2.05em" id={reversed ? "reversed" : "default"} />
+      <RootMark size="2.05em" />
       <Wordmark size="1em" />
     </span>
   );

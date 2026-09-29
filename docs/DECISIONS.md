@@ -2537,3 +2537,39 @@ before committing to the geometry.
   `design/ui_kits/*` mockups and `design/guidelines/brand-monogram.card.html` still link the retired
   `monogram-operators*.svg` files directly (not through `<Logo />`, so updating the component did not
   fix them). None of this is read by the live site. Separate pass if wanted.
+
+### 44b. Bob's third review of PR #110 — fixes — 2026-09-29
+
+- **Fixed — P3, duplicate SVG mask IDs:** `design/components/brand/Logo.jsx`'s `RootMark` derived
+  its `<mask id>` from the `reversed` boolean (`id={reversed ? "reversed" : "default"}`), so any two
+  `<Logo>` instances on one page with the same `reversed` value got the identical, invalid duplicate
+  id. **Reproduced first**, before fixing: a standalone two-instance render showed
+  `['logo-mark-cut-default', 'logo-mark-cut-default']`. Fixed by switching to React's `useId()` for a
+  guaranteed-unique id per component instance, dropping the `id` prop entirely. **Re-verified against
+  the same reproduction**: two unique ids (`logo-mark-cut-:r0:`, `logo-mark-cut-:r1:`), both marks
+  render correctly.
+- **Fixed — "is live" overclaim:** `design/BRAND-INTAKE.md` §4 said the new mark was "approved and
+  live" while PR #110 was still open. Reworded to say it is on PR #110, not yet merged.
+- **Fixed — the remaining old-mark entry points Bob named**, choosing to update rather than only
+  label where the tooling allowed it:
+  - `design/_ds_bundle.js`: hand-patched the compiled `Logo` block to the new mark (same practice as
+    the earlier `PageHeader` patch, §2 of `STATES.md`) instead of only flagging it as before. The
+    replacement was not hand-typed — the real, already-fixed `Logo.jsx` was compiled through the same
+    Babel toolchain the rest of this session's browser tests use, so the spliced code is a byte-real
+    compile of the shipped source, not an approximation. **Verified by loading the actual patched
+    file** in a browser (not a copy): `window.JustMathDesignSystem_270e96.Logo` rendered both a
+    monogram and a full lockup with zero bundle/console errors and unique mask ids. The one old-mark
+    reference the bundle can't remove — the `Booking.jsx` mockup's WhatsApp-avatar image path, a
+    static asset reference, not a `<Logo />` call — got the same historical comment as its source
+    file instead. `sourceHashes` in the bundle header is now stale for the `Logo.jsx` entry; noted
+    inline, not silently left wrong.
+  - `design/ui_kits/booking/{Booking.jsx,README.md}`, `design/ui_kits/website/index.html`,
+    `design/ui_kits/blog/{index,post}.html`, `design/guidelines/brand-monogram.card.html`: each
+    still needs the actual old-mark SVG file (favicon or mockup avatar) since none of them import
+    `<Logo />` — labeled with a historical/superseded comment or banner at each reference instead,
+    pointing to `ASSETS.md` §1c. The `brand-monogram.card.html` guideline card also got a visible
+    on-page banner (matching `mark-options.html`'s pattern) and its `@dsCard` title/subtitle
+    retitled "(historical)", since it's a rendered reference card someone could otherwise mistake for
+    current guidance. Booking README's asset filename was also corrected in passing
+    (`-square.svg` → the `-invert.svg` the component actually uses — a pre-existing, unrelated typo
+    found while adding the note).

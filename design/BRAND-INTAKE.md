@@ -49,9 +49,9 @@ in `tokens/fonts.css` alone. Full detail in `ASSETS.md` §3.
 ## 4. Marks — superseded 2026-09-29, see `ASSETS.md` §1c
 
 **This section is historical.** The operator-cluster mark it describes shipped from 2026-08-11
-until 2026-09-29, when the owner replaced it with a new mark (a cut square-root sign) from a
-Claude design canvas — approved and live. `ASSETS.md` §1c has the current record; this section is
-kept for how the operator mark was reasoned through, not as current guidance.
+until 2026-09-29, when the owner chose a new mark (a cut square-root sign) from a Claude design
+canvas. The new mark is on PR #110, not yet merged — see `ASSETS.md` §1c for the current record.
+This section is kept for how the operator mark was reasoned through, not as current guidance.
 
 **Three SVG marks exist** — `monogram-operators.svg`, `-invert.svg`, `-square.svg`. They are a
 **redraw of the client's own live mark** (the 2×2 operator cluster on `mathematicsmalaysia.com`),

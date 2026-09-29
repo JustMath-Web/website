@@ -73,6 +73,7 @@ function Thread() {
   return (
     <Phone>
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", background: "var(--ink-900)", color: "var(--paper)" }}>
+        {/* Avatar below is the retired operator mark (historical) — superseded 2026-09-29, see ASSETS.md §1c. */}
         <img src="../../assets/monogram-operators-invert.svg" width="40" height="40" alt="" style={{ borderRadius: "999px", border: "1px solid rgba(251,250,247,.2)" }} />
         <div>
           <div style={{ font: "var(--type-body)", fontSize: "var(--size-sm)", fontWeight: "var(--weight-semibold)" }}>Just Math Malaysia</div>
