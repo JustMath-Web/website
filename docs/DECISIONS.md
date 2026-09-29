@@ -2460,3 +2460,19 @@ Bob's runs. Note CI retries a failed test twice, which could hide a real flake �
 - **P3, accepted: without JS the sheet stays open after a tap.** A native popover cannot close itself
   when a link inside it is followed; closing needs a script. It closes on tap-outside or Esc. JS
   users (nearly everyone) get it closed on tap.
+
+## 43. Two CSP console errors found on the live site — 2026-09-29
+
+Found while checking the TOC live (§42). Both show on pages without a TOC too, so neither came from it.
+
+1. **KaTeX_Size3 font inlined as `data:` (fixed in code).** Vite inlines any asset under 4KB. The
+   KaTeX_Size3 woff2 was one, so the post CSS carried it as a `data:font/woff2` URI, which
+   `font-src 'self'` blocks. Every blog post logged a CSP error, then fell back to the `.woff` file,
+   so nothing looked wrong. `web/astro.config.mjs` now sets `build.assetsInlineLimit` to never
+   inline fonts (other assets keep the default). **No CSP change** — loosening `font-src` to allow
+   `data:` was the other option, rejected because the fonts are same-origin files anyway. e2e test:
+   no post stylesheet contains `url(data:font`; it fails without the config change.
+2. **Cloudflare Web Analytics beacon blocked (dashboard, not code).** Cloudflare's automatic Web
+   Analytics injects `static.cloudflareinsights.com/beacon.min.js`, which `script-src` blocks — so it
+   has been counting nothing. Google Analytics (GTM) is the site's analytics, so the choice was to
+   turn Cloudflare's automatic setup off rather than widen the CSP for a second, unused counter.

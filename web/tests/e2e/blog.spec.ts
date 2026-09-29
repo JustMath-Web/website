@@ -233,6 +233,22 @@ test.describe("KaTeX self-hosting and CSS scoping (VS-KaTeX)", () => {
 		expect(externalRequests).toEqual([]);
 	});
 
+	test("no font is inlined as a data: URI (CSP font-src 'self' blocks them)", async ({
+		page,
+	}) => {
+		// Vite inlines assets under 4KB by default, and KaTeX_Size3's woff2 was one: every post
+		// logged a CSP error and fell back to the .woff. astro.config.mjs now never inlines fonts.
+		await page.goto("/blog/why-surds-trip-up-students/");
+		const cssHrefs = await page
+			.locator('link[rel="stylesheet"]')
+			.evaluateAll((links) => links.map((l) => (l as HTMLLinkElement).href));
+		expect(cssHrefs.length).toBeGreaterThan(0);
+		for (const href of cssHrefs) {
+			const css = await (await page.request.get(href)).text();
+			expect(css, href).not.toMatch(/url\(\s*["']?data:font/);
+		}
+	});
+
 	test("the post page's own CSS bundle includes KaTeX styles", async ({
 		page,
 	}) => {

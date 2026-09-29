@@ -32,5 +32,13 @@ export default defineConfig({
 	integrations: [deployEnvGuard, sitemap()],
 	vite: {
 		plugins: [tailwindcss()],
+		build: {
+			// Never inline fonts as data: URIs. The CSP is `font-src 'self'`, which blocks data:
+			// fonts, and Vite inlines any asset under 4KB — KaTeX_Size3's woff2 was inlined, so every
+			// blog post logged a CSP error and fell back to the .woff. Other small assets keep the
+			// default (undefined = use the 4KB limit). docs/DECISIONS.md §43.
+			assetsInlineLimit: (filePath) =>
+				/\.(woff2?|ttf|otf|eot)$/i.test(filePath) ? false : undefined,
+		},
 	},
 });
