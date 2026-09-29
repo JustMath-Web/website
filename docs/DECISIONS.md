@@ -2573,3 +2573,27 @@ before committing to the geometry.
     current guidance. Booking README's asset filename was also corrected in passing
     (`-square.svg` → the `-invert.svg` the component actually uses — a pre-existing, unrelated typo
     found while adding the note).
+
+### 44c. Bob's fourth review of PR #110 — fix — 2026-09-29
+
+- **Fixed — the website kit header drew the old mark:** `design/ui_kits/website/index.html`'s
+  favicon got the historical label in §44b, but the page's own `PageHeader` (in `LandingShell.jsx`)
+  draws its lockup inline rather than importing `<Logo />` (bespoke sizing — documented, correctly,
+  in `design/ui_kits/website/README.md`), and that inline SVG still had the old operator cluster's
+  exact geometry (`viewBox="0 0 160 160"`, the eight-rectangle-two-circle grid) — the HTML comment
+  on the favicon was invisible here because there was no comment on this SVG at all. **Verified
+  before fixing**, not assumed from the review comment: grepped for `160 160` across the kit and
+  found only this one spot; read the surrounding `PageHeader` code directly.
+  Replaced the inline SVG with the real new-mark geometry — same viewBox, mask, paths and dot as
+  `web/src/components/LogoLockup.astro` and `design/components/brand/Logo.jsx`'s `RootMark` — kept
+  as inline markup rather than switched to `<Logo />`, matching this file's own stated reason for
+  not using the component (bespoke sizing). Also updated `README.md`'s §"The lockup is the operator
+  mark…" paragraph and the stale in-file comments, which both still named the retired mark.
+  **Verified by rendering the real multi-file mockup**, not a copy: the page's own Babel-in-browser
+  loader can't `XMLHttpRequest` sibling `.jsx` files over `file://` (a pre-existing CORS limitation
+  of this package, unrelated to this fix — confirmed by first getting the same "Cta is undefined"
+  errors, then re-running over a local `python3 -m http.server` and seeing them disappear). Over
+  HTTP: zero console errors, header screenshot shows the cut root-sign mark correctly aligned with
+  the type block, and `document.querySelectorAll("mask")` returns exactly the header's one id
+  (single instance on this page, so a static id is correct here — unlike the multi-instance
+  `<Logo />` component, which needs `useId()`).

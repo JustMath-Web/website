@@ -328,24 +328,31 @@ function PageHeader() {
   return (
     <header style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(251,250,247,.92)", backdropFilter: "blur(10px)", borderBottom: "1px solid var(--rule)" }}>
       <Container style={{ minHeight: 62, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
-        {/* The lockup (owner decisions, 2026-08-11): operator mark + stacked type.
+        {/* The lockup: mark + stacked type. Mark updated 2026-09-29, ASSETS.md §1c.
             MALAYSIA sits beneath the name, justified to exactly the width of "Just Math" —
             `stretch` gives the lower line the block's width, which the serif line defines, and
             text-align-last: justify spreads the tracking to fill it, so the edges align at any
             viewport width rather than at one hand-tuned size. */}
         <span style={{ display: "inline-flex", alignItems: "center", gap: "0.6em", fontSize: "clamp(1rem, 2vw, 1.25rem)" }}>
-          {/* The operator mark, carried over from the live site and redrawn in ink (ASSETS.md §1b).
-              Sized to 2.05em — the exact height of the type block beside it (1em + 0.45em + 0.6em) —
-              so mark and type optically align at every viewport width. */}
-          <svg viewBox="0 0 160 160" width="2.05em" height="2.05em" fill="var(--ink-900)" aria-hidden="true" focusable="false" style={{ display: "block", flex: "none" }}>
-            <rect x="22" y="40.5" width="44" height="7" />
-            <rect x="40.5" y="22" width="7" height="44" />
-            <rect x="94" y="40.5" width="44" height="7" />
-            <rect x="22" y="112.5" width="44" height="7" transform="rotate(45 44 116)" />
-            <rect x="22" y="112.5" width="44" height="7" transform="rotate(-45 44 116)" />
-            <rect x="94" y="112.5" width="44" height="7" />
-            <circle cx="116" cy="99" r="4.5" />
-            <circle cx="116" cy="133" r="4.5" />
+          {/* The mark (ASSETS.md §1c, adopted 2026-09-29): a square-root sign cut away at its lowest
+              point, with the ochre dot in the cut. Superseded the 2x2 operator cluster this header
+              used to draw. Same geometry as web/src/components/LogoLockup.astro and
+              design/components/brand/Logo.jsx's RootMark — kept in sync by hand because this header
+              draws it inline rather than importing `<Logo />` (the sizing here is bespoke).
+              Width set to 2.05em, height from aspect-ratio (124:108, not square like the old mark)
+              — optically close enough to the type block's height for the two to align. */}
+          <svg viewBox="0 -4 124 108" width="2.05em" aria-hidden="true" focusable="false" style={{ display: "block", flex: "none", aspectRatio: "124 / 108" }}>
+            <defs>
+              <mask id="header-logo-cut" maskUnits="userSpaceOnUse" x="0" y="-4" width="124" height="108">
+                <rect x="0" y="-4" width="124" height="108" fill="#fff" />
+                <circle cx="40" cy="92" r="13.5" fill="#000" />
+              </mask>
+            </defs>
+            <g mask="url(#header-logo-cut)" fill="none" stroke="var(--ink-900)" strokeWidth="9" strokeLinejoin="round" strokeLinecap="round">
+              <path d="M6 55 L22 46 L40 92" />
+              <path d="M40 92 L62 8 L118 8" />
+            </g>
+            <circle cx="40" cy="92" r="7.5" fill="var(--ochre-500)" />
           </svg>
         <span style={{
           display: "inline-flex", flexDirection: "column", alignItems: "stretch",
