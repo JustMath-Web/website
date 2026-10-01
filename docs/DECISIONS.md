@@ -2674,8 +2674,15 @@ itself, and Studio's grid editor has no input for it, so it could never be fille
 caption and the row-header choice moved to the `postTable` wrapper. Live Studio 6.16.0, 2026-10-01
 (throwaway draft in the production dataset, deleted afterwards): table inserts as a 3×3 grid with a
 header row; the grid menu has only the three items above; header-off shows the validation error.
-**Not yet verified live:** the wrapper's own editing flow (caption field, checkbox, inserting the
-grid inside it).
+**Second live test, same day, head `0642c8e`** (second throwaway draft in the production dataset,
+authorised by Charlie, deleted afterwards; the post list was checked and shows the original 4 posts).
+Verified: **Table** appears in the body insert menu and opens a dialog with the required Caption box,
+the "First column labels the rows" switch and the nested Table field; **Insert → Table** inside it
+adds a 3×3 grid with a header row; a spaces-only caption shows "Body / Table / Caption — A table needs
+a caption."; the untouched grid shows "Every header cell needs text."; Publish stays blocked.
+**Not exercised live:** the "exactly one grid" / "remove the text" errors (unit-tested only), and
+the row-header switch's effect on published markup (covered by the Playwright fixture tests, not by a
+Studio-authored document).
 
 **Bob's second review (head `0caa9d6`), 2026-10-01.** One new P2, confirmed and fixed: the caption
 used `required()`, which accepts a string of only spaces, while `Table.astro` trims it, leaving an
