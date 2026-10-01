@@ -19,7 +19,7 @@ export const postBodyComponents = {
 		callout: Callout,
 		imageWithAlt: ImageWithAlt,
 		youtubeEmbed: YoutubeEmbed,
-		table: Table,
+		postTable: Table,
 	},
 	// H2–H4 carry anchor ids for the table of contents (lib/content/postHeadings.ts).
 	block: {

@@ -3,7 +3,7 @@ import type {
 	PortableTextBlock,
 	Post,
 	PostBodyBlock,
-	Table,
+	PostTable,
 	TableCell,
 } from "../sanity/types";
 
@@ -83,19 +83,27 @@ function cell(
 function tableBlock(
 	key: string,
 	caption: string,
+	rowHeaders: boolean,
 	headerRows: number,
 	rows: TableCell[][],
-): Table {
+): PostTable {
 	return {
 		_key: key,
-		_type: "table",
+		_type: "postTable",
 		caption,
-		headerRows,
-		rows: rows.map((cells, index) => ({
-			_key: `${key}r${index}`,
-			_type: "row",
-			cells,
-		})),
+		rowHeaders,
+		content: [
+			{
+				_key: `${key}g`,
+				_type: "table",
+				headerRows,
+				rows: rows.map((cells, index) => ({
+					_key: `${key}r${index}`,
+					_type: "row",
+					cells,
+				})),
+			},
+		],
 	};
 }
 
@@ -166,7 +174,7 @@ const surdsBody: PostBodyBlock[] = [
 		body: "If the number under the root has no perfect-square factor greater than 1, the surd is already in simplest form.",
 	},
 	// Short table with inline maths in the cells, and a header row.
-	tableBlock("t1", "Simplest form of common surds", 1, [
+	tableBlock("t1", "Simplest form of common surds", true, 1, [
 		[cell("t1c1", "Surd"), cell("t1c2", "Simplest form")],
 		[
 			cell("t1c3", { latex: "\\sqrt{72}" }),
@@ -178,7 +186,7 @@ const surdsBody: PostBodyBlock[] = [
 		],
 	]),
 	// Deliberately wide: proves a table scrolls inside its own box instead of the page (FE-14).
-	tableBlock("t2", "Index laws with an example each", 1, [
+	tableBlock("t2", "Index laws with an example each", true, 1, [
 		[
 			cell("t2a1", "Law"),
 			cell("t2a2", "Rule"),
@@ -195,6 +203,12 @@ const surdsBody: PostBodyBlock[] = [
 			cell("t2b5", "Multiplying the indices instead of adding them"),
 			cell("t2b6", "Paper 1, simplification questions near the start"),
 		],
+	]),
+	// First column is ordinary data here, so no row headers: proves the choice is honoured.
+	tableBlock("t3", "Powers of 2", false, 1, [
+		[cell("t3a1", "Exponent"), cell("t3a2", "Value")],
+		[cell("t3b1", { latex: "3" }), cell("t3b2", { latex: "8" })],
+		[cell("t3c1", { latex: "4" }), cell("t3c2", { latex: "16" })],
 	]),
 	textBlock("h-steps", "h2", "See it step by step"),
 	{

@@ -208,6 +208,19 @@ test.describe("blog post tables (Portable Text `table`)", () => {
 		await expect(
 			table.locator("tbody .math-inline .katex").first(),
 		).toBeVisible();
+		// First column labels the rows (rowHeaders on): those cells are row headers, the rest data.
+		await expect(table.locator("tbody th[scope='row']")).toHaveCount(2);
+		await expect(table.locator("tbody td")).toHaveCount(2);
+	});
+
+	test("the first column stays ordinary data when row headers are off", async ({
+		page,
+	}) => {
+		await page.goto("/blog/why-surds-trip-up-students/");
+		const table = page.getByRole("table", { name: "Powers of 2" });
+		await expect(table).toBeVisible();
+		await expect(table.locator("thead th[scope='col']")).toHaveCount(2);
+		await expect(table.locator("th[scope='row']")).toHaveCount(0);
 		await expect(table.locator("tbody td")).toHaveCount(4);
 	});
 

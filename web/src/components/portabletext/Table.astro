@@ -1,19 +1,24 @@
 ---
 import { PortableText } from "astro-portabletext";
-import type { Table } from "../../lib/sanity/types";
+import type { PostTable, Table } from "../../lib/sanity/types";
 import MathInline from "./MathInline.astro";
 
 interface Props {
-	node: Table;
+	node: PostTable;
 }
 
 const { node } = Astro.props;
 
+// The wrapper holds one grid (Studio validates this); empty paragraphs beside it are ignored.
+const grid = (node.content ?? []).find(
+	(item): item is Table => item._type === "table",
+);
 // Rows past `headerRows` are body rows. Anything else (absent, 0, NaN, negative) means no header.
-const headerRows = Number.isInteger(node.headerRows)
-	? Math.max(0, node.headerRows as number)
+const headerRows = Number.isInteger(grid?.headerRows)
+	? Math.max(0, grid?.headerRows as number)
 	: 0;
-const rows = node.rows ?? [];
+const rows = grid?.rows ?? [];
+const rowHeaders = node.rowHeaders === true;
 const headRows = rows.slice(0, headerRows);
 const bodyRows = rows.slice(headerRows);
 const caption = node.caption?.trim();
@@ -52,14 +57,23 @@ const cellComponents = { type: { mathInline: MathInline } };
 				<tbody>
 					{bodyRows.map((row) => (
 						<tr>
-							{(row.cells ?? []).map((cell) => (
-								<td>
-									<PortableText
-										value={cell.value ?? []}
-										components={cellComponents}
-									/>
-								</td>
-							))}
+							{(row.cells ?? []).map((cell, index) =>
+								rowHeaders && index === 0 ? (
+									<th scope="row">
+										<PortableText
+											value={cell.value ?? []}
+											components={cellComponents}
+										/>
+									</th>
+								) : (
+									<td>
+										<PortableText
+											value={cell.value ?? []}
+											components={cellComponents}
+										/>
+									</td>
+								),
+							)}
 						</tr>
 					))}
 				</tbody>
@@ -110,6 +124,11 @@ const cellComponents = { type: { mathInline: MathInline } };
 	th {
 		background: var(--surface-sunken);
 		font-weight: 600;
+	}
+
+	/* A row header labels its row; it is not a column header, so it keeps the page background. */
+	tbody th {
+		background: transparent;
 	}
 
 	/* PortableText wraps each cell's text in a <p>. */

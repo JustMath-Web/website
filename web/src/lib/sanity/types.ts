@@ -165,13 +165,24 @@ export interface TableRow {
 	cells?: TableCell[];
 }
 
+/** The grid itself — Studio's table editor shape. Has no caption: that lives on `PostTable`. */
 export interface Table {
 	_key: string;
 	_type: "table";
-	caption?: string;
 	/** Leading rows rendered as column headers. Absent or 0 means a table with no header row. */
 	headerRows?: number;
 	rows?: TableRow[];
+}
+
+/** What an editor inserts in the body: caption + row-header choice + one `Table` grid. */
+export interface PostTable {
+	_key: string;
+	_type: "postTable";
+	caption?: string;
+	/** True when the first column labels each row, so those cells are row headers. */
+	rowHeaders?: boolean;
+	/** One grid. Studio's nested editor may also leave empty paragraphs, which are ignored. */
+	content?: (Table | PortableTextBlock)[];
 }
 
 export type PostBodyBlock =
@@ -182,7 +193,7 @@ export type PostBodyBlock =
 	| Callout
 	| PortableTextImage
 	| YoutubeEmbed
-	| Table;
+	| PostTable;
 
 /** Card/listing shape — archive and category-archive rows. No `body`. */
 export interface PostSummary {

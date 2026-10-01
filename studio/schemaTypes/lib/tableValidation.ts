@@ -37,3 +37,24 @@ export function validateTableHeader(value: unknown): true | string {
   })
   return blank ? 'Every header cell needs text.' : true
 }
+
+interface FigureItem {
+  _type?: string
+  children?: {text?: string}[]
+}
+
+/**
+ * `postTable.content` is a Portable Text field only so Studio's table editor can render in it.
+ * It must hold exactly one grid; typed text outside the grid would never be rendered, so reject
+ * it instead of silently dropping an editor's words. Empty paragraphs are the editor's own
+ * scaffolding and are fine.
+ */
+export function validateTableFigureContent(value: unknown): true | string {
+  const items = (value as FigureItem[] | undefined) ?? []
+  const grids = items.filter((item) => item._type === 'table')
+  if (grids.length !== 1) return 'Add exactly one table: Insert → Table.'
+  const stray = items.some(
+    (item) => item._type === 'block' && (item.children ?? []).some((child) => !!child.text?.trim()),
+  )
+  return stray ? 'Remove the text outside the grid. Put it inside a table cell.' : true
+}

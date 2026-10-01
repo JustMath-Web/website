@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {validateTableHeader} from '../schemaTypes/lib/tableValidation'
+import {validateTableFigureContent, validateTableHeader} from '../schemaTypes/lib/tableValidation'
 
 const text = (t: string) => ({value: [{children: [{_type: 'span', text: t}]}]})
 const math = (latex: string) => ({value: [{children: [{_type: 'mathInline', latex}]}]})
@@ -27,4 +27,15 @@ assert.match(
 )
 assert.match(String(validateTableHeader({headerRows: 1, rows: [row(), ...ok]})), /header cell/)
 
-console.log('OK: table header validation rejects header-off, out-of-range and blank-header tables.')
+const grid = {_type: 'table'}
+const para = (t: string) => ({_type: 'block', children: [{text: t}]})
+assert.equal(validateTableFigureContent([grid]), true)
+assert.equal(validateTableFigureContent([para(''), grid, para('  ')]), true)
+assert.match(String(validateTableFigureContent(undefined)), /exactly one table/)
+assert.match(String(validateTableFigureContent([para('')])), /exactly one table/)
+assert.match(String(validateTableFigureContent([grid, grid])), /exactly one table/)
+assert.match(String(validateTableFigureContent([para('Notes'), grid])), /Remove the text/)
+
+console.log(
+  'OK: table validation rejects header-off, blank-header, no-grid, two-grid and stray-text tables.',
+)

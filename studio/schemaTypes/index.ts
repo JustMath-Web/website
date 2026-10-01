@@ -10,6 +10,7 @@ import {
   callout,
   youtubeEmbed,
   table,
+  postTable,
 } from './objects/portableTextObjects'
 import {
   statItem,
@@ -41,6 +42,7 @@ export const schemaTypes = [
   callout,
   youtubeEmbed,
   table,
+  postTable,
 
   // homePage-only objects
   statItem,

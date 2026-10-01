@@ -92,7 +92,7 @@ Allowed custom objects:
 - `commonMistake`
 - `callout`
 - `imageWithAlt`
-- `table` — edited with Studio's built-in table editor (`docs/DECISIONS.md` §45)
+- `postTable` — caption, row-header choice and a table grid edited with Studio's built-in table editor (`docs/DECISIONS.md` §45)
 
 No raw HTML object is allowed.
 
