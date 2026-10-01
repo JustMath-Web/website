@@ -40,6 +40,11 @@ assert.match(String(validateTableFigureContent([para('')])), /exactly one table/
 assert.match(String(validateTableFigureContent([grid, grid])), /exactly one table/)
 assert.match(String(validateTableFigureContent([para('Notes'), grid])), /Remove the text/)
 
+assert.equal(validateTableCaption('Simplest form of common surds'), true)
+for (const bad of [undefined, null, '', '   ', '\n\t']) {
+  assert.match(String(validateTableCaption(bad)), /needs a caption/)
+}
+
 console.log(
   'OK: table validation rejects header-off, blank-header, no-grid, two-grid, stray-text and blank-caption tables.',
 )
