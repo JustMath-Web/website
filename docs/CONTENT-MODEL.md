@@ -92,6 +92,7 @@ Allowed custom objects:
 - `commonMistake`
 - `callout`
 - `imageWithAlt`
+- `table` — edited with Studio's built-in table editor (`docs/DECISIONS.md` §45)
 
 No raw HTML object is allowed.
 

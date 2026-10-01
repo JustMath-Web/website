@@ -183,6 +183,80 @@ export const callout = defineType({
 })
 
 /**
+ * Table block for `post.body`, edited with Studio's built-in table editor (Studio v6.6.0+; switched
+ * on in sanity.config.ts). The editor binds to this exact shape — `table` > `rows[]` of `row` >
+ * `cells[]` of `cell` > `value[]` of blocks — so the names are not ours to change. `headerRows`
+ * MUST stay declared: the editor strips undeclared fields, and without it the header-row toggle
+ * silently does nothing. Cell text is plain `normal` blocks with bold/italic and inline maths only.
+ */
+export const table = defineType({
+  name: 'table',
+  title: 'Table',
+  type: 'object',
+  fields: [
+    defineField({
+      name: 'caption',
+      title: 'Caption',
+      type: 'string',
+      description: 'Names the table for screen readers and shows above it.',
+    }),
+    defineField({name: 'headerRows', title: 'Header rows', type: 'number'}),
+    defineField({
+      name: 'rows',
+      title: 'Rows',
+      type: 'array',
+      of: [
+        defineArrayMember({
+          type: 'object',
+          name: 'row',
+          fields: [
+            defineField({
+              name: 'cells',
+              type: 'array',
+              of: [
+                defineArrayMember({
+                  type: 'object',
+                  name: 'cell',
+                  fields: [
+                    defineField({
+                      name: 'value',
+                      type: 'array',
+                      of: [
+                        defineArrayMember({
+                          type: 'block',
+                          styles: [{title: 'Normal', value: 'normal'}],
+                          lists: [],
+                          marks: {
+                            decorators: [
+                              {title: 'Strong', value: 'strong'},
+                              {title: 'Emphasis', value: 'em'},
+                            ],
+                            annotations: [],
+                          },
+                          of: [defineArrayMember({type: 'mathInline'})],
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        }),
+      ],
+      validation: (Rule) => Rule.required().min(1),
+    }),
+  ],
+  preview: {
+    select: {caption: 'caption', rows: 'rows'},
+    prepare: ({caption, rows}) => ({
+      title: caption || 'Table',
+      subtitle: `${rows?.length ?? 0} rows`,
+    }),
+  },
+})
+
+/**
  * Reusable Portable Text array config for `post.body`. Not a named schema `type` itself — Sanity
  * Portable Text arrays are configured inline, and wrapping this in an extra object type would
  * nest content beyond the standard convention.
@@ -237,4 +311,5 @@ export const portableBodyOf = [
   defineArrayMember({type: 'callout'}),
   defineArrayMember({type: 'imageWithAlt'}),
   defineArrayMember({type: 'youtubeEmbed'}),
+  defineArrayMember({type: 'table'}),
 ]

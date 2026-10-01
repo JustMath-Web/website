@@ -1,0 +1,122 @@
+---
+import { PortableText } from "astro-portabletext";
+import type { Table } from "../../lib/sanity/types";
+import MathInline from "./MathInline.astro";
+
+interface Props {
+	node: Table;
+}
+
+const { node } = Astro.props;
+
+// Rows past `headerRows` are body rows. Anything else (absent, 0, NaN, negative) means no header.
+const headerRows = Number.isInteger(node.headerRows)
+	? Math.max(0, node.headerRows as number)
+	: 0;
+const rows = node.rows ?? [];
+const headRows = rows.slice(0, headerRows);
+const bodyRows = rows.slice(headerRows);
+const caption = node.caption?.trim();
+
+// Cell text renders through the same Portable Text pipeline as the post body, so inline maths
+// goes through MathInline's KaTeX settings (trust: false) rather than a second renderer.
+const cellComponents = { type: { mathInline: MathInline } };
+---
+
+{
+	rows.length > 0 && (
+		<div
+			class="table-scroll"
+			role="region"
+			aria-label={caption || "Table"}
+			tabindex="0"
+		>
+			<table class="post-table">
+				{caption && <caption>{caption}</caption>}
+				{headRows.length > 0 && (
+					<thead>
+						{headRows.map((row) => (
+							<tr>
+								{(row.cells ?? []).map((cell) => (
+									<th scope="col">
+										<PortableText
+											value={cell.value ?? []}
+											components={cellComponents}
+										/>
+									</th>
+								))}
+							</tr>
+						))}
+					</thead>
+				)}
+				<tbody>
+					{bodyRows.map((row) => (
+						<tr>
+							{(row.cells ?? []).map((cell) => (
+								<td>
+									<PortableText
+										value={cell.value ?? []}
+										components={cellComponents}
+									/>
+								</td>
+							))}
+						</tr>
+					))}
+				</tbody>
+			</table>
+		</div>
+	)
+}
+
+<style>
+	/* Wide tables scroll inside this box, never the page (FE-14). It is a keyboard-focusable
+	   region so keyboard users can scroll it. */
+	.table-scroll {
+		margin: var(--space-6) 0;
+		overflow-x: auto;
+		border: 1px solid var(--rule);
+		border-radius: var(--radius-lg);
+		background: var(--white);
+	}
+
+	.table-scroll:focus-visible {
+		outline: 2px solid var(--ink-900);
+		outline-offset: 2px;
+	}
+
+	.post-table {
+		width: 100%;
+		min-width: max-content;
+		border-collapse: collapse;
+		font: var(--type-body);
+	}
+
+	caption {
+		padding: var(--space-3) var(--space-4);
+		color: var(--text-muted);
+		font: var(--type-label);
+		letter-spacing: var(--tracking-wide);
+		text-align: left;
+		text-transform: uppercase;
+	}
+
+	th,
+	td {
+		padding: var(--space-3) var(--space-4);
+		border-top: 1px solid var(--rule);
+		text-align: left;
+		vertical-align: top;
+	}
+
+	th {
+		background: var(--surface-sunken);
+		font-weight: 600;
+	}
+
+	/* PortableText wraps each cell's text in a <p>. */
+	th :global(p),
+	td :global(p) {
+		margin: 0;
+		max-width: none;
+	}
+</style>

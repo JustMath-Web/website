@@ -1,5 +1,11 @@
 import { defaultAuthor } from "./defaultLandingData";
-import type { Post, PostBodyBlock } from "../sanity/types";
+import type {
+	PortableTextBlock,
+	Post,
+	PostBodyBlock,
+	Table,
+	TableCell,
+} from "../sanity/types";
 
 /**
  * Fixture blog content — rendered only in explicit fixture mode (web/src/lib/content/blogData.ts's
@@ -49,6 +55,47 @@ function textBlock(
 		style,
 		markDefs: [],
 		children: [{ _key: `${key}s1`, _type: "span", text }],
+	};
+}
+
+/**
+ * One table cell. A string is a text run; `{ latex }` is inline maths, so a cell can mix both the
+ * way Studio's table editor lets an editor do.
+ */
+function cell(
+	key: string,
+	...parts: (string | { latex: string })[]
+): TableCell {
+	const block: PortableTextBlock = {
+		_key: `${key}b`,
+		_type: "block",
+		style: "normal",
+		markDefs: [],
+		children: parts.map((part, index) =>
+			typeof part === "string"
+				? { _key: `${key}s${index}`, _type: "span", text: part }
+				: { _key: `${key}m${index}`, _type: "mathInline", latex: part.latex },
+		),
+	};
+	return { _key: key, _type: "cell", value: [block] };
+}
+
+function tableBlock(
+	key: string,
+	caption: string,
+	headerRows: number,
+	rows: TableCell[][],
+): Table {
+	return {
+		_key: key,
+		_type: "table",
+		caption,
+		headerRows,
+		rows: rows.map((cells, index) => ({
+			_key: `${key}r${index}`,
+			_type: "row",
+			cells,
+		})),
 	};
 }
 
@@ -118,6 +165,37 @@ const surdsBody: PostBodyBlock[] = [
 		tone: "tip",
 		body: "If the number under the root has no perfect-square factor greater than 1, the surd is already in simplest form.",
 	},
+	// Short table with inline maths in the cells, and a header row.
+	tableBlock("t1", "Simplest form of common surds", 1, [
+		[cell("t1c1", "Surd"), cell("t1c2", "Simplest form")],
+		[
+			cell("t1c3", { latex: "\\sqrt{72}" }),
+			cell("t1c4", { latex: "6\\sqrt{2}" }),
+		],
+		[
+			cell("t1c5", { latex: "\\sqrt{50}" }),
+			cell("t1c6", { latex: "5\\sqrt{2}" }),
+		],
+	]),
+	// Deliberately wide: proves a table scrolls inside its own box instead of the page (FE-14).
+	tableBlock("t2", "Index laws with an example each", 1, [
+		[
+			cell("t2a1", "Law"),
+			cell("t2a2", "Rule"),
+			cell("t2a3", "Example"),
+			cell("t2a4", "Result"),
+			cell("t2a5", "Common slip"),
+			cell("t2a6", "Where it shows up in exams"),
+		],
+		[
+			cell("t2b1", "Multiplying powers"),
+			cell("t2b2", { latex: "a^m \\times a^n = a^{m+n}" }),
+			cell("t2b3", { latex: "2^3 \\times 2^4" }),
+			cell("t2b4", { latex: "2^7" }),
+			cell("t2b5", "Multiplying the indices instead of adding them"),
+			cell("t2b6", "Paper 1, simplification questions near the start"),
+		],
+	]),
 	textBlock("h-steps", "h2", "See it step by step"),
 	{
 		_key: "b6",

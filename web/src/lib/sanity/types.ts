@@ -152,6 +152,28 @@ export interface YoutubeEmbed {
 	title?: string;
 }
 
+/** Cell text is plain blocks (bold/italic, inline maths) — studio's `table` > `row` > `cell`. */
+export interface TableCell {
+	_key: string;
+	_type: "cell";
+	value?: PortableTextBlock[];
+}
+
+export interface TableRow {
+	_key: string;
+	_type: "row";
+	cells?: TableCell[];
+}
+
+export interface Table {
+	_key: string;
+	_type: "table";
+	caption?: string;
+	/** Leading rows rendered as column headers. Absent or 0 means a table with no header row. */
+	headerRows?: number;
+	rows?: TableRow[];
+}
+
 export type PostBodyBlock =
 	| PortableTextBlock
 	| MathBlock
@@ -159,7 +181,8 @@ export type PostBodyBlock =
 	| CommonMistake
 	| Callout
 	| PortableTextImage
-	| YoutubeEmbed;
+	| YoutubeEmbed
+	| Table;
 
 /** Card/listing shape — archive and category-archive rows. No `body`. */
 export interface PostSummary {

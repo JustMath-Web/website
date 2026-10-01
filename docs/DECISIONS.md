@@ -2597,3 +2597,45 @@ before committing to the geometry.
   the type block, and `document.querySelectorAll("mask")` returns exactly the header's one id
   (single instance on this page, so a static id is correct here — unlike the multi-instance
   `<Logo />` component, which needs `useId()`).
+
+## 45. Tables in blog posts — 2026-10-01
+
+**What.** Posts can now contain a table. Editors insert it from the body's insert menu and edit it as
+a grid (add/remove rows and columns, header-row toggle). Charlie chose this over a plain-text-cell
+custom block because cells need inline maths.
+
+**Shape.** `studio/schemaTypes/objects/portableTextObjects.ts` `table`: `caption` (string),
+`headerRows` (number), `rows[]` of `row` > `cells[]` of `cell` > `value[]` of blocks. The row/cell/
+`value` names and `headerRows` are the shape Studio's table editor binds to, so they are not ours to
+rename; `headerRows` must stay declared or the header toggle silently does nothing. A cell block
+allows only `normal` style, bold/italic, and `mathInline` — no lists, links or headings. Registered in
+`schemaTypes/index.ts` (the `portableBodyOf` entry alone is not enough) and added to `portableBodyOf`.
+
+**Built-in editor, no new package.** Studio v6.6.0+ ships a table editor (docs: "Configure the
+Portable Text Editor" > Table editing); this project is on 6.16.0. It is off by default, so
+`studio/sanity.config.ts` turns it on via `form.components.portableText.plugins`. No `@sanity/table`
+plugin and no new dependency (FE-40), no registry component (FE-41/42).
+
+**Rendering.** `web/src/components/portabletext/Table.astro`: a real `<table>` with `<caption>`,
+`<thead>` of `<th scope="col">` for the first `headerRows` rows, and `<td>` for the rest. Cell text goes
+through `PortableText` with the existing `MathInline` override, so maths uses the same KaTeX settings
+(`trust: false`) as everywhere else. The table sits in `.table-scroll` (`overflow-x: auto`,
+`role="region"`, `aria-label` = caption, `tabindex="0"`) so a wide table scrolls inside its own box,
+never the page (FE-14), and keyboard users can scroll it. The landing page's table styles are
+page-scoped, so the blog component carries its own. A `table` with no rows renders nothing.
+
+**Header rows beyond one.** Rendered as multiple `<thead>` rows, every cell `scope="col"`. A
+multi-level header (spanning cells) is not supported — the editor has no cell merging.
+
+**Not done / to know.** Row headers (first column as `<th scope="row">`) are not rendered; the editor
+has no per-column setting for it. Add if a post needs it.
+
+**Tests.** Fixture post gained two tables (short with inline maths; deliberately wide). Four new
+Playwright tests in `blog.spec.ts`: caption + header cells + maths in cells, 390px no page overflow
+with the wide table scrolling in its own focusable region, and no-JS render. Full suite 63 passed.
+`astro check` 0 errors, `format:check`, all `test:*` guard scripts, `sanity schema validate` 0
+errors/0 warnings.
+
+**Deploy.** Studio must be redeployed (`pnpm deploy` in `studio/`) for editors to see the table
+option; the web build needs no config change. Not verified in a live Studio session by automation —
+the editor UI itself is exercised only by hand.
