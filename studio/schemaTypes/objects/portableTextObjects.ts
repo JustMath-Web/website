@@ -1,4 +1,9 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
+import {
+  validateTableCaption,
+  validateTableFigureContent,
+  validateTableHeader,
+} from '../lib/tableValidation'
 
 /**
  * docs/CONTENT-MODEL.md §2 `portableBlock`. mathInline is an inline child object (renders inside
@@ -183,6 +188,129 @@ export const callout = defineType({
 })
 
 /**
+ * The table grid, edited with Studio's built-in table editor (Studio v6.6.0+; switched on in
+ * sanity.config.ts). The editor binds to this exact shape — `table` > `rows[]` of `row` >
+ * `cells[]` of `cell` > `value[]` of blocks — so the names are not ours to change. `headerRows`
+ * MUST stay declared: the editor strips undeclared fields, and without it the header-row toggle
+ * silently does nothing. Cell text is plain `normal` blocks with bold/italic and inline maths only.
+ *
+ * The grid's own menu offers only Header row / Select table / Delete table, so it has nowhere to
+ * put a caption or a row-header choice. Those live on `postTable`, which wraps this type.
+ */
+export const table = defineType({
+  name: 'table',
+  title: 'Table',
+  type: 'object',
+  fields: [
+    defineField({name: 'headerRows', title: 'Header rows', type: 'number'}),
+    defineField({
+      name: 'rows',
+      title: 'Rows',
+      type: 'array',
+      of: [
+        defineArrayMember({
+          type: 'object',
+          name: 'row',
+          fields: [
+            defineField({
+              name: 'cells',
+              type: 'array',
+              of: [
+                defineArrayMember({
+                  type: 'object',
+                  name: 'cell',
+                  fields: [
+                    defineField({
+                      name: 'value',
+                      type: 'array',
+                      of: [
+                        defineArrayMember({
+                          type: 'block',
+                          styles: [{title: 'Normal', value: 'normal'}],
+                          lists: [],
+                          marks: {
+                            decorators: [
+                              {title: 'Strong', value: 'strong'},
+                              {title: 'Emphasis', value: 'em'},
+                            ],
+                            annotations: [],
+                          },
+                          of: [defineArrayMember({type: 'mathInline'})],
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        }),
+      ],
+      validation: (Rule) => Rule.required().min(1),
+    }),
+  ],
+  validation: (Rule) => Rule.custom(validateTableHeader),
+  preview: {
+    select: {rows: 'rows'},
+    prepare: ({rows}) => ({title: 'Table grid', subtitle: `${rows?.length ?? 0} rows`}),
+  },
+})
+
+/**
+ * What editors insert into `post.body`: a required caption, the "first column labels the rows"
+ * choice, and the table grid. The grid is a nested Portable Text field because Studio's table
+ * editor only renders inside one (it needs the `block` member to be a Portable Text editor); the
+ * `block` is configured with no formatting and validation requires exactly one grid and no text.
+ */
+export const postTable = defineType({
+  name: 'postTable',
+  title: 'Table',
+  type: 'object',
+  fields: [
+    defineField({
+      name: 'caption',
+      title: 'Caption',
+      type: 'string',
+      description:
+        'Names the table for screen readers and shows above it. Say what the table shows, e.g. "Simplest form of common surds".',
+      validation: (Rule) => Rule.custom(validateTableCaption),
+    }),
+    defineField({
+      name: 'rowHeaders',
+      title: 'First column labels the rows',
+      type: 'boolean',
+      description:
+        'Tick when each row starts with a label (e.g. the name of a law). Leave off when the first column is ordinary data.',
+      initialValue: false,
+    }),
+    defineField({
+      name: 'content',
+      title: 'Table',
+      type: 'array',
+      description: 'Use Insert → Table, then fill the grid. Only one grid, and no text outside it.',
+      of: [
+        defineArrayMember({
+          type: 'block',
+          styles: [{title: 'Normal', value: 'normal'}],
+          lists: [],
+          marks: {decorators: [], annotations: []},
+        }),
+        defineArrayMember({type: 'table'}),
+      ],
+      validation: (Rule) => Rule.custom(validateTableFigureContent),
+    }),
+  ],
+  preview: {
+    select: {caption: 'caption', content: 'content'},
+    prepare: ({caption, content}) => {
+      const grid = (content ?? []).find((item: {_type: string}) => item._type === 'table') as
+        {rows?: unknown[]} | undefined
+      return {title: caption || 'Table (no caption)', subtitle: `${grid?.rows?.length ?? 0} rows`}
+    },
+  },
+})
+
+/**
  * Reusable Portable Text array config for `post.body`. Not a named schema `type` itself — Sanity
  * Portable Text arrays are configured inline, and wrapping this in an extra object type would
  * nest content beyond the standard convention.
@@ -237,4 +365,5 @@ export const portableBodyOf = [
   defineArrayMember({type: 'callout'}),
   defineArrayMember({type: 'imageWithAlt'}),
   defineArrayMember({type: 'youtubeEmbed'}),
+  defineArrayMember({type: 'postTable'}),
 ]

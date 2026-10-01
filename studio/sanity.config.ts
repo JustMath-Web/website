@@ -16,4 +16,17 @@ export default defineConfig({
   schema: {
     types: schemaTypes,
   },
+
+  // Built-in Portable Text table editor (Studio v6.6.0+) is off by default.
+  form: {
+    components: {
+      portableText: {
+        plugins: (props) =>
+          props.renderDefault({
+            ...props,
+            plugins: {...props.plugins, table: {enabled: true}},
+          }),
+      },
+    },
+  },
 })

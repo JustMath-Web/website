@@ -152,6 +152,39 @@ export interface YoutubeEmbed {
 	title?: string;
 }
 
+/** Cell text is plain blocks (bold/italic, inline maths) — studio's `table` > `row` > `cell`. */
+export interface TableCell {
+	_key: string;
+	_type: "cell";
+	value?: PortableTextBlock[];
+}
+
+export interface TableRow {
+	_key: string;
+	_type: "row";
+	cells?: TableCell[];
+}
+
+/** The grid itself — Studio's table editor shape. Has no caption: that lives on `PostTable`. */
+export interface Table {
+	_key: string;
+	_type: "table";
+	/** Leading rows rendered as column headers. Absent or 0 means a table with no header row. */
+	headerRows?: number;
+	rows?: TableRow[];
+}
+
+/** What an editor inserts in the body: caption + row-header choice + one `Table` grid. */
+export interface PostTable {
+	_key: string;
+	_type: "postTable";
+	caption?: string;
+	/** True when the first column labels each row, so those cells are row headers. */
+	rowHeaders?: boolean;
+	/** One grid. Studio's nested editor may also leave empty paragraphs, which are ignored. */
+	content?: (Table | PortableTextBlock)[];
+}
+
 export type PostBodyBlock =
 	| PortableTextBlock
 	| MathBlock
@@ -159,7 +192,8 @@ export type PostBodyBlock =
 	| CommonMistake
 	| Callout
 	| PortableTextImage
-	| YoutubeEmbed;
+	| YoutubeEmbed
+	| PostTable;
 
 /** Card/listing shape — archive and category-archive rows. No `body`. */
 export interface PostSummary {

@@ -9,6 +9,8 @@ import {
   commonMistake,
   callout,
   youtubeEmbed,
+  table,
+  postTable,
 } from './objects/portableTextObjects'
 import {
   statItem,
@@ -39,6 +41,8 @@ export const schemaTypes = [
   commonMistake,
   callout,
   youtubeEmbed,
+  table,
+  postTable,
 
   // homePage-only objects
   statItem,

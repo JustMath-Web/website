@@ -2597,3 +2597,94 @@ before committing to the geometry.
   the type block, and `document.querySelectorAll("mask")` returns exactly the header's one id
   (single instance on this page, so a static id is correct here — unlike the multi-instance
   `<Logo />` component, which needs `useId()`).
+
+## 45. Tables in blog posts — 2026-10-01
+
+**What.** Posts can contain a table. Editors insert **Table** from the body's insert menu, type a
+caption, optionally tick "First column labels the rows", and fill the grid (add/remove rows and
+columns, header-row toggle). Charlie chose Studio's built-in grid over a plain-text-cell custom block
+because cells need inline maths.
+
+**Shape (revised after Bob's review of PR #111, see 45a).** `studio/schemaTypes/objects/
+portableTextObjects.ts`:
+- `postTable` — what goes in `post.body`. Fields: `caption` (string, **required**), `rowHeaders`
+  (boolean, default false), `content` (a Portable Text field that must hold exactly one `table`).
+- `table` — the grid, in `postTable.content`. Studio's table editor binds to this shape:
+  `headerRows`, `rows[]` of `row` > `cells[]` of `cell` > `value[]` of blocks. Names are not ours to
+  change; `headerRows` must stay declared or the header toggle silently does nothing. A cell block
+  allows only `normal` style, bold/italic and `mathInline`.
+- Why a wrapper: the grid's own menu has only Header row / Select table / Delete table, so it has no
+  place for a caption or a row-header choice (confirmed live in Studio 6.16.0 on 2026-10-01). The
+  grid only renders inside a Portable Text field, hence `content` is one, with a `block` member
+  configured with no formatting. Validation (`schemaTypes/lib/tableValidation.ts`) requires exactly
+  one grid and rejects typed text outside it; empty paragraphs are the editor's scaffolding and are
+  ignored. `postTable` is registered in `schemaTypes/index.ts` (the `portableBodyOf` entry alone is
+  not enough) along with `table`.
+
+**Built-in editor, no new package.** Studio v6.6.0+ ships the table editor (docs: "Configure the
+Portable Text Editor" > Table editing); this project is on 6.16.0. It is off by default, so
+`studio/sanity.config.ts` turns it on via `form.components.portableText.plugins`. No `@sanity/table`,
+no new dependency (FE-40), no registry component (FE-41/42).
+
+**Accessibility rules enforced.**
+- Column headers (WCAG 1.3.1): a table cannot be published with the header row off, a header count
+  outside 1..rows, or a blank header cell (`validateTableHeader`). Verified live: turning the header
+  row off shows "Turn the header row on…" and blocks Publish.
+- Row headers: with `rowHeaders` on, the first cell of each body row renders as `<th scope="row">`.
+  With it off it stays `<td>`. The editor decides; the sample tables use both.
+- Name: `caption` is required; it is the visible `<caption>` and the scroll region's `aria-label`,
+  so two tables in one post never share a name.
+
+**Rendering.** `web/src/components/portabletext/Table.astro`: a real `<table>` with `<caption>`,
+`<thead>` of `<th scope="col">` for the first `headerRows` rows. Cell text goes through `PortableText`
+with the existing `MathInline` override, so maths uses the same KaTeX settings (`trust: false`). The
+table sits in `.table-scroll` (`overflow-x: auto`, `role="region"`, `tabindex="0"`) so a wide table
+scrolls inside its own box, never the page (FE-14), and keyboard users can scroll it. Square corners:
+`design/DESIGN.md` prescribes zero radius on tables. The landing page's table styles are page-scoped,
+so the blog component carries its own. A table with no rows renders nothing.
+
+**Known limits.** No merged cells (the editor has none), so no multi-level headers. Several header
+rows render as several `<thead>` rows, every cell `scope="col"`.
+
+**Tests.** Fixture post has three tables: short with maths and row headers; deliberately wide with
+row headers; and a plain-data one with row headers off. Four Playwright tests in `blog.spec.ts`:
+caption + column headers + row headers + maths in cells; first column stays `<td>` when row headers
+are off; 390px no page overflow with the wide table scrolling in its own focusable region; no-JS
+render. `studio` `test:table-validation` (CI) covers the header and wrapper rules. Full web suite 64
+passed, `astro check` 0 errors, `format:check`, all `test:*` guard scripts, `sanity schema validate`
+0 errors/0 warnings.
+
+**Deploy.** Studio must be redeployed (`pnpm deploy` in `studio/`) for editors to see the option; the
+web build needs no config change.
+
+### 45a. Bob's review of PR #111 at `12bab82` — fixes — 2026-10-01
+
+Bob returned **Revision required** (2 × P1, 1 × P2, 2 × P3). Each was re-checked before acting.
+
+| Finding | Result |
+|---|---|
+| P1 table can be published with no header row | **Confirmed, fixed.** `validateTableHeader` on `table`; unit-tested; live-verified in Studio. |
+| P1 first-column labels are `<td>`, not row headers | **Confirmed, fixed.** `rowHeaders` choice → `<th scope="row">`; both states tested. |
+| P2 caption optional, unnamed tables share the name "Table" | **Confirmed, fixed.** Caption required. |
+| P3 rounded frame vs zero-radius rule | **Confirmed, fixed** (square). |
+| P3 "Four new tests" overstated | **Confirmed, fixed** (was three at that head; now four, listed above). |
+
+Something Bob did not catch, found by testing live: the first version put `caption` on the grid
+itself, and Studio's grid editor has no input for it, so it could never be filled in. That is why the
+caption and the row-header choice moved to the `postTable` wrapper. Live Studio 6.16.0, 2026-10-01
+(throwaway draft in the production dataset, deleted afterwards): table inserts as a 3×3 grid with a
+header row; the grid menu has only the three items above; header-off shows the validation error.
+**Second live test, same day, head `0642c8e`** (second throwaway draft in the production dataset,
+authorised by Charlie, deleted afterwards; the post list was checked and shows the original 4 posts).
+Verified: **Table** appears in the body insert menu and opens a dialog with the required Caption box,
+the "First column labels the rows" switch and the nested Table field; **Insert → Table** inside it
+adds a 3×3 grid with a header row; a spaces-only caption shows "Body / Table / Caption — A table needs
+a caption."; the untouched grid shows "Every header cell needs text."; Publish stays blocked.
+**Not exercised live:** the "exactly one grid" / "remove the text" errors (unit-tested only), and
+the row-header switch's effect on published markup (covered by the Playwright fixture tests, not by a
+Studio-authored document).
+
+**Bob's second review (head `0caa9d6`), 2026-10-01.** One new P2, confirmed and fixed: the caption
+used `required()`, which accepts a string of only spaces, while `Table.astro` trims it, leaving an
+unnamed table. The rule is now `validateTableCaption`, which trims too (unit-tested with `''`,
+spaces, `\n\t`, `null`, `undefined`). Bob's verdict is blocked on the live wrapper test below.

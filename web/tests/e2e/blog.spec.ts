@@ -192,6 +192,72 @@ test.describe("blog post (/blog/[slug]/)", () => {
 	});
 });
 
+test.describe("blog post tables (Portable Text `table`)", () => {
+	test("renders a captioned table with column headers and inline maths in cells", async ({
+		page,
+	}) => {
+		await page.goto("/blog/why-surds-trip-up-students/");
+		const table = page.getByRole("table", {
+			name: "Simplest form of common surds",
+		});
+		await expect(table).toBeVisible();
+		// One header row: two real column headers, and the remaining rows are data rows.
+		await expect(table.locator("thead th[scope='col']")).toHaveCount(2);
+		await expect(table.locator("tbody tr")).toHaveCount(2);
+		// Inline maths inside a cell goes through the KaTeX override, not raw text.
+		await expect(
+			table.locator("tbody .math-inline .katex").first(),
+		).toBeVisible();
+		// First column labels the rows (rowHeaders on): those cells are row headers, the rest data.
+		await expect(table.locator("tbody th[scope='row']")).toHaveCount(2);
+		await expect(table.locator("tbody td")).toHaveCount(2);
+	});
+
+	test("the first column stays ordinary data when row headers are off", async ({
+		page,
+	}) => {
+		await page.goto("/blog/why-surds-trip-up-students/");
+		const table = page.getByRole("table", { name: "Powers of 2" });
+		await expect(table).toBeVisible();
+		await expect(table.locator("thead th[scope='col']")).toHaveCount(2);
+		await expect(table.locator("th[scope='row']")).toHaveCount(0);
+		await expect(table.locator("tbody td")).toHaveCount(4);
+	});
+
+	test("390px: a wide table scrolls inside its own box, not the page", async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto("/blog/why-surds-trip-up-students/");
+		await assertNoHorizontalOverflow(page);
+		const region = page.getByRole("region", {
+			name: "Index laws with an example each",
+		});
+		await expect(region).toBeVisible();
+		const { scrollWidth, clientWidth } = await region.evaluate((el) => ({
+			scrollWidth: el.scrollWidth,
+			clientWidth: el.clientWidth,
+		}));
+		expect(scrollWidth).toBeGreaterThan(clientWidth);
+		// A scroll box is only usable from the keyboard if it can take focus.
+		await region.focus();
+		await expect(region).toBeFocused();
+	});
+
+	test("renders with JavaScript disabled", async ({ browser }) => {
+		const context = await browser.newContext({ javaScriptEnabled: false });
+		const page = await context.newPage();
+		try {
+			await page.goto("/blog/why-surds-trip-up-students/");
+			await expect(
+				page.getByRole("table", { name: "Simplest form of common surds" }),
+			).toBeVisible();
+		} finally {
+			await context.close();
+		}
+	});
+});
+
 test.describe("KaTeX self-hosting and CSS scoping (VS-KaTeX)", () => {
 	test("no external CDN/font-host requests for CSS, fonts, or scripts on the post page", async ({
 		page,
