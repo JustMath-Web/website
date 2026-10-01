@@ -2688,3 +2688,58 @@ Studio-authored document).
 used `required()`, which accepts a string of only spaces, while `Table.astro` trims it, leaving an
 unnamed table. The rule is now `validateTableCaption`, which trims too (unit-tested with `''`,
 spaces, `\n\t`, `null`, `undefined`). Bob's verdict is blocked on the live wrapper test below.
+
+## 46. FAQ accordion in blog posts — 2026-10-01
+
+**What.** Posts can contain an FAQ accordion. Editors insert **FAQ accordion**, type a title, pick two
+heading levels, and add questions with answers. Charlie asked for it to follow shadcn/ui's Accordion
+with its `multiple` option (any number of answers open at once).
+
+**The two settings.** `titleLevel` (H2–H4, default H2) is the heading of the FAQ itself.
+`questionLevel` (H3–H6, default H3) is set once and applied to **every** question. Studio rejects a
+question level that is not deeper than the title level (`validateFaqLevels`), and **warns** when it
+skips a level, e.g. title H2 with questions H4 (`faqLevelSkipWarning`, FE-06). The renderer does not
+trust stored data: an unknown level falls back to the default, and a question at or above its title
+drops to the next level down.
+
+**Shape.** `studio/schemaTypes/objects/portableTextObjects.ts` `faqAccordion`: `title` (required,
+non-blank), `titleLevel`, `questionLevel`, `items[]` of `faqEntry` { `question` (required, non-blank),
+`answer` (Portable Text: normal paragraphs, bullet/numbered lists, bold/italic, links, inline maths) }.
+At least one question. The link annotation is now one shared `linkAnnotation` constant used by both the
+body and the answers; its rule is unchanged. Registered in `schemaTypes/index.ts` and `portableBodyOf`.
+
+**shadcn as the guideline, not as a dependency.** shadcn's Accordion is a React/Radix component. FE-33
+keeps Astro pages JS-free and FE-32 says not to script what the platform does, so this is native
+`<details>`/`<summary>` with no JavaScript. `multiple` maps to **leaving off the `name` attribute**
+(`<details name="…">` is what makes items exclusive; the landing page FAQ uses it on purpose). All items
+start closed. The look follows shadcn's: a chevron that flips when open, ruled rows, a slide on
+open/close — the slide is CSS (`::details-content`, Chromium 131+) and is dropped as a whole rule
+elsewhere, so nothing depends on it; it respects `prefers-reduced-motion` through the `--dur-3` token.
+No new dependency (FE-40), no registry component (FE-41/42).
+
+**Markup.** `<section aria-labelledby>` named by the title heading (FE-02), `<ul>` of `<li>` (FE-04),
+the question as a heading **inside** `<summary>` (allowed by the HTML spec; the heading role is
+asserted in Chromium by the tests). The question heading is restyled to read as the summary's own text
+because the post page styles `.prose h2/h3/h4` with higher specificity than one class — a test asserts
+margin and size so it cannot regress. Answers go through `PortableText` with the existing `MathInline`
+override.
+
+**Not done / to know.**
+- The FAQ title is **not** in the table of contents and gets no section anchor. Only top-level
+  headings are (`lib/content/postHeadings.ts`). The id on the title is for `aria-labelledby` only.
+- No `FAQPage` JSON-LD. `docs`/guideline §14: Google generally limits FAQ rich results to authoritative
+  government and health sites, so none is promised.
+- Heading-in-summary is exposed as a heading by Chromium; **not checked in VoiceOver/NVDA**.
+- Not exercised in a live Studio yet (see PR description).
+
+**Tests.** Fixture post has two FAQs (title H2 / questions H3, and title H3 / questions H5). Six new
+Playwright tests: both level pairs honoured; several answers open together and one closes alone;
+maths in an answer + Enter/Space from the keyboard; question margin/size; JavaScript disabled;
+390px no overflow with everything open and 44px tap targets. The TOC id test now ignores headings
+inside `.faq`. `studio` `test:faq-validation` (new CI step) covers the level rules and was checked to
+fail when the rule is broken. Full web suite 70 passed; `astro check` 0 errors; all guard scripts OK;
+`sanity schema validate` 0/0.
+
+One bug the tests caught before review: the question first rendered with a 32px top margin and the
+post heading font, because `.prose :global(h3)` out-ranks a single class. Fixed with a two-class
+selector; the margin test stays as the guard.

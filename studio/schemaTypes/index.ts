@@ -11,6 +11,7 @@ import {
   youtubeEmbed,
   table,
   postTable,
+  faqAccordion,
 } from './objects/portableTextObjects'
 import {
   statItem,
@@ -43,6 +44,7 @@ export const schemaTypes = [
   youtubeEmbed,
   table,
   postTable,
+  faqAccordion,
 
   // homePage-only objects
   statItem,

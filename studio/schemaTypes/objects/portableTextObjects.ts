@@ -1,4 +1,5 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
+import {faqLevelSkipWarning, validateFaqLevels, validateFaqText} from '../lib/faqValidation'
 import {
   validateTableCaption,
   validateTableFigureContent,
@@ -310,6 +311,140 @@ export const postTable = defineType({
   },
 })
 
+/** The one link annotation: http(s), mailto:, or an internal path. Shared by the body and FAQ answers. */
+const linkAnnotation = defineField({
+  name: 'link',
+  title: 'Link',
+  type: 'object',
+  fields: [
+    defineField({
+      name: 'href',
+      title: 'URL',
+      type: 'string',
+      description: 'http(s), mailto:, or an internal path starting with /.',
+      validation: (Rule) =>
+        Rule.required().custom((value: string | undefined) => {
+          if (!value) return true
+          const isValid =
+            /^https?:\/\//.test(value) || /^mailto:/.test(value) || value.startsWith('/')
+          return isValid || 'Must be http(s), mailto:, or start with /.'
+        }),
+    }),
+  ],
+})
+
+/**
+ * FAQ accordion for `post.body`. `titleLevel` and `questionLevel` are the two heading settings:
+ * the FAQ's own title, and — applied to every question — the questions. Rendered as native
+ * <details> with no `name`, so any number of answers can be open at once (shadcn's `multiple`).
+ */
+export const faqAccordion = defineType({
+  name: 'faqAccordion',
+  title: 'FAQ accordion',
+  type: 'object',
+  fields: [
+    defineField({
+      name: 'title',
+      title: 'FAQ title',
+      type: 'string',
+      description: 'The heading above the questions, e.g. "Common questions".',
+      validation: (Rule) => Rule.custom(validateFaqText),
+    }),
+    defineField({
+      name: 'titleLevel',
+      title: 'FAQ title heading level',
+      type: 'string',
+      description: 'Pick the level that fits where this FAQ sits in the post.',
+      options: {
+        layout: 'radio',
+        direction: 'horizontal',
+        list: [
+          {title: 'H2', value: 'h2'},
+          {title: 'H3', value: 'h3'},
+          {title: 'H4', value: 'h4'},
+        ],
+      },
+      initialValue: 'h2',
+    }),
+    defineField({
+      name: 'questionLevel',
+      title: 'Question heading level (all questions)',
+      type: 'string',
+      description: 'Applies to every question. Use the level just below the FAQ title.',
+      options: {
+        layout: 'radio',
+        direction: 'horizontal',
+        list: [
+          {title: 'H3', value: 'h3'},
+          {title: 'H4', value: 'h4'},
+          {title: 'H5', value: 'h5'},
+          {title: 'H6', value: 'h6'},
+        ],
+      },
+      initialValue: 'h3',
+    }),
+    defineField({
+      name: 'items',
+      title: 'Questions',
+      type: 'array',
+      of: [
+        defineArrayMember({
+          type: 'object',
+          name: 'faqEntry',
+          title: 'Question',
+          fields: [
+            defineField({
+              name: 'question',
+              title: 'Question',
+              type: 'string',
+              validation: (Rule) => Rule.custom(validateFaqText),
+            }),
+            defineField({
+              name: 'answer',
+              title: 'Answer',
+              type: 'array',
+              of: [
+                defineArrayMember({
+                  type: 'block',
+                  styles: [{title: 'Normal', value: 'normal'}],
+                  lists: [
+                    {title: 'Bullet', value: 'bullet'},
+                    {title: 'Numbered', value: 'number'},
+                  ],
+                  marks: {
+                    decorators: [
+                      {title: 'Strong', value: 'strong'},
+                      {title: 'Emphasis', value: 'em'},
+                    ],
+                    annotations: [linkAnnotation],
+                  },
+                  of: [defineArrayMember({type: 'mathInline'})],
+                }),
+              ],
+              validation: (Rule) => Rule.required().min(1),
+            }),
+          ],
+          preview: {
+            select: {title: 'question'},
+          },
+        }),
+      ],
+      validation: (Rule) => Rule.required().min(1),
+    }),
+  ],
+  validation: (Rule) => [
+    Rule.custom(validateFaqLevels).error(),
+    Rule.custom(faqLevelSkipWarning).warning(),
+  ],
+  preview: {
+    select: {title: 'title', items: 'items'},
+    prepare: ({title, items}) => ({
+      title: title || 'FAQ (no title)',
+      subtitle: `${items?.length ?? 0} questions`,
+    }),
+  },
+})
+
 /**
  * Reusable Portable Text array config for `post.body`. Not a named schema `type` itself — Sanity
  * Portable Text arrays are configured inline, and wrapping this in an extra object type would
@@ -334,28 +469,7 @@ export const portableBodyOf = [
         {title: 'Strong', value: 'strong'},
         {title: 'Emphasis', value: 'em'},
       ],
-      annotations: [
-        defineField({
-          name: 'link',
-          title: 'Link',
-          type: 'object',
-          fields: [
-            defineField({
-              name: 'href',
-              title: 'URL',
-              type: 'string',
-              description: 'http(s), mailto:, or an internal path starting with /.',
-              validation: (Rule) =>
-                Rule.required().custom((value: string | undefined) => {
-                  if (!value) return true
-                  const isValid =
-                    /^https?:\/\//.test(value) || /^mailto:/.test(value) || value.startsWith('/')
-                  return isValid || 'Must be http(s), mailto:, or start with /.'
-                }),
-            }),
-          ],
-        }),
-      ],
+      annotations: [linkAnnotation],
     },
     of: [defineArrayMember({type: 'mathInline'})],
   }),
@@ -366,4 +480,5 @@ export const portableBodyOf = [
   defineArrayMember({type: 'imageWithAlt'}),
   defineArrayMember({type: 'youtubeEmbed'}),
   defineArrayMember({type: 'postTable'}),
+  defineArrayMember({type: 'faqAccordion'}),
 ]

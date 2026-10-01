@@ -107,4 +107,5 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test:table-validation
+      - run: pnpm test:faq-validation
       - run: pnpm build

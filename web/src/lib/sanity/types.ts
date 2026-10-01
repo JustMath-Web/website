@@ -185,6 +185,29 @@ export interface PostTable {
 	content?: (Table | PortableTextBlock)[];
 }
 
+/** One question. `answer` is plain Portable Text: paragraphs, lists, bold/italic, links, inline maths. */
+export interface FaqEntry {
+	_key: string;
+	_type: "faqEntry";
+	question: string;
+	answer: PortableTextBlock[];
+}
+
+/**
+ * The two heading settings are strings from Studio's radio lists. The renderer re-validates them
+ * (a question must sit deeper than the title) rather than trusting stored data.
+ */
+export interface FaqAccordion {
+	_key: string;
+	_type: "faqAccordion";
+	title: string;
+	/** h2–h4. */
+	titleLevel?: string;
+	/** h3–h6; applies to every question. */
+	questionLevel?: string;
+	items?: FaqEntry[];
+}
+
 export type PostBodyBlock =
 	| PortableTextBlock
 	| MathBlock
@@ -193,7 +216,8 @@ export type PostBodyBlock =
 	| Callout
 	| PortableTextImage
 	| YoutubeEmbed
-	| PostTable;
+	| PostTable
+	| FaqAccordion;
 
 /** Card/listing shape — archive and category-archive rows. No `body`. */
 export interface PostSummary {

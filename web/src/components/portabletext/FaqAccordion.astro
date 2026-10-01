@@ -1,0 +1,178 @@
+---
+import { PortableText } from "astro-portabletext";
+import type { FaqAccordion } from "../../lib/sanity/types";
+import MathInline from "./MathInline.astro";
+
+interface Props {
+	node: FaqAccordion;
+}
+
+const { node } = Astro.props;
+
+// Heading levels come from two Studio settings. Studio rejects a bad pair, but the data is not
+// trusted here: an unknown value falls back to the default, and a question never renders at or
+// above its own title (that would break the outline), it drops to the next level down.
+function headingLevel(
+	raw: string | undefined,
+	allowed: number[],
+	fallback: number,
+) {
+	const level = Number(raw?.slice(1));
+	return raw?.[0] === "h" && allowed.includes(level) ? level : fallback;
+}
+const titleLevel = headingLevel(node.titleLevel, [2, 3, 4], 2);
+let questionLevel = headingLevel(node.questionLevel, [3, 4, 5, 6], 3);
+if (questionLevel <= titleLevel) questionLevel = Math.min(titleLevel + 1, 6);
+
+const TitleTag = `h${titleLevel}` as "h2" | "h3" | "h4";
+const QuestionTag = `h${questionLevel}` as "h3" | "h4" | "h5" | "h6";
+
+const title = node.title?.trim();
+const titleId = `faq-${node._key}`;
+const items = (node.items ?? []).filter((item) => item.question?.trim());
+
+const answerComponents = { type: { mathInline: MathInline } };
+---
+
+{
+	items.length > 0 && (
+		<section
+			class="faq"
+			aria-labelledby={title ? titleId : undefined}
+			aria-label={title ? undefined : "Frequently asked questions"}
+		>
+			{title && <TitleTag id={titleId}>{title}</TitleTag>}
+			<ul class="faq__list">
+				{items.map((item) => (
+					<li>
+						{/* No `name` attribute: that would make the items exclusive. Leaving it off
+						    lets any number of answers stay open together (shadcn's `multiple`). */}
+						<details class="faq__item">
+							<summary class="faq__summary">
+								<QuestionTag class="faq__question">{item.question}</QuestionTag>
+								<i class="faq__chevron" aria-hidden="true" />
+							</summary>
+							<div class="faq__answer">
+								<PortableText
+									value={item.answer ?? []}
+									components={answerComponents}
+								/>
+							</div>
+						</details>
+					</li>
+				))}
+			</ul>
+		</section>
+	)
+}
+
+<style>
+	.faq {
+		margin: var(--space-6) 0;
+	}
+
+	/* Room between the FAQ title and the first rule; the heading's own margin-bottom is the UA's. */
+	.faq > :global(:is(h2, h3, h4)) {
+		margin-bottom: var(--space-4);
+	}
+
+	.faq__list {
+		margin: 0;
+		padding: 0;
+		border-top: 1px solid var(--rule);
+		list-style: none;
+	}
+
+	.faq__list li {
+		margin: 0;
+		padding: 0;
+		border-bottom: 1px solid var(--rule);
+	}
+
+	.faq__summary {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-4);
+		min-height: var(--control-h);
+		padding: var(--space-4) 0;
+		color: var(--ink-700);
+		cursor: pointer;
+		list-style: none;
+		transition: color var(--dur-1) var(--ease-standard);
+	}
+
+	/* `list-style: none` covers Chromium/Firefox; this covers Safari/older WebKit. */
+	.faq__summary::-webkit-details-marker {
+		display: none;
+	}
+
+	.faq__summary:hover,
+	.faq__item[open] > .faq__summary {
+		color: var(--ink-900);
+	}
+
+	.faq__summary:focus-visible {
+		outline: 2px solid var(--ink-900);
+		outline-offset: 2px;
+	}
+
+	/* The question is a real heading inside the summary, so it must look like the summary's own
+	   text, not like a post heading. The post page styles `.prose h2/h3/h4` (margin, size, serif
+	   font) with a higher specificity than one class, hence the two-class selector. */
+	.faq__summary .faq__question {
+		margin: 0;
+		color: inherit;
+		font: var(--weight-medium) 1rem / 1.4 var(--font-sans);
+	}
+
+	.faq__chevron {
+		flex: none;
+		width: 8px;
+		height: 8px;
+		margin-right: 4px;
+		border-right: 2px solid var(--ink-600);
+		border-bottom: 2px solid var(--ink-600);
+		transform: translateY(-2px) rotate(45deg);
+		transition: transform var(--dur-3) var(--ease-standard);
+	}
+
+	.faq__item[open] > .faq__summary .faq__chevron {
+		transform: translateY(2px) rotate(-135deg);
+	}
+
+	.faq__answer {
+		padding-bottom: var(--space-4);
+		color: var(--text-body);
+	}
+
+	/* PortableText renders paragraphs/lists straight into the panel; trim the outer margins so the
+	   panel's own padding sets the spacing. */
+	.faq__answer > :global(:first-child) {
+		margin-top: 0;
+	}
+
+	.faq__answer > :global(:last-child) {
+		margin-bottom: 0;
+	}
+
+	/* Slide open/closed where the browser supports it (Chromium 131+). Elsewhere this rule is
+	   dropped whole and the answer simply appears — nothing depends on it. The duration token is
+	   zeroed under prefers-reduced-motion (styles/tokens/motion.css). Own rule, not grouped with
+	   another selector, so an unsupported pseudo-element cannot void anything else. */
+	.faq__item::details-content {
+		block-size: 0;
+		overflow: hidden;
+		transition:
+			block-size var(--dur-3) var(--ease-standard),
+			content-visibility var(--dur-3) allow-discrete;
+	}
+
+	.faq__item[open]::details-content {
+		block-size: auto;
+	}
+
+	.faq__item {
+		interpolate-size: allow-keywords;
+	}
+</style>
