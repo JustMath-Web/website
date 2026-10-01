@@ -58,3 +58,11 @@ export function validateTableFigureContent(value: unknown): true | string {
   )
   return stray ? 'Remove the text outside the grid. Put it inside a table cell.' : true
 }
+
+/**
+ * `required()` accepts a caption of only spaces, but Table.astro trims it, which would leave the
+ * table unnamed — so the check trims too.
+ */
+export function validateTableCaption(value: unknown): true | string {
+  return typeof value === 'string' && value.trim() ? true : 'A table needs a caption.'
+}

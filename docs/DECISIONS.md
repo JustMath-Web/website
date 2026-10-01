@@ -2676,3 +2676,8 @@ caption and the row-header choice moved to the `postTable` wrapper. Live Studio 
 header row; the grid menu has only the three items above; header-off shows the validation error.
 **Not yet verified live:** the wrapper's own editing flow (caption field, checkbox, inserting the
 grid inside it).
+
+**Bob's second review (head `0caa9d6`), 2026-10-01.** One new P2, confirmed and fixed: the caption
+used `required()`, which accepts a string of only spaces, while `Table.astro` trims it, leaving an
+unnamed table. The rule is now `validateTableCaption`, which trims too (unit-tested with `''`,
+spaces, `\n\t`, `null`, `undefined`). Bob's verdict is blocked on the live wrapper test below.

@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict'
-import {validateTableFigureContent, validateTableHeader} from '../schemaTypes/lib/tableValidation'
+import {
+  validateTableCaption,
+  validateTableFigureContent,
+  validateTableHeader,
+} from '../schemaTypes/lib/tableValidation'
 
 const text = (t: string) => ({value: [{children: [{_type: 'span', text: t}]}]})
 const math = (latex: string) => ({value: [{children: [{_type: 'mathInline', latex}]}]})
@@ -37,5 +41,5 @@ assert.match(String(validateTableFigureContent([grid, grid])), /exactly one tabl
 assert.match(String(validateTableFigureContent([para('Notes'), grid])), /Remove the text/)
 
 console.log(
-  'OK: table validation rejects header-off, blank-header, no-grid, two-grid and stray-text tables.',
+  'OK: table validation rejects header-off, blank-header, no-grid, two-grid, stray-text and blank-caption tables.',
 )

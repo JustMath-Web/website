@@ -1,5 +1,9 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
-import {validateTableFigureContent, validateTableHeader} from '../lib/tableValidation'
+import {
+  validateTableCaption,
+  validateTableFigureContent,
+  validateTableHeader,
+} from '../lib/tableValidation'
 
 /**
  * docs/CONTENT-MODEL.md §2 `portableBlock`. mathInline is an inline child object (renders inside
@@ -269,7 +273,7 @@ export const postTable = defineType({
       type: 'string',
       description:
         'Names the table for screen readers and shows above it. Say what the table shows, e.g. "Simplest form of common surds".',
-      validation: (Rule) => Rule.required().error('A table needs a caption.'),
+      validation: (Rule) => Rule.custom(validateTableCaption),
     }),
     defineField({
       name: 'rowHeaders',
