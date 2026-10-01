@@ -2630,7 +2630,7 @@ multi-level header (spanning cells) is not supported — the editor has no cell 
 **Not done / to know.** Row headers (first column as `<th scope="row">`) are not rendered; the editor
 has no per-column setting for it. Add if a post needs it.
 
-**Tests.** Fixture post gained two tables (short with inline maths; deliberately wide). Four new
+**Tests.** Fixture post gained two tables (short with inline maths; deliberately wide). Three new
 Playwright tests in `blog.spec.ts`: caption + header cells + maths in cells, 390px no page overflow
 with the wide table scrolling in its own focusable region, and no-JS render. Full suite 63 passed.
 `astro check` 0 errors, `format:check`, all `test:*` guard scripts, `sanity schema validate` 0

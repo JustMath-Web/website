@@ -1,4 +1,5 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
+import {validateTableHeader} from '../lib/tableValidation'
 
 /**
  * docs/CONTENT-MODEL.md §2 `portableBlock`. mathInline is an inline child object (renders inside
@@ -247,6 +248,7 @@ export const table = defineType({
       validation: (Rule) => Rule.required().min(1),
     }),
   ],
+  validation: (Rule) => Rule.custom(validateTableHeader),
   preview: {
     select: {caption: 'caption', rows: 'rows'},
     prepare: ({caption, rows}) => ({
