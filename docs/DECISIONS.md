@@ -2740,6 +2740,15 @@ Cloudflare's source rules are from its current Workers Static Assets redirect do
 **Duplicate status:** if two documents share `From` and `To` but differ on `permanent`, 301 wins, so
 the deployed status no longer depends on fetch order.
 
+**Live Studio check (Bob's last gate on PR #115), 2026-10-02.** Charlie ran the local Studio
+(`pnpm dev` in `studio/`, `http://localhost:3333`, branch `feat/sanity-redirects` at `5ebe9f2`)
+against the production dataset and reported steps 3–7 "as expected", in his own words: a temporary
+draft with From `/pricing ` (trailing space) showed an error and blocked Publish; changing it to
+`/review-test` → `/blog/` cleared the error and Publish became available; the valid draft was not
+published, was deleted, and the redirect list was checked. This is Charlie's report, not an
+observation by Andy or Bob: no screenshot was taken, and Andy's attempt to drive Studio through
+Chrome failed (the extension's tab group kept disappearing) before any write.
+
 **Verified.** Build against the live `production` dataset: log line "1 Sanity redirect(s) added,
 0 skipped", and `dist/_redirects` ends with `/pricing /#pricing 301`. Not verified: the rule
 actually redirecting on the deployed Worker (needs a deploy), and `/pricing` versus `/pricing/` —
