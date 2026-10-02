@@ -2826,4 +2826,3 @@ Andy in the source before fixing.**
   in `withHeadingIds`.
 - **Still open:** Bob's live Studio check — insert an FAQ, confirm a skipped pair and a blank answer
   block each block Publish and a valid FAQ does — needs Charlie's local Studio, as for PR #115. Not yet done.
-
