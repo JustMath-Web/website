@@ -2688,3 +2688,41 @@ Studio-authored document).
 used `required()`, which accepts a string of only spaces, while `Table.astro` trims it, leaving an
 unnamed table. The rule is now `validateTableCaption`, which trims too (unit-tested with `''`,
 spaces, `\n\t`, `null`, `undefined`). Bob's verdict is blocked on the live wrapper test below.
+
+## 46. Sanity redirects now reach the live site — 2026-10-02
+
+**Bug.** A redirect saved in Studio did nothing. The `redirect` schema, the `redirectsQuery` GROQ
+query, `getRedirects()` and the `Redirect` type all existed, and nothing called `getRedirects()`.
+§24's FE-24 row said as much ("redirect *documents* … not yet consumed by a route"). Only the
+hand-written `web/public/_redirects` ever took effect.
+
+**Fix.** `src/lib/content/sanityRedirectsIntegration.ts` is an Astro integration on
+`astro:build:done`. It reads published `redirect` documents and appends the valid ones to
+`dist/_redirects`, after the static rules. `public/_redirects` is unchanged and nothing generated is
+committed. The merge itself is the pure function `mergeRedirects` in `src/lib/content/mergeRedirects.ts`.
+
+**Rules the merge enforces** (asserted by `pnpm test:merge-redirects`, wired into CI):
+- Each field is one token: any space or line break skips the entry. Editor text goes into a file
+  Cloudflare parses line by line, so this is the security boundary.
+- `from` must start with a single `/`; `/` itself, `*` and `:` are rejected (no home-page redirect,
+  no wildcards). `to` is a path or an `https://` URL.
+- A path already in the static file wins. A duplicate path inside Sanity resolves deterministically.
+- One hop (guideline CORE-20): a rule whose target is itself redirected is skipped. Self-loops too.
+- `permanent: false` → 302, otherwise 301.
+- A bad entry is skipped and logged in the build output, never thrown.
+
+**Failure policy.** Matches the blog's. With `DEPLOY_ENV=production`, missing Sanity variables or a
+failed fetch fails the build, so production never ships quietly without its redirects. Elsewhere it
+warns and keeps only the static rules.
+
+**Still true.** The site is static, so a redirect goes live on the **next build**. That needs the
+Sanity publish webhook → Cloudflare deploy hook (guideline §20). Whether that webhook exists is
+**not verified from the repo** — it is a dashboard setting. Until it is confirmed, an editor must
+trigger a build by hand after saving a redirect. The `www` → apex redirect is unaffected: it is a
+Cloudflare zone rule (dashboard, not in this repo), not part of this. Guideline §20 asks for that
+rule's location to be recorded here; no entry for it exists yet.
+
+**Verified.** Build against the live `production` dataset: log line "1 Sanity redirect(s) added,
+0 skipped", and `dist/_redirects` ends with `/pricing /#pricing 301`. Not verified: the rule
+actually redirecting on the deployed Worker (needs a deploy), and `/pricing` versus `/pricing/` —
+Cloudflare matches the exact path, and the static file already has `/pricing/`.
