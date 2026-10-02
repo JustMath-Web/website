@@ -2761,11 +2761,13 @@ heading levels, and add questions with answers. Charlie asked for it to follow s
 with its `multiple` option (any number of answers open at once).
 
 **The two settings.** `titleLevel` (H2–H4, default H2) is the heading of the FAQ itself.
-`questionLevel` (H3–H6, default H3) is set once and applied to **every** question. Studio rejects a
-question level that is not deeper than the title level (`validateFaqLevels`), and **warns** when it
-skips a level, e.g. title H2 with questions H4 (`faqLevelSkipWarning`, FE-06). The renderer does not
-trust stored data: an unknown level falls back to the default, and a question at or above its title
-drops to the next level down.
+`questionLevel` (H3–H5, default H3) is set once and applied to **every** question, and must be
+**exactly one level below** the title: H2→H3, H3→H4, H4→H5 (`validateFaqLevels`, an error that blocks
+Publish; FE-06). *Revised after Bob's review (below):* it was first "deeper than the title" with a
+warning for a skipped level, which let Publish through a heading outline with a gap inside the FAQ's
+own parent–child pair. H6 is no longer offered, since titles stop at H4 and H6 could never be valid.
+The renderer does not trust stored data: it always renders questions one level below the title, so an
+older or script-written document cannot produce a gap.
 
 **Shape.** `studio/schemaTypes/objects/portableTextObjects.ts` `faqAccordion`: `title` (required,
 non-blank), `titleLevel`, `questionLevel`, `items[]` of `faqEntry` { `question` (required, non-blank),
@@ -2790,21 +2792,38 @@ margin and size so it cannot regress. Answers go through `PortableText` with the
 override.
 
 **Not done / to know.**
-- The FAQ title is **not** in the table of contents and gets no section anchor. Only top-level
-  headings are (`lib/content/postHeadings.ts`). The id on the title is for `aria-labelledby` only.
+- The FAQ title **is** in the table of contents (revised after Bob's review, below), at its own level,
+  with a unique slug id from the same `withHeadingIds` pass as every other heading. Question headings
+  are not sections and are not listed. A title the page does not render (no title, or no question)
+  gets no entry.
 - No `FAQPage` JSON-LD. `docs`/guideline §14: Google generally limits FAQ rich results to authoritative
   government and health sites, so none is promised.
 - Heading-in-summary is exposed as a heading by Chromium; **not checked in VoiceOver/NVDA**.
 - Not exercised in a live Studio yet (see PR description).
 
-**Tests.** Fixture post has two FAQs (title H2 / questions H3, and title H3 / questions H5). Six new
+**Tests.** Fixture post has two FAQs (title H2 / questions H3, and title H3 / questions H4). Six new
 Playwright tests: both level pairs honoured; several answers open together and one closes alone;
 maths in an answer + Enter/Space from the keyboard; question margin/size; JavaScript disabled;
-390px no overflow with everything open and 44px tap targets. The TOC id test now ignores headings
-inside `.faq`. `studio` `test:faq-validation` (new CI step) covers the level rules and was checked to
+390px no overflow with everything open and 44px tap targets. The TOC id test now ignores only question headings. `studio` `test:faq-validation` (new CI step) covers the level rules and was checked to
 fail when the rule is broken. Full web suite 70 passed; `astro check` 0 errors; all guard scripts OK;
 `sanity schema validate` 0/0.
 
 One bug the tests caught before review: the question first rendered with a 32px top margin and the
 post heading font, because `.prose :global(h3)` out-ranks a single class. Fixed with a two-class
 selector; the margin test stays as the guard.
+
+**Bob's review of head `2cd9106` (2026-10-01): Revision required — three findings, each reproduced by
+Andy in the source before fixing.**
+- **P1, skipped level was only a warning.** Fixed as above: exact-one-below is an error; `faqLevelSkipWarning`
+  is removed; the fixture's second FAQ is now title H3 / questions H4.
+- **P2, a one-block answer could hold no text.** `required().min(1)` counts blocks, not text. New
+  `validateFaqAnswer`: at least one non-blank text run or inline maths (a maths-only answer is valid).
+  Tested with an empty block, no children, blank spans, whitespace/tab, blank maths, and valid cases.
+- **P2, FAQ titles missing from the contents list.** Chose Bob's first option (include them) rather than
+  record an exclusion, because the owner asked in §42 for every H2–H4 section. `faqVisibleItems` and
+  `faqTitleLevel` are shared by the component and the heading pass so they cannot disagree.
+  **Charlie can reverse this** if FAQ sections should stay out of the contents list; it is one branch
+  in `withHeadingIds`.
+- **Still open:** Bob's live Studio check — insert an FAQ, confirm a skipped pair and a blank answer
+  block each block Publish and a valid FAQ does — needs Charlie's local Studio, as for PR #115. Not yet done.
+

@@ -277,13 +277,14 @@ test.describe("blog post FAQ accordion (Portable Text `faqAccordion`)", () => {
 			}),
 		).toBeVisible();
 		await expect(first.getByRole("heading", { level: 3 })).toHaveCount(3);
-		// FAQ 2: title H3, questions H5 — a different pair, same component.
+		// FAQ 2: title H3, questions H4 — a different valid pair, same component. The question level is
+		// always exactly one below the title (Bob, PR #114 P1): no skipped H4 inside the FAQ.
 		const second = page.getByRole("region", { name: "More about indices" });
 		await expect(
 			second.getByRole("heading", { level: 3, name: "More about indices" }),
 		).toBeVisible();
-		await expect(second.getByRole("heading", { level: 5 })).toHaveCount(2);
-		await expect(second.getByRole("heading", { level: 4 })).toHaveCount(0);
+		await expect(second.getByRole("heading", { level: 4 })).toHaveCount(2);
+		await expect(second.getByRole("heading", { level: 5 })).toHaveCount(0);
 	});
 
 	test("answers start closed and several can be open at once (multiple)", async ({
@@ -476,16 +477,19 @@ test.describe("blog post table of contents", () => {
 		"worked-example-2",
 		"adding-under-the-root",
 		"see-it-step-by-step",
+		// FAQ section titles are post sections too (Bob, PR #114 P2): same pass, same TOC.
+		"common-questions-about-surds",
+		"more-about-indices",
 	];
 
 	test("every H2–H4 gets a unique id, and each TOC link points at one", async ({
 		page,
 	}) => {
 		await page.goto(POST);
-		// Headings inside an FAQ accordion are not post sections: they are not in the TOC and carry no
-		// section id, so they are left out of this count.
+		// An FAQ's title is a post section and gets an id; its question headings are not sections and
+		// carry none, so they are left out of this count.
 		const ids = await page
-			.locator(".prose :is(h2, h3, h4):not(.faq *)")
+			.locator(".prose :is(h2, h3, h4):not(.faq__question)")
 			.evaluateAll((els) => els.map((el) => el.id));
 		expect(ids).toEqual(EXPECTED_IDS);
 

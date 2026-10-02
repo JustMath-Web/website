@@ -1,5 +1,5 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
-import {faqLevelSkipWarning, validateFaqLevels, validateFaqText} from '../lib/faqValidation'
+import {validateFaqAnswer, validateFaqLevels, validateFaqText} from '../lib/faqValidation'
 import {
   validateTableCaption,
   validateTableFigureContent,
@@ -370,7 +370,8 @@ export const faqAccordion = defineType({
       name: 'questionLevel',
       title: 'Question heading level (all questions)',
       type: 'string',
-      description: 'Applies to every question. Use the level just below the FAQ title.',
+      description:
+        'Applies to every question. Must be exactly one level below the FAQ title (title H2 → H3, H3 → H4, H4 → H5).',
       options: {
         layout: 'radio',
         direction: 'horizontal',
@@ -378,7 +379,6 @@ export const faqAccordion = defineType({
           {title: 'H3', value: 'h3'},
           {title: 'H4', value: 'h4'},
           {title: 'H5', value: 'h5'},
-          {title: 'H6', value: 'h6'},
         ],
       },
       initialValue: 'h3',
@@ -421,7 +421,7 @@ export const faqAccordion = defineType({
                   of: [defineArrayMember({type: 'mathInline'})],
                 }),
               ],
-              validation: (Rule) => Rule.required().min(1),
+              validation: (Rule) => Rule.required().min(1).custom(validateFaqAnswer),
             }),
           ],
           preview: {
@@ -432,10 +432,7 @@ export const faqAccordion = defineType({
       validation: (Rule) => Rule.required().min(1),
     }),
   ],
-  validation: (Rule) => [
-    Rule.custom(validateFaqLevels).error(),
-    Rule.custom(faqLevelSkipWarning).warning(),
-  ],
+  validation: (Rule) => Rule.custom(validateFaqLevels).error(),
   preview: {
     select: {title: 'title', items: 'items'},
     prepare: ({title, items}) => ({

@@ -306,8 +306,8 @@ const surdsBody: PostBodyBlock[] = [
 			"Yes, unless the question asks for a decimal. Leaving it exact avoids rounding errors.",
 		),
 	]),
-	// Different levels (title H3, questions H5) to prove both settings are honoured.
-	faqBlock("f2", "More about indices", "h3", "h5", [
+	// A different valid pair (title H3, questions H4) to prove the level follows the title.
+	faqBlock("f2", "More about indices", "h3", "h4", [
 		faqEntry(
 			"f2q1",
 			"What is a zero index?",

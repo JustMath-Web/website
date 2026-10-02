@@ -203,7 +203,7 @@ export interface FaqAccordion {
 	title: string;
 	/** h2–h4. */
 	titleLevel?: string;
-	/** h3–h6; applies to every question. */
+	/** h3–h5; must be exactly one below `titleLevel`; applies to every question. */
 	questionLevel?: string;
 	items?: FaqEntry[];
 }

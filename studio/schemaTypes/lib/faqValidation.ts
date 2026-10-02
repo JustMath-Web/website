@@ -1,5 +1,6 @@
 const TITLE_LEVELS = ['h2', 'h3', 'h4']
-const QUESTION_LEVELS = ['h3', 'h4', 'h5', 'h6']
+// H6 is not offered: titles stop at H4, so the one level below them stops at H5.
+const QUESTION_LEVELS = ['h3', 'h4', 'h5']
 
 interface FaqLike {
   titleLevel?: string
@@ -14,9 +15,11 @@ export function validateFaqText(value: unknown): true | string {
 }
 
 /**
- * The two heading settings must describe a real outline: a question is a child of the FAQ title,
- * so its level has to be deeper (WCAG 1.3.1). Anything outside the offered lists means the field
- * was cleared or written by a script — the page would silently fall back, so reject it here.
+ * The two heading settings must describe a real outline: a question is a direct child of the FAQ
+ * title, so its level is exactly one deeper (FE-06). A skipped level inside that pair is not
+ * something the surrounding article can repair, so it blocks Publish. Anything outside the offered
+ * lists means the field was cleared or written by a script — the page would silently fall back, so
+ * reject it here.
  */
 export function validateFaqLevels(value: unknown): true | string {
   const faq = value as FaqLike | undefined
@@ -25,22 +28,30 @@ export function validateFaqLevels(value: unknown): true | string {
     return 'Choose a heading level for the FAQ title (H2–H4).'
   }
   if (!faq.questionLevel || !QUESTION_LEVELS.includes(faq.questionLevel)) {
-    return 'Choose a heading level for the questions (H3–H6).'
+    return 'Choose a heading level for the questions (H3–H5).'
   }
-  if (rank(faq.questionLevel) <= rank(faq.titleLevel)) {
-    return 'Questions must sit deeper than the FAQ title, e.g. title H2 → questions H3.'
+  const expected = rank(faq.titleLevel) + 1
+  if (rank(faq.questionLevel) !== expected) {
+    return `Questions must be exactly one level below the FAQ title: title ${faq.titleLevel.toUpperCase()} → questions H${expected}.`
   }
   return true
 }
 
+interface AnswerBlockLike {
+  children?: {_type?: string; text?: string; latex?: string}[]
+}
+
 /**
- * Skipping a level (title H2, questions H4) is allowed — the surrounding post decides what is right
- * — but it leaves a gap in the outline, so it is a warning, not an error (FE-06).
+ * `required().min(1)` only counts blocks, so one empty paragraph passes and the published
+ * disclosure opens onto a blank panel. An answer needs at least one non-blank text run or inline
+ * maths. A missing or empty array is left to `required()`/`min(1)`, not reported twice.
  */
-export function faqLevelSkipWarning(value: unknown): true | string {
-  const faq = value as FaqLike | undefined
-  if (!faq || validateFaqLevels(faq) !== true) return true
-  return rank(faq.questionLevel as string) - rank(faq.titleLevel as string) > 1
-    ? 'The questions skip a heading level below the title. Use the next level down unless the page around it needs this.'
-    : true
+export function validateFaqAnswer(value: unknown): true | string {
+  if (!Array.isArray(value) || value.length === 0) return true
+  const hasContent = (value as AnswerBlockLike[]).some((block) =>
+    (block.children ?? []).some((child) =>
+      child._type === 'mathInline' ? !!child.latex?.trim() : !!child.text?.trim(),
+    ),
+  )
+  return hasContent ? true : 'Write an answer. A blank paragraph would open to an empty panel.'
 }
