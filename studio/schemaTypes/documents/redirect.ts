@@ -1,4 +1,5 @@
 import {defineField, defineType} from 'sanity'
+import {validateRedirectFrom, validateRedirectTo} from '../lib/redirectValidation'
 
 export const redirect = defineType({
   name: 'redirect',
@@ -9,10 +10,9 @@ export const redirect = defineType({
       name: 'from',
       title: 'From',
       type: 'string',
-      validation: (Rule) =>
-        Rule.required().custom((value: string | undefined) =>
-          !value || value.startsWith('/') ? true : 'Must start with /',
-        ),
+      description:
+        'The old address, starting with / — for example /pricing. No spaces, no wildcards, no ? or #.',
+      validation: (Rule) => Rule.required().custom((value) => validateRedirectFrom(value)),
     }),
     defineField({
       name: 'to',
@@ -21,11 +21,9 @@ export const redirect = defineType({
       description:
         'Internal path (starting with /) or an https:// URL. No other scheme is allowed.',
       validation: (Rule) =>
-        Rule.required().custom((value: string | undefined) => {
-          if (!value) return true
-          const isValid = value.startsWith('/') || value.startsWith('https://')
-          return isValid || 'Must be an internal path starting with / or an https:// URL.'
-        }),
+        Rule.required().custom((value, context) =>
+          validateRedirectTo(value, (context.document as {from?: unknown} | undefined)?.from),
+        ),
     }),
     defineField({
       name: 'permanent',
