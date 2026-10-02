@@ -5,6 +5,7 @@ import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
 
 import { checkDeployEnv } from "./src/lib/content/assertDeployEnv.ts";
+import { sanityRedirects } from "./src/lib/content/sanityRedirectsIntegration.ts";
 
 /**
  * Fails the build when Cloudflare says it is deploying `main` but DEPLOY_ENV does not say
@@ -29,7 +30,7 @@ const deployEnvGuard = {
 // https://astro.build/config
 export default defineConfig({
 	site: "https://mathematicsmalaysia.com",
-	integrations: [deployEnvGuard, sitemap()],
+	integrations: [deployEnvGuard, sitemap(), sanityRedirects()],
 	vite: {
 		plugins: [tailwindcss()],
 		build: {

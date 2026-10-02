@@ -14,6 +14,7 @@
     "seed:dry-run": "tsx scripts/seed.ts --dry-run",
     "test:table-validation": "tsx scripts/assert-table-validation.ts",
     "test:faq-validation": "tsx scripts/assert-faq-validation.ts",
+    "test:redirect-validation": "tsx scripts/assert-redirect-validation.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",

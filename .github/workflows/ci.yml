@@ -69,6 +69,10 @@ jobs:
       # leaves ordinary content byte-identical to plain JSON.stringify.
       - run: pnpm test:json-ld-escaping
       - run: pnpm test:post-heading-ids
+      # Sanity redirect documents are merged into dist/_redirects at build time. Editor-typed text
+      # lands in a line-oriented file, so this asserts a newline or space can never become a second
+      # rule, and that loops, chains and home-page redirects are rejected.
+      - run: pnpm test:merge-redirects
 
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
@@ -108,4 +112,5 @@ jobs:
       - run: pnpm lint
       - run: pnpm test:table-validation
       - run: pnpm test:faq-validation
+      - run: pnpm test:redirect-validation
       - run: pnpm build
