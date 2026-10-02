@@ -28,6 +28,11 @@ interface Candidate {
 	status: 301 | 302;
 }
 
+/** Cloudflare's per-declaration limit: one `from to status` line. */
+const MAX_DECLARATION_LENGTH = 1000;
+/** Two separating spaces plus the three-digit status. */
+const STATUS_AND_SEPARATORS = 5;
+
 const MARKER =
 	"# --- Redirects from Sanity (generated at build; do not edit) ---";
 
@@ -60,11 +65,21 @@ function validate(entry: unknown): Candidate | string {
 	if (from === "/") return "From cannot be / (it would redirect the home page)";
 	// `*` and `:name` are Cloudflare splat/placeholder syntax; editors mean literal paths.
 	if (/[*:]/.test(from)) return "From cannot contain * or : (no wildcards)";
+	// Cloudflare does not match a query string in the source and never evaluates a source fragment,
+	// so the rule would be written and then never fire.
+	if (/[?#]/.test(from))
+		return "From cannot contain ? or # (Cloudflare cannot match them)";
 	const internal = to.startsWith("/") && !to.startsWith("//");
 	if (!internal && !to.startsWith("https://")) {
 		return "To must be a path starting with / or an https:// URL";
 	}
 	if (from === to) return "redirects to itself (loop)";
+	if (
+		from.length + to.length + STATUS_AND_SEPARATORS >
+		MAX_DECLARATION_LENGTH
+	) {
+		return `rule is longer than Cloudflare's ${MAX_DECLARATION_LENGTH}-character limit`;
+	}
 	return { from, to, status: permanent === false ? 302 : 301 };
 }
 
@@ -91,8 +106,13 @@ export function mergeRedirects(
 			skipped.push({ from: label(entry), reason: result });
 		else valid.push(result);
 	}
+	// Status is the last tie-break so two documents differing only in `permanent` still resolve the
+	// same way every build: 301 sorts first and wins.
 	valid.sort(
-		(a, b) => a.from.localeCompare(b.from) || a.to.localeCompare(b.to),
+		(a, b) =>
+			a.from.localeCompare(b.from) ||
+			a.to.localeCompare(b.to) ||
+			a.status - b.status,
 	);
 
 	for (const c of valid) {

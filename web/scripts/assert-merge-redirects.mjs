@@ -149,6 +149,94 @@ const lines = (content) =>
 	assert.match(s.skipped[0].reason, /chain|hop/i);
 }
 
+// 13. Cloudflare cannot match a query string or fragment in the source (Bob, PR #115).
+{
+	const r = mergeRedirects("", [
+		{ from: "/old?ref=1", to: "/a" },
+		{ from: "/old#part", to: "/a" },
+	]);
+	assert.equal(lines(r.content).length, 0);
+	assert.deepEqual(r.applied, []);
+	assert.equal(r.skipped.length, 2);
+}
+
+// 14. Cloudflare's 1,000-character limit applies to the whole `from to status` line. Exactly at the
+// limit is applied; one character over is skipped, and never counted as applied.
+{
+	const fits = "/" + "a".repeat(1000 - 5 - 2 - 1);
+	const ok = mergeRedirects("", [{ from: fits, to: "/b" }]);
+	assert.equal(
+		ok.content.split("\n").find((l) => l.startsWith(fits)).length,
+		1000,
+	);
+	assert.deepEqual(ok.applied, [fits]);
+	const over = mergeRedirects("", [{ from: fits, to: "/bb" }]);
+	assert.deepEqual(over.applied, []);
+	assert.match(over.skipped[0].reason, /1000|long/i);
+}
+
+// 15. Same source and target, different `permanent`: the status must not depend on fetch order
+// (Bob, PR #115). 301 wins, and the other document is reported as skipped.
+{
+	const a = mergeRedirects("", [
+		{ from: "/d", to: "/n", permanent: true },
+		{ from: "/d", to: "/n", permanent: false },
+	]);
+	const b = mergeRedirects("", [
+		{ from: "/d", to: "/n", permanent: false },
+		{ from: "/d", to: "/n", permanent: true },
+	]);
+	assert.deepEqual(lines(a.content), ["/d /n 301"]);
+	assert.deepEqual(lines(b.content), ["/d /n 301"]);
+	assert.equal(a.skipped.length, 1);
+	assert.equal(b.skipped.length, 1);
+}
+
+// 16. PARITY: Studio blocks publication with the same rules the build applies. Run one table of
+// inputs through both; any disagreement means an editor could publish something the build drops
+// (or the reverse). Cross-document rules (duplicates, chains) are build-only and not in this table.
+{
+	const { validateRedirectFrom, validateRedirectTo } =
+		await import("../../studio/schemaTypes/lib/redirectValidation.ts");
+	const long = "/" + "a".repeat(1000 - 5 - 2 - 1);
+	const cases = [
+		["/pricing", "/#pricing"],
+		["/old-post/", "/blog/new-post/"],
+		["/ext", "https://example.com/x?y=1"],
+		["/pricing ", "/ok"],
+		[" /pricing", "/ok"],
+		["/x\n/evil", "/ok"],
+		["/y", "/ok\n/steal /elsewhere 301"],
+		["/tab\t", "/ok"],
+		["/z", "/has space"],
+		["no-slash", "/x"],
+		["//host", "/x"],
+		["/", "/blog/"],
+		["/blog/*", "/"],
+		["/p/:slug", "/blog/"],
+		["/old?ref=1", "/a"],
+		["/old#part", "/a"],
+		["/a", "http://example.com"],
+		["/a", "javascript:alert(1)"],
+		["/a", "//evil.example"],
+		["/a", "blog"],
+		["/same", "/same"],
+		[long, "/b"],
+		[long, "/bb"],
+	];
+	for (const [from, to] of cases) {
+		const studioOk =
+			validateRedirectFrom(from) === true &&
+			validateRedirectTo(to, from) === true;
+		const buildOk = mergeRedirects("", [{ from, to }]).applied.length === 1;
+		assert.equal(
+			buildOk,
+			studioOk,
+			`Studio and build disagree on ${JSON.stringify({ from, to })}: studio=${studioOk} build=${buildOk}`,
+		);
+	}
+}
+
 // 12. Nothing to add → the static file comes back unchanged (no stray marker block).
 {
 	const r = mergeRedirects(STATIC, []);

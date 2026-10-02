@@ -248,8 +248,8 @@ simplicity. If modelled in Sanity, use:
 
 | Field | Type | Validation / notes |
 | --- | --- | --- |
-| `from` | `string` | Required, starts with `/` |
-| `to` | `string` | Required, internal path or external URL |
+| `from` | `string` | Required. Single leading `/`, not `/` alone. No spaces or line breaks, no `*` `:` `?` `#`. Enforced in Studio |
+| `to` | `string` | Required. Path starting with a single `/`, or an `https://` URL. No spaces or line breaks, not equal to `from`. `from` + `to` + 5 ≤ 1,000 characters. Enforced in Studio |
 | `permanent` | `boolean` | Default true |
 | `note` | `text` | Optional reason/source |
 

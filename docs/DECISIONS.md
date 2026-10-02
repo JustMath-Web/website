@@ -2715,12 +2715,30 @@ committed. The merge itself is the pure function `mergeRedirects` in `src/lib/co
 failed fetch fails the build, so production never ships quietly without its redirects. Elsewhere it
 warns and keeps only the static rules.
 
-**Still true.** The site is static, so a redirect goes live on the **next build**. That needs the
-Sanity publish webhook → Cloudflare deploy hook (guideline §20). Whether that webhook exists is
-**not verified from the repo** — it is a dashboard setting. Until it is confirmed, an editor must
-trigger a build by hand after saving a redirect. The `www` → apex redirect is unaffected: it is a
-Cloudflare zone rule (dashboard, not in this repo), not part of this. Guideline §20 asks for that
-rule's location to be recorded here; no entry for it exists yet.
+**Webhook.** The site is static, so a redirect goes live on the **next build**. The Sanity publish
+webhook → Cloudflare deploy hook chain was verified end-to-end in §35 (2026-08-31) and is the single
+hook recorded in §39. `npx sanity hooks list` on 2026-10-02 still shows exactly one hook,
+`JustMathWebsite - CF Webhook`, dataset `*`, pointing at a Cloudflare deploy hook. That command does
+not show the hook's trigger events or document filter (§35), so **not verified:** that publishing a
+`redirect` document fires it. Post-merge check, owner Charlie: publish one redirect, then confirm
+`npx sanity hooks logs` shows a delivery, `npx wrangler deployments list --name justmathwebsite`
+shows a new deployment, and the redirect answers on the live URL. Until that passes, do not tell
+editors a redirect is live the moment they publish.
+
+The `www` → apex redirect is unaffected: it is a Cloudflare zone rule (dashboard, not in this repo),
+not part of this. Guideline §20 asks for that rule's location to be recorded here; no entry exists yet.
+
+**Studio blocks bad entries (Bob review of PR #115).** The build can only log a warning an editor never
+sees, so the entry-local rules are also enforced at publish time in Studio
+(`studio/schemaTypes/lib/redirectValidation.ts`, `pnpm test:redirect-validation`): no spaces or
+line breaks, a single leading `/`, `From` is not `/`, no `*` `:` `?` `#` in `From`, `To` is a path or
+`https://` URL, no self-loop, and the whole line fits Cloudflare's 1,000-character limit. Duplicates
+and chains span documents, so Studio cannot see them; the build skips them with a warning.
+`assert-merge-redirects.mjs` runs one table of inputs through both validators so they cannot drift.
+Cloudflare's source rules are from its current Workers Static Assets redirect docs (checked
+2026-10-02): no query-string matching, source fragments not evaluated, 1,000 characters per rule.
+**Duplicate status:** if two documents share `From` and `To` but differ on `permanent`, 301 wins, so
+the deployed status no longer depends on fetch order.
 
 **Verified.** Build against the live `production` dataset: log line "1 Sanity redirect(s) added,
 0 skipped", and `dist/_redirects` ends with `/pricing /#pricing 301`. Not verified: the rule
