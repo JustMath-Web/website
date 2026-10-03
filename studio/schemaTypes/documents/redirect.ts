@@ -19,7 +19,7 @@ export const redirect = defineType({
       title: 'To',
       type: 'string',
       description:
-        'Internal path starting with / and ending with / (for example /blog/), or an https:// URL. A file such as /logo.png is fine without the final /. No other scheme is allowed.',
+        'Internal path starting with / and ending with / (for example /blog/), or an https:// URL. A file such as /logo.png is fine without the final /. For another website use its full https:// address; for this site always use a path, not the full address. No other scheme is allowed.',
       validation: (Rule) =>
         Rule.required().custom((value, context) =>
           validateRedirectTo(value, (context.document as {from?: unknown} | undefined)?.from),

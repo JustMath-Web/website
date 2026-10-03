@@ -2850,3 +2850,15 @@ scheme, loop, length, then this one.
 the target page exists, or that a file target is really served. Redirects already published in Sanity
 are not rewritten: the build now skips any that violate the rule, and Studio shows the error the next
 time that document is opened.
+
+**Revised after Bob's review of PR #119 (head `df7b9a6`): Blocked on one finding, confirmed by reading
+the code.** The slash rule only looked at paths, so a copied full address of this site
+(`https://mathematicsmalaysia.com/blog`) passed Studio and was emitted, and still took a second hop;
+`https://www…` adds the `www` redirect on top. Fix: an `https://` target whose parsed hostname is
+`mathematicsmalaysia.com` or `www.mathematicsmalaysia.com` (any case, optional trailing dot or port) is
+rejected with "write it as a path instead"; look-alikes (`…com.evil.example`, `…com@evil.example`,
+`sub.…`) are other sites and stay allowed; an `https://` with no valid host is rejected. Same check in
+Studio and the build, covered by the parity table. A target on this site therefore can only be written as
+a path, so the slash rule always applies to it. The site host is a constant in both files; if the domain
+ever changes, change both (the parity test fails if only one is changed and the inputs use the old host).
+Still outstanding: the live Studio Publish check, to be done on the revised head.

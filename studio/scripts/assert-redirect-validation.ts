@@ -62,6 +62,30 @@ for (const good of [
 for (const bad of ['/blog', '/blog#faq', '/blog?page=2', '/blog/level/form-1-3', '/about-us']) {
   assert.match(String(validateRedirectTo(bad)), /end with a \//, bad)
 }
+// Bob, PR #119: a copied full address of THIS site bypassed the slash rule (`https://…/blog` still
+// takes a second hop), and the www host adds its own redirect. Write these as a path instead.
+for (const own of [
+  'https://mathematicsmalaysia.com/blog',
+  'https://mathematicsmalaysia.com/blog/',
+  'https://mathematicsmalaysia.com',
+  'https://www.mathematicsmalaysia.com/blog/',
+  'https://MathematicsMalaysia.com/blog/',
+  'https://mathematicsmalaysia.com./blog/',
+  'https://mathematicsmalaysia.com:443/blog/',
+]) {
+  assert.match(String(validateRedirectTo(own)), /address of this site/, own)
+}
+// Look-alikes are other sites, so they stay allowed.
+for (const other of [
+  'https://notmathematicsmalaysia.com/blog',
+  'https://mathematicsmalaysia.com.evil.example/blog',
+  'https://mathematicsmalaysia.com@evil.example/blog',
+  'https://sub.mathematicsmalaysia.com/blog',
+]) {
+  assert.equal(validateRedirectTo(other), true, other)
+}
+assert.match(String(validateRedirectTo('https://')), /valid/)
+
 // External targets are not ours to add slashes to.
 assert.equal(validateRedirectTo('https://example.com/page'), true)
 

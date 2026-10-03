@@ -208,6 +208,18 @@ const lines = (content) =>
 	assert.match(r.skipped[0].reason, /end with a \//);
 }
 
+// 15c. Bob, PR #119: the site's own full address is not emitted, whatever its path.
+{
+	const r = mergeRedirects("", [
+		{ from: "/a", to: "https://mathematicsmalaysia.com/blog" },
+		{ from: "/b", to: "https://www.mathematicsmalaysia.com/blog/" },
+		{ from: "/c", to: "https://example.com/blog" },
+	]);
+	assert.deepEqual(lines(r.content), ["/c https://example.com/blog 301"]);
+	assert.equal(r.skipped.length, 2);
+	assert.match(r.skipped[0].reason, /address of this site/);
+}
+
 // 16. PARITY: Studio blocks publication with the same rules the build applies. Run one table of
 // inputs through both; any disagreement means an editor could publish something the build drops
 // (or the reverse). Cross-document rules (duplicates, chains) are build-only and not in this table.
@@ -250,6 +262,18 @@ const lines = (content) =>
 		["/a", "/blog?page=2"],
 		["/a", "/about-us"],
 		["/a", "https://example.com/page"],
+		["/a", "https://mathematicsmalaysia.com/blog"],
+		["/a", "https://mathematicsmalaysia.com/blog/"],
+		["/a", "https://mathematicsmalaysia.com"],
+		["/a", "https://www.mathematicsmalaysia.com/blog/"],
+		["/a", "https://MathematicsMalaysia.com/blog/"],
+		["/a", "https://mathematicsmalaysia.com./blog/"],
+		["/a", "https://mathematicsmalaysia.com:443/blog/"],
+		["/a", "https://notmathematicsmalaysia.com/blog"],
+		["/a", "https://mathematicsmalaysia.com.evil.example/blog"],
+		["/a", "https://mathematicsmalaysia.com@evil.example/blog"],
+		["/a", "https://sub.mathematicsmalaysia.com/blog"],
+		["/a", "https://"],
 	];
 	for (const [from, to] of cases) {
 		const studioOk =
