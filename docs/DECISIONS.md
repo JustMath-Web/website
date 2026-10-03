@@ -2862,3 +2862,12 @@ Studio and the build, covered by the parity table. A target on this site therefo
 a path, so the slash rule always applies to it. The site host is a constant in both files; if the domain
 ever changes, change both (the parity test fails if only one is changed and the inputs use the old host).
 Still outstanding: the live Studio Publish check, to be done on the revised head.
+
+**Live Studio check (Bob's last gate on PR #119), 2026-10-03.** Charlie ran the local Studio
+(`pnpm dev` in `studio/`, `http://localhost:3333`, branch `feat/redirect-trailing-slash-rule` at
+`dad584b`) against the production dataset and reported the steps "all expected", in his own words, for:
+a draft with To `/blog` showing an error and blocking Publish; To
+`https://mathematicsmalaysia.com/blog/` showing an error and blocking Publish; To `/blog/` clearing the
+errors; the draft deleted and the redirect list checked, nothing published. This is Charlie's report,
+not an observation by Andy or Bob: no screenshot was taken, and the exact error wording and the list's
+contents were not recorded.
