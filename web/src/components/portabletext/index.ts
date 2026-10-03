@@ -7,6 +7,7 @@ import ImageWithAlt from "./ImageWithAlt.astro";
 import YoutubeEmbed from "./YoutubeEmbed.astro";
 import Heading from "./Heading.astro";
 import Table from "./Table.astro";
+import FaqAccordion from "./FaqAccordion.astro";
 
 // docs/CONTENT-MODEL.md §2 portableBlock allowed custom objects, matching
 // studio/schemaTypes/objects/portableTextObjects.ts's portableBodyOf array member types exactly.
@@ -20,6 +21,7 @@ export const postBodyComponents = {
 		imageWithAlt: ImageWithAlt,
 		youtubeEmbed: YoutubeEmbed,
 		postTable: Table,
+		faqAccordion: FaqAccordion,
 	},
 	// H2–H4 carry anchor ids for the table of contents (lib/content/postHeadings.ts).
 	block: {

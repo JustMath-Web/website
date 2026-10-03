@@ -83,6 +83,69 @@ assert.deepEqual(
 	["real"],
 );
 
+// 6. Bob, PR #114 P2: an FAQ section title is a post section. It joins the TOC, in body order,
+// through the same pass, so its id is unique and the TOC link points at the rendered heading.
+const faq = (title, titleLevel, ...questions) => ({
+	_key: `f${key++}`,
+	_type: "faqAccordion",
+	title,
+	titleLevel,
+	questionLevel: "h3",
+	items: questions.map((question) => ({
+		_key: `q${key++}`,
+		_type: "faqEntry",
+		question,
+		answer: [],
+	})),
+});
+{
+	const f = faq("Common questions", "h3", "Is a surd irrational?");
+	const r = withHeadingIds([
+		heading("h2", "Intro"),
+		f,
+		heading("h2", "Common questions"),
+	]);
+	assert.deepEqual(
+		r.headings.map((h) => [h.id, h.level]),
+		[
+			["intro", 2],
+			["common-questions", 3],
+			["common-questions-2", 2],
+		],
+	);
+	assert.deepEqual(r.headings[1].parts, [{ text: "Common questions" }]);
+	assert.equal(r.body[1]._headingId, "common-questions");
+	assert.equal(r.body[1]._type, "faqAccordion");
+	assert.equal(
+		new Set(r.headings.map((h) => h.id)).size,
+		r.headings.length,
+		"FAQ title ids must be unique with the rest",
+	);
+	assert.equal(f._headingId, undefined, "the input block must not be mutated");
+}
+
+// 7. A title the page will not render gets no TOC entry and no id: no title, a blank title, or
+// no question that would render (the section renders nothing at all then).
+{
+	const r = withHeadingIds([
+		faq(undefined, "h2", "Q?"),
+		faq("   ", "h2", "Q?"),
+		faq("Has no questions", "h2"),
+		faq("Only blank questions", "h2", "  ", ""),
+	]);
+	assert.deepEqual(r.headings, []);
+	assert.ok(r.body.every((b) => b._headingId === undefined));
+}
+
+// 8. A missing or unsupported titleLevel renders as H2 (FaqAccordion.astro), so the TOC says H2.
+assert.deepEqual(
+	withHeadingIds([
+		faq("A", undefined, "Q?"),
+		faq("B", "h1", "Q?"),
+	]).headings.map((h) => h.level),
+	[2, 2],
+);
+
 console.log(
 	"OK: withHeadingIds gives unique ids (including after a literal -N heading), never takes a " +
 		"reserved page id, matches body and TOC, and keeps inline maths in labels.",

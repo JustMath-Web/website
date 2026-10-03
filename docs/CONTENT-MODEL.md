@@ -93,6 +93,7 @@ Allowed custom objects:
 - `callout`
 - `imageWithAlt`
 - `postTable` — caption, row-header choice and a table grid edited with Studio's built-in table editor (`docs/DECISIONS.md` §45)
+- `faqAccordion` — FAQ title + question list with two heading-level settings (`docs/DECISIONS.md` §47)
 
 No raw HTML object is allowed.
 

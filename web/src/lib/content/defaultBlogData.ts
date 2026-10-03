@@ -3,6 +3,8 @@ import type {
 	PortableTextBlock,
 	Post,
 	PostBodyBlock,
+	FaqAccordion,
+	FaqEntry,
 	PostTable,
 	TableCell,
 } from "../sanity/types";
@@ -104,6 +106,55 @@ function tableBlock(
 				})),
 			},
 		],
+	};
+}
+
+/**
+ * One FAQ entry. The answer is a single paragraph of text runs and inline maths, like `cell`.
+ */
+function faqEntry(
+	key: string,
+	question: string,
+	...answer: (string | { latex: string })[]
+): FaqEntry {
+	return {
+		_key: key,
+		_type: "faqEntry",
+		question,
+		answer: [
+			{
+				_key: `${key}b`,
+				_type: "block",
+				style: "normal",
+				markDefs: [],
+				children: answer.map((part, index) =>
+					typeof part === "string"
+						? { _key: `${key}s${index}`, _type: "span", text: part }
+						: {
+								_key: `${key}m${index}`,
+								_type: "mathInline",
+								latex: part.latex,
+							},
+				),
+			},
+		],
+	};
+}
+
+function faqBlock(
+	key: string,
+	title: string,
+	titleLevel: string,
+	questionLevel: string,
+	items: FaqEntry[],
+): FaqAccordion {
+	return {
+		_key: key,
+		_type: "faqAccordion",
+		title,
+		titleLevel,
+		questionLevel,
+		items,
 	};
 }
 
@@ -233,6 +284,41 @@ const surdsBody: PostBodyBlock[] = [
 		url: "https://www.youtube.com/watch?v=xxxxxxxxxxx",
 		caption: "A five-minute recap of the same simplification method.",
 	},
+	// Title H2, questions H3 (the defaults).
+	faqBlock("f1", "Common questions about surds", "h2", "h3", [
+		faqEntry(
+			"f1q1",
+			"Is a surd always irrational?",
+			"Yes. A surd is a root that cannot be written as a whole number or fraction, such as ",
+			{ latex: "\\sqrt{2}" },
+			".",
+		),
+		faqEntry(
+			"f1q2",
+			"Can I add two surds?",
+			"Only when they share the same root once simplified, e.g. ",
+			{ latex: "6\\sqrt{2} + 5\\sqrt{2} = 11\\sqrt{2}" },
+			".",
+		),
+		faqEntry(
+			"f1q3",
+			"Do I leave the answer as a surd?",
+			"Yes, unless the question asks for a decimal. Leaving it exact avoids rounding errors.",
+		),
+	]),
+	// A different valid pair (title H3, questions H4) to prove the level follows the title.
+	faqBlock("f2", "More about indices", "h3", "h4", [
+		faqEntry(
+			"f2q1",
+			"What is a zero index?",
+			"Any non-zero number to the power 0 is 1.",
+		),
+		faqEntry(
+			"f2q2",
+			"What is a negative index?",
+			"It means the reciprocal: one over the positive power.",
+		),
+	]),
 ];
 
 const indicesBody: PostBodyBlock[] = [

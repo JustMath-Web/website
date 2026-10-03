@@ -111,5 +111,6 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test:table-validation
+      - run: pnpm test:faq-validation
       - run: pnpm test:redirect-validation
       - run: pnpm build
