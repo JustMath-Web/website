@@ -17,7 +17,7 @@ assert.equal(validateRedirectFrom('/old-post/'), true)
 assert.equal(validateRedirectTo('/#pricing'), true)
 assert.equal(validateRedirectTo('/blog/new/'), true)
 assert.equal(validateRedirectTo('https://example.com/x?y=1'), true)
-assert.equal(validateRedirectTo('/b', '/a'), true)
+assert.equal(validateRedirectTo('/b/', '/a'), true)
 
 // BOB P1: a trailing/leading space used to publish and then vanish at build time.
 assert.match(String(validateRedirectFrom('/pricing ')), /spaces/)
@@ -44,13 +44,34 @@ assert.match(String(validateRedirectTo('javascript:alert(1)')), /https/)
 assert.match(String(validateRedirectTo('//evil.example')), /https/)
 assert.match(String(validateRedirectTo('blog')), /https/)
 
+// Cloudflare adds the trailing slash to a page path with a 307, so `/blog` would be two hops
+// (Bob, PR #118). The path before any ? or # must end in `/`, or be a file such as /logo.png.
+for (const good of [
+  '/',
+  '/blog/',
+  '/#pricing',
+  '/blog/#faq',
+  '/blog/?page=2',
+  '/logo.png',
+  '/files/report.pdf?dl=1',
+  '/files/report.pdf#page=2',
+  '/blog/level/form-1-3/',
+]) {
+  assert.equal(validateRedirectTo(good), true, good)
+}
+for (const bad of ['/blog', '/blog#faq', '/blog?page=2', '/blog/level/form-1-3', '/about-us']) {
+  assert.match(String(validateRedirectTo(bad)), /end with a \//, bad)
+}
+// External targets are not ours to add slashes to.
+assert.equal(validateRedirectTo('https://example.com/page'), true)
+
 // Loop.
 assert.match(String(validateRedirectTo('/same', '/same')), /loop/)
 
 // Length: the whole `from to 301` line must fit Cloudflare's 1,000-character limit, exactly.
 // A line is `from to 301`: from + to + 5 (two spaces and the status). This one is exactly 1000.
-const fits = '/' + 'a'.repeat(MAX_DECLARATION_LENGTH - 5 - 2 - 1)
-assert.equal(validateRedirectTo('/b', fits), true)
-assert.match(String(validateRedirectTo('/bb', fits)), /too long/)
+const fits = '/' + 'a'.repeat(MAX_DECLARATION_LENGTH - 5 - 3 - 1)
+assert.equal(validateRedirectTo('/b/', fits), true)
+assert.match(String(validateRedirectTo('/bb/', fits)), /too long/)
 
 console.log('redirect validation: all assertions passed')

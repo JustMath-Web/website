@@ -49,6 +49,19 @@ function staticSources(staticFile: string): Set<string> {
 	return sources;
 }
 
+/**
+ * Cloudflare 307-redirects a page path without a trailing slash (`/blog` → `/blog/`), so a target
+ * like that costs a second hop. The part before any `?`/`#` must end in `/` or be a file. Mirrors
+ * studio/schemaTypes/lib/redirectValidation.ts; assert-merge-redirects.mjs keeps them in step.
+ */
+function pathIsSettled(target: string): boolean {
+	const path = target.split(/[?#]/)[0];
+	return (
+		path.endsWith("/") ||
+		/\.[A-Za-z0-9]+$/.test(path.slice(path.lastIndexOf("/") + 1))
+	);
+}
+
 function validate(entry: unknown): Candidate | string {
 	if (typeof entry !== "object" || entry === null)
 		return "not a redirect object";
@@ -79,6 +92,9 @@ function validate(entry: unknown): Candidate | string {
 		MAX_DECLARATION_LENGTH
 	) {
 		return `rule is longer than Cloudflare's ${MAX_DECLARATION_LENGTH}-character limit`;
+	}
+	if (internal && !pathIsSettled(to)) {
+		return "To must end with a / (for example /blog/), unless it is a file such as /logo.png — otherwise Cloudflare adds a second redirect";
 	}
 	return { from, to, status: permanent === false ? 302 : 301 };
 }

@@ -2831,3 +2831,22 @@ Andy in the source before fixing.**
   answer cleared the errors; nothing was published, and the draft was deleted. This is Charlie's
   report, not an observation by Andy or Bob: no screenshot was taken, and he did not tell me the exact
   error wording or the post list contents.
+
+## 48. Redirect targets must end in `/` — 2026-10-03
+
+**Gap (Bob, review of PR #118).** An editor could publish a redirect to `/blog`. Cloudflare answers a
+page path without a trailing slash with a 307 to `/blog/`, so that redirect took two hops (§46 records
+the live `/blogs` → `/blog` case). Guideline §14 and CORE-20 require one hop.
+
+**Rule.** For an internal `To`, the part before any `?` or `#` must end in `/` or in a file extension
+(`/logo.png`). `/`, `/blog/`, `/#pricing`, `/blog/?page=2` and `/files/report.pdf?dl=1` pass; `/blog`,
+`/blog#faq` and `/about-us` fail. `https://` targets are not ours to rewrite and are unchanged. Enforced
+at publish time in Studio (`validateRedirectTo`, `pathIsSettled`) and again by the build merge
+(`mergeRedirects`), which skips a violating entry with a warning. The parity table in
+`assert-merge-redirects.mjs` runs the new cases through both. Order of checks: unsafe characters,
+scheme, loop, length, then this one.
+
+**Limits.** A directory whose name contains a dot would be treated as a file. Nothing here checks that
+the target page exists, or that a file target is really served. Redirects already published in Sanity
+are not rewritten: the build now skips any that violate the rule, and Studio shows the error the next
+time that document is opened.
