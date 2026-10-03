@@ -2754,6 +2754,30 @@ Chrome failed (the extension's tab group kept disappearing) before any write.
 actually redirecting on the deployed Worker (needs a deploy), and `/pricing` versus `/pricing/` —
 Cloudflare matches the exact path, and the static file already has `/pricing/`.
 
+**Production verification, 2026-10-03 (after PRs #115 and #114 were merged and the Studio redeployed).**
+Andy ran `curl -I` against the live site:
+- `/pricing` → 301 `/#pricing` (the redirect Charlie published in Studio) and `/pricing/` → 301
+  `/#pricing` (the static rule): one hop each. Before the merge, `/pricing` was 404.
+- `/blogs` → 301 `/blog/` and `/blogs/` → 301 `/blog/`, both published in Studio by Charlie, one hop
+  each. Charlie's first version pointed `/blogs` at `/blog`, which took two hops (`/blog` → 307
+  `/blog/`, Cloudflare's trailing-slash redirect); he changed To to `/blog/`. `/blogs/` was 404 until its
+  own rule was published: Cloudflare matches `/x` and `/x/` as different paths, so each needs its own
+  rule. Two exact rules were kept over a wildcard on purpose (Bob): a wildcard could catch paths nobody
+  meant. Studio rejects wildcards anyway.
+- **Editor flow proven end to end:** publish in Studio → Sanity webhook (`npx sanity hooks logs` shows
+  `success` / 200 deliveries on 2026-10-03, including 09:38:20Z and 09:43:59Z) → Cloudflare build →
+  redirect live, with no manual build. The remaining question in "Webhook" above is answered: a
+  `redirect` document does fire the hook.
+- **Not verified:** `npx wrangler deployments list --name justmathwebsite` fails with `Authentication
+  error [code: 10000]` under the OAuth login `charliekong.work@gmail.com`, which cannot read this
+  Worker. The live responses above are the evidence instead.
+- **Where the `www` redirect lives (guideline §20).** `https://www.mathematicsmalaysia.com/` → 301
+  `https://mathematicsmalaysia.com/` was confirmed live today. The rule is a zone-level Cloudflare
+  Redirect Rule (phase `http_request_dynamic_redirect`, Free plan) added 2026-09-21 in the Cloudflare
+  dashboard, **not in this repository**; it cannot be in `public/_redirects`, which matches paths only.
+  The rule's existence and date come from Andy's session notes, not from today's check (only its
+  effect was re-tested). Any change to it needs a dated entry here.
+
 ## 47. FAQ accordion in blog posts — 2026-10-01
 
 **What.** Posts can contain an FAQ accordion. Editors insert **FAQ accordion**, type a title, pick two
