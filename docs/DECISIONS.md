@@ -2824,5 +2824,10 @@ Andy in the source before fixing.**
   `faqTitleLevel` are shared by the component and the heading pass so they cannot disagree.
   **Charlie can reverse this** if FAQ sections should stay out of the contents list; it is one branch
   in `withHeadingIds`.
-- **Still open:** Bob's live Studio check — insert an FAQ, confirm a skipped pair and a blank answer
-  block each block Publish and a valid FAQ does — needs Charlie's local Studio, as for PR #115. Not yet done.
+- **Live Studio check (Bob's last gate on PR #114), 2026-10-03.** Charlie ran the local Studio
+  (`pnpm dev` in `studio/`, `http://localhost:3333`, branch `feat/blog-faq-accordion` at `f27f83e`)
+  against the production dataset and reported steps 4–7 "all expected", in his own words: title H2 /
+  questions H4 blocked Publish; a blank answer blocked Publish; title H2 / questions H3 with a real
+  answer cleared the errors; nothing was published, and the draft was deleted. This is Charlie's
+  report, not an observation by Andy or Bob: no screenshot was taken, and he did not tell me the exact
+  error wording or the post list contents.
