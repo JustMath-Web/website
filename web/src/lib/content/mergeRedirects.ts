@@ -49,6 +49,41 @@ function staticSources(staticFile: string): Set<string> {
 	return sources;
 }
 
+/**
+ * Cloudflare 307-redirects a page path without a trailing slash (`/blog` → `/blog/`), so a target
+ * like that costs a second hop. The part before any `?`/`#` must end in `/` or be a file. Mirrors
+ * studio/schemaTypes/lib/redirectValidation.ts; assert-merge-redirects.mjs keeps them in step.
+ */
+function pathIsSettled(target: string): boolean {
+	const path = target.split(/[?#]/)[0];
+	return (
+		path.endsWith("/") ||
+		/\.[A-Za-z0-9]+$/.test(path.slice(path.lastIndexOf("/") + 1))
+	);
+}
+
+/** This site's own host. A full address of it must be written as a path (see below). */
+const SITE_HOST = "mathematicsmalaysia.com";
+
+/**
+ * An `https://` address of THIS site would skip the trailing-slash rule yet still take a second hop,
+ * and the `www` host adds its own redirect, so both must be written as a path. Compared by parsed
+ * hostname, so look-alikes (`…com.evil.example`, `…com@evil.example`) count as other sites. Mirrors
+ * studio/schemaTypes/lib/redirectValidation.ts.
+ */
+function externalTargetProblem(value: string): string | undefined {
+	let host: string;
+	try {
+		host = new URL(value).hostname.toLowerCase().replace(/\.$/, "");
+	} catch {
+		return "To is not a valid address";
+	}
+	if (host === SITE_HOST || host === `www.${SITE_HOST}`) {
+		return "To is the address of this site — write it as a path instead, for example /blog/";
+	}
+	return undefined;
+}
+
 function validate(entry: unknown): Candidate | string {
 	if (typeof entry !== "object" || entry === null)
 		return "not a redirect object";
@@ -73,12 +108,19 @@ function validate(entry: unknown): Candidate | string {
 	if (!internal && !to.startsWith("https://")) {
 		return "To must be a path starting with / or an https:// URL";
 	}
+	if (!internal) {
+		const problem = externalTargetProblem(to);
+		if (problem) return problem;
+	}
 	if (from === to) return "redirects to itself (loop)";
 	if (
 		from.length + to.length + STATUS_AND_SEPARATORS >
 		MAX_DECLARATION_LENGTH
 	) {
 		return `rule is longer than Cloudflare's ${MAX_DECLARATION_LENGTH}-character limit`;
+	}
+	if (internal && !pathIsSettled(to)) {
+		return "To must end with a / (for example /blog/), unless it is a file such as /logo.png — otherwise Cloudflare adds a second redirect";
 	}
 	return { from, to, status: permanent === false ? 302 : 301 };
 }

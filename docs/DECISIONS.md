@@ -2855,3 +2855,43 @@ Andy in the source before fixing.**
   answer cleared the errors; nothing was published, and the draft was deleted. This is Charlie's
   report, not an observation by Andy or Bob: no screenshot was taken, and he did not tell me the exact
   error wording or the post list contents.
+
+## 48. Redirect targets must end in `/` — 2026-10-03
+
+**Gap (Bob, review of PR #118).** An editor could publish a redirect to `/blog`. Cloudflare answers a
+page path without a trailing slash with a 307 to `/blog/`, so that redirect took two hops (§46 records
+the live `/blogs` → `/blog` case). Guideline §14 and CORE-20 require one hop.
+
+**Rule.** For an internal `To`, the part before any `?` or `#` must end in `/` or in a file extension
+(`/logo.png`). `/`, `/blog/`, `/#pricing`, `/blog/?page=2` and `/files/report.pdf?dl=1` pass; `/blog`,
+`/blog#faq` and `/about-us` fail. `https://` targets are not ours to rewrite and are unchanged. Enforced
+at publish time in Studio (`validateRedirectTo`, `pathIsSettled`) and again by the build merge
+(`mergeRedirects`), which skips a violating entry with a warning. The parity table in
+`assert-merge-redirects.mjs` runs the new cases through both. Order of checks: unsafe characters,
+scheme, loop, length, then this one.
+
+**Limits.** A directory whose name contains a dot would be treated as a file. Nothing here checks that
+the target page exists, or that a file target is really served. Redirects already published in Sanity
+are not rewritten: the build now skips any that violate the rule, and Studio shows the error the next
+time that document is opened.
+
+**Revised after Bob's review of PR #119 (head `df7b9a6`): Blocked on one finding, confirmed by reading
+the code.** The slash rule only looked at paths, so a copied full address of this site
+(`https://mathematicsmalaysia.com/blog`) passed Studio and was emitted, and still took a second hop;
+`https://www…` adds the `www` redirect on top. Fix: an `https://` target whose parsed hostname is
+`mathematicsmalaysia.com` or `www.mathematicsmalaysia.com` (any case, optional trailing dot or port) is
+rejected with "write it as a path instead"; look-alikes (`…com.evil.example`, `…com@evil.example`,
+`sub.…`) are other sites and stay allowed; an `https://` with no valid host is rejected. Same check in
+Studio and the build, covered by the parity table. A target on this site therefore can only be written as
+a path, so the slash rule always applies to it. The site host is a constant in both files; if the domain
+ever changes, change both (the parity test fails if only one is changed and the inputs use the old host).
+Still outstanding: the live Studio Publish check, to be done on the revised head.
+
+**Live Studio check (Bob's last gate on PR #119), 2026-10-03.** Charlie ran the local Studio
+(`pnpm dev` in `studio/`, `http://localhost:3333`, branch `feat/redirect-trailing-slash-rule` at
+`dad584b`) against the production dataset and reported the steps "all expected", in his own words, for:
+a draft with To `/blog` showing an error and blocking Publish; To
+`https://mathematicsmalaysia.com/blog/` showing an error and blocking Publish; To `/blog/` clearing the
+errors; the draft deleted and the redirect list checked, nothing published. This is Charlie's report,
+not an observation by Andy or Bob: no screenshot was taken, and the exact error wording and the list's
+contents were not recorded.

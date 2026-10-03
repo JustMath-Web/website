@@ -41,10 +41,10 @@ const lines = (content) =>
 // 2. permanent:false → 302; permanent missing → 301 (schema default is true).
 {
 	const r = mergeRedirects("", [
-		{ from: "/a", to: "/b", permanent: false },
-		{ from: "/c", to: "/d" },
+		{ from: "/a", to: "/b/", permanent: false },
+		{ from: "/c", to: "/d/" },
 	]);
-	assert.deepEqual(lines(r.content), ["/a /b 302", "/c /d 301"]);
+	assert.deepEqual(lines(r.content), ["/a /b/ 302", "/c /d/ 301"]);
 }
 
 // 3. External https target is allowed; other schemes are not.
@@ -123,12 +123,12 @@ const lines = (content) =>
 // 10. Duplicate `from` inside Sanity: exactly one wins, deterministically.
 {
 	const first = mergeRedirects("", [
-		{ from: "/dup", to: "/one" },
-		{ from: "/dup", to: "/two" },
+		{ from: "/dup", to: "/one/" },
+		{ from: "/dup", to: "/two/" },
 	]);
 	const swapped = mergeRedirects("", [
-		{ from: "/dup", to: "/two" },
-		{ from: "/dup", to: "/one" },
+		{ from: "/dup", to: "/two/" },
+		{ from: "/dup", to: "/one/" },
 	]);
 	assert.equal(lines(first.content).length, 1);
 	assert.deepEqual(lines(first.content), lines(swapped.content));
@@ -138,10 +138,10 @@ const lines = (content) =>
 // 11. One-hop rule (guideline §Cutover): a target that is itself redirected would chain. Reject.
 {
 	const r = mergeRedirects("", [
-		{ from: "/a", to: "/b" },
-		{ from: "/b", to: "/c" },
+		{ from: "/a", to: "/b/" },
+		{ from: "/b/", to: "/c/" },
 	]);
-	assert.deepEqual(lines(r.content), ["/b /c 301"]);
+	assert.deepEqual(lines(r.content), ["/b/ /c/ 301"]);
 	assert.match(r.skipped[0].reason, /chain|hop/i);
 	// ...including chains into the static file.
 	const s = mergeRedirects(STATIC, [{ from: "/legacy", to: "/pricing/" }]);
@@ -163,14 +163,14 @@ const lines = (content) =>
 // 14. Cloudflare's 1,000-character limit applies to the whole `from to status` line. Exactly at the
 // limit is applied; one character over is skipped, and never counted as applied.
 {
-	const fits = "/" + "a".repeat(1000 - 5 - 2 - 1);
-	const ok = mergeRedirects("", [{ from: fits, to: "/b" }]);
+	const fits = "/" + "a".repeat(1000 - 5 - 3 - 1);
+	const ok = mergeRedirects("", [{ from: fits, to: "/b/" }]);
 	assert.equal(
 		ok.content.split("\n").find((l) => l.startsWith(fits)).length,
 		1000,
 	);
 	assert.deepEqual(ok.applied, [fits]);
-	const over = mergeRedirects("", [{ from: fits, to: "/bb" }]);
+	const over = mergeRedirects("", [{ from: fits, to: "/bb/" }]);
 	assert.deepEqual(over.applied, []);
 	assert.match(over.skipped[0].reason, /1000|long/i);
 }
@@ -179,17 +179,45 @@ const lines = (content) =>
 // (Bob, PR #115). 301 wins, and the other document is reported as skipped.
 {
 	const a = mergeRedirects("", [
-		{ from: "/d", to: "/n", permanent: true },
-		{ from: "/d", to: "/n", permanent: false },
+		{ from: "/d", to: "/n/", permanent: true },
+		{ from: "/d", to: "/n/", permanent: false },
 	]);
 	const b = mergeRedirects("", [
-		{ from: "/d", to: "/n", permanent: false },
-		{ from: "/d", to: "/n", permanent: true },
+		{ from: "/d", to: "/n/", permanent: false },
+		{ from: "/d", to: "/n/", permanent: true },
 	]);
-	assert.deepEqual(lines(a.content), ["/d /n 301"]);
-	assert.deepEqual(lines(b.content), ["/d /n 301"]);
+	assert.deepEqual(lines(a.content), ["/d /n/ 301"]);
+	assert.deepEqual(lines(b.content), ["/d /n/ 301"]);
 	assert.equal(a.skipped.length, 1);
 	assert.equal(b.skipped.length, 1);
+}
+
+// 15b. Bob, PR #118: a target without a trailing slash would be two hops (Cloudflare 307s to
+// `/blog/`). Skipped with a reason an editor can act on; file paths and fragments-only stay valid.
+{
+	const r = mergeRedirects("", [
+		{ from: "/blogs", to: "/blog" },
+		{ from: "/pricing", to: "/#pricing" },
+		{ from: "/logo", to: "/logo.png" },
+	]);
+	assert.deepEqual(lines(r.content), [
+		"/logo /logo.png 301",
+		"/pricing /#pricing 301",
+	]);
+	assert.equal(r.skipped.length, 1);
+	assert.match(r.skipped[0].reason, /end with a \//);
+}
+
+// 15c. Bob, PR #119: the site's own full address is not emitted, whatever its path.
+{
+	const r = mergeRedirects("", [
+		{ from: "/a", to: "https://mathematicsmalaysia.com/blog" },
+		{ from: "/b", to: "https://www.mathematicsmalaysia.com/blog/" },
+		{ from: "/c", to: "https://example.com/blog" },
+	]);
+	assert.deepEqual(lines(r.content), ["/c https://example.com/blog 301"]);
+	assert.equal(r.skipped.length, 2);
+	assert.match(r.skipped[0].reason, /address of this site/);
 }
 
 // 16. PARITY: Studio blocks publication with the same rules the build applies. Run one table of
@@ -198,7 +226,7 @@ const lines = (content) =>
 {
 	const { validateRedirectFrom, validateRedirectTo } =
 		await import("../../studio/schemaTypes/lib/redirectValidation.ts");
-	const long = "/" + "a".repeat(1000 - 5 - 2 - 1);
+	const long = "/" + "a".repeat(1000 - 5 - 3 - 1);
 	const cases = [
 		["/pricing", "/#pricing"],
 		["/old-post/", "/blog/new-post/"],
@@ -221,8 +249,31 @@ const lines = (content) =>
 		["/a", "//evil.example"],
 		["/a", "blog"],
 		["/same", "/same"],
-		[long, "/b"],
-		[long, "/bb"],
+		[long, "/b/"],
+		[long, "/bb/"],
+		["/a", "/"],
+		["/a", "/blog/"],
+		["/a", "/#pricing"],
+		["/a", "/blog/?page=2"],
+		["/a", "/logo.png"],
+		["/a", "/files/report.pdf?dl=1"],
+		["/a", "/blog"],
+		["/a", "/blog#faq"],
+		["/a", "/blog?page=2"],
+		["/a", "/about-us"],
+		["/a", "https://example.com/page"],
+		["/a", "https://mathematicsmalaysia.com/blog"],
+		["/a", "https://mathematicsmalaysia.com/blog/"],
+		["/a", "https://mathematicsmalaysia.com"],
+		["/a", "https://www.mathematicsmalaysia.com/blog/"],
+		["/a", "https://MathematicsMalaysia.com/blog/"],
+		["/a", "https://mathematicsmalaysia.com./blog/"],
+		["/a", "https://mathematicsmalaysia.com:443/blog/"],
+		["/a", "https://notmathematicsmalaysia.com/blog"],
+		["/a", "https://mathematicsmalaysia.com.evil.example/blog"],
+		["/a", "https://mathematicsmalaysia.com@evil.example/blog"],
+		["/a", "https://sub.mathematicsmalaysia.com/blog"],
+		["/a", "https://"],
 	];
 	for (const [from, to] of cases) {
 		const studioOk =
