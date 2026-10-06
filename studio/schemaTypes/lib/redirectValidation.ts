@@ -21,6 +21,43 @@ const UNSAFE_CHARS = /[\s\u0000-\u001f\u007f]/
 /** Longest status token (`301`/`302`) plus the two separating spaces. */
 const STATUS_AND_SEPARATORS = 5
 
+/**
+ * Cloudflare answers a page path without a trailing slash (`/blog`) with a 307 to `/blog/`, so a
+ * redirect aimed at it takes two hops. The part before any `?` or `#` must therefore end in `/`, or
+ * be a file (`/logo.png`), which is served as-is. `/#pricing` and `/blog/?page=2` are fine.
+ * The build re-checks this (web/src/lib/content/mergeRedirects.ts).
+ */
+export function pathIsSettled(target: string): boolean {
+  const path = target.split(/[?#]/)[0]
+  return path.endsWith('/') || /\.[A-Za-z0-9]+$/.test(path.slice(path.lastIndexOf('/') + 1))
+}
+
+export const NOT_SETTLED_MESSAGE =
+  'To must end with a / (for example /blog/), unless it is a file such as /logo.png. Without it, Cloudflare adds a second redirect.'
+
+/** This site's own host. A full address of it must be written as a path (see below). */
+const SITE_HOST = 'mathematicsmalaysia.com'
+
+/**
+ * Only `https://` addresses of OTHER sites are left alone. A copied full address of this site
+ * (`https://mathematicsmalaysia.com/blog`) would skip the trailing-slash rule and still take a second
+ * hop, and the `www` host adds its own redirect, so both must be written as a path. Hosts are compared
+ * by parsed hostname, so `…com.evil.example` and `…com@evil.example` count as other sites.
+ * The build re-checks this (web/src/lib/content/mergeRedirects.ts).
+ */
+export function externalTargetProblem(value: string): string | undefined {
+  let host: string
+  try {
+    host = new URL(value).hostname.toLowerCase().replace(/\.$/, '')
+  } catch {
+    return 'To is not a valid address.'
+  }
+  if (host === SITE_HOST || host === `www.${SITE_HOST}`) {
+    return 'That is the address of this site. Write it as a path instead, for example /blog/.'
+  }
+  return undefined
+}
+
 export function validateRedirectFrom(value: unknown): true | string {
   if (value === undefined || value === null || value === '') return true // `required()` reports it
   if (typeof value !== 'string') return 'From must be text.'
@@ -42,11 +79,16 @@ export function validateRedirectTo(value: unknown, from?: unknown): true | strin
   if (!internal && !value.startsWith('https://')) {
     return 'To must be a path starting with a single / or an https:// URL.'
   }
+  if (!internal) {
+    const problem = externalTargetProblem(value)
+    if (problem) return problem
+  }
   if (typeof from === 'string' && from) {
     if (from === value) return 'To is the same as From — that is a loop.'
     if (from.length + value.length + STATUS_AND_SEPARATORS > MAX_DECLARATION_LENGTH) {
       return `From and To together are too long (Cloudflare allows ${MAX_DECLARATION_LENGTH} characters per rule).`
     }
   }
+  if (internal && !pathIsSettled(value)) return NOT_SETTLED_MESSAGE
   return true
 }

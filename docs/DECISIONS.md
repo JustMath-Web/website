@@ -2753,3 +2753,145 @@ Chrome failed (the extension's tab group kept disappearing) before any write.
 0 skipped", and `dist/_redirects` ends with `/pricing /#pricing 301`. Not verified: the rule
 actually redirecting on the deployed Worker (needs a deploy), and `/pricing` versus `/pricing/` —
 Cloudflare matches the exact path, and the static file already has `/pricing/`.
+
+**Production verification, 2026-10-03 (after PRs #115 and #114 were merged and the Studio redeployed).**
+Andy ran `curl -I` against the live site:
+- `/pricing` → 301 `/#pricing` (the redirect Charlie published in Studio) and `/pricing/` → 301
+  `/#pricing` (the static rule): one hop each. Before the merge, `/pricing` was 404.
+- `/blogs` → 301 `/blog/` and `/blogs/` → 301 `/blog/`, both published in Studio by Charlie, one hop
+  each. Charlie's first version pointed `/blogs` at `/blog`, which took two hops (`/blog` → 307
+  `/blog/`, Cloudflare's trailing-slash redirect); he changed To to `/blog/`. `/blogs/` was 404 until its
+  own rule was published: Cloudflare matches `/x` and `/x/` as different paths, so each needs its own
+  rule. Two exact rules were kept over a wildcard on purpose (Bob): a wildcard could catch paths nobody
+  meant. Studio rejects wildcards anyway.
+- **Editor flow proven end to end:** publish in Studio → Sanity webhook (`npx sanity hooks logs` shows
+  `success` / 200 deliveries on 2026-10-03, including 09:38:20Z and 09:43:59Z) → Cloudflare build →
+  redirect live, with no manual build. The remaining question in "Webhook" above is answered: a
+  `redirect` document does fire the hook.
+- **Not verified:** `npx wrangler deployments list --name justmathwebsite` fails with `Authentication
+  error [code: 10000]` under the OAuth login `charliekong.work@gmail.com`, which cannot read this
+  Worker. The live responses above are the evidence instead.
+- **Where the `www` redirect lives (guideline §20).** `https://www.mathematicsmalaysia.com/` → 301
+  `https://mathematicsmalaysia.com/` was confirmed live today. The rule is a zone-level Cloudflare
+  Redirect Rule (phase `http_request_dynamic_redirect`, Free plan) added 2026-09-21 in the Cloudflare
+  dashboard, **not in this repository**; it cannot be in `public/_redirects`, which matches paths only.
+  The rule's existence and date come from Andy's session notes, not from today's check (only its
+  effect was re-tested). Any change to it needs a dated entry here.
+
+## 47. FAQ accordion in blog posts — 2026-10-01
+
+**What.** Posts can contain an FAQ accordion. Editors insert **FAQ accordion**, type a title, pick two
+heading levels, and add questions with answers. Charlie asked for it to follow shadcn/ui's Accordion
+with its `multiple` option (any number of answers open at once).
+
+**The two settings.** `titleLevel` (H2–H4, default H2) is the heading of the FAQ itself.
+`questionLevel` (H3–H5, default H3) is set once and applied to **every** question, and must be
+**exactly one level below** the title: H2→H3, H3→H4, H4→H5 (`validateFaqLevels`, an error that blocks
+Publish; FE-06). *Revised after Bob's review (below):* it was first "deeper than the title" with a
+warning for a skipped level, which let Publish through a heading outline with a gap inside the FAQ's
+own parent–child pair. H6 is no longer offered, since titles stop at H4 and H6 could never be valid.
+The renderer does not trust stored data: it always renders questions one level below the title, so an
+older or script-written document cannot produce a gap.
+
+**Shape.** `studio/schemaTypes/objects/portableTextObjects.ts` `faqAccordion`: `title` (required,
+non-blank), `titleLevel`, `questionLevel`, `items[]` of `faqEntry` { `question` (required, non-blank),
+`answer` (Portable Text: normal paragraphs, bullet/numbered lists, bold/italic, links, inline maths) }.
+At least one question. The link annotation is now one shared `linkAnnotation` constant used by both the
+body and the answers; its rule is unchanged. Registered in `schemaTypes/index.ts` and `portableBodyOf`.
+
+**shadcn as the guideline, not as a dependency.** shadcn's Accordion is a React/Radix component. FE-33
+keeps Astro pages JS-free and FE-32 says not to script what the platform does, so this is native
+`<details>`/`<summary>` with no JavaScript. `multiple` maps to **leaving off the `name` attribute**
+(`<details name="…">` is what makes items exclusive; the landing page FAQ uses it on purpose). All items
+start closed. The look follows shadcn's: a chevron that flips when open, ruled rows, a slide on
+open/close — the slide is CSS (`::details-content`, Chromium 131+) and is dropped as a whole rule
+elsewhere, so nothing depends on it; it respects `prefers-reduced-motion` through the `--dur-3` token.
+No new dependency (FE-40), no registry component (FE-41/42).
+
+**Markup.** `<section aria-labelledby>` named by the title heading (FE-02), `<ul>` of `<li>` (FE-04),
+the question as a heading **inside** `<summary>` (allowed by the HTML spec; the heading role is
+asserted in Chromium by the tests). The question heading is restyled to read as the summary's own text
+because the post page styles `.prose h2/h3/h4` with higher specificity than one class — a test asserts
+margin and size so it cannot regress. Answers go through `PortableText` with the existing `MathInline`
+override.
+
+**Not done / to know.**
+- The FAQ title **is** in the table of contents (revised after Bob's review, below), at its own level,
+  with a unique slug id from the same `withHeadingIds` pass as every other heading. Question headings
+  are not sections and are not listed. A title the page does not render (no title, or no question)
+  gets no entry.
+- No `FAQPage` JSON-LD. `docs`/guideline §14: Google generally limits FAQ rich results to authoritative
+  government and health sites, so none is promised.
+- Heading-in-summary is exposed as a heading by Chromium; **not checked in VoiceOver/NVDA**.
+- Not exercised in a live Studio yet (see PR description).
+
+**Tests.** Fixture post has two FAQs (title H2 / questions H3, and title H3 / questions H4). Six new
+Playwright tests: both level pairs honoured; several answers open together and one closes alone;
+maths in an answer + Enter/Space from the keyboard; question margin/size; JavaScript disabled;
+390px no overflow with everything open and 44px tap targets. The TOC id test now ignores only question headings. `studio` `test:faq-validation` (new CI step) covers the level rules and was checked to
+fail when the rule is broken. Full web suite 70 passed; `astro check` 0 errors; all guard scripts OK;
+`sanity schema validate` 0/0.
+
+One bug the tests caught before review: the question first rendered with a 32px top margin and the
+post heading font, because `.prose :global(h3)` out-ranks a single class. Fixed with a two-class
+selector; the margin test stays as the guard.
+
+**Bob's review of head `2cd9106` (2026-10-01): Revision required — three findings, each reproduced by
+Andy in the source before fixing.**
+- **P1, skipped level was only a warning.** Fixed as above: exact-one-below is an error; `faqLevelSkipWarning`
+  is removed; the fixture's second FAQ is now title H3 / questions H4.
+- **P2, a one-block answer could hold no text.** `required().min(1)` counts blocks, not text. New
+  `validateFaqAnswer`: at least one non-blank text run or inline maths (a maths-only answer is valid).
+  Tested with an empty block, no children, blank spans, whitespace/tab, blank maths, and valid cases.
+- **P2, FAQ titles missing from the contents list.** Chose Bob's first option (include them) rather than
+  record an exclusion, because the owner asked in §42 for every H2–H4 section. `faqVisibleItems` and
+  `faqTitleLevel` are shared by the component and the heading pass so they cannot disagree.
+  **Charlie can reverse this** if FAQ sections should stay out of the contents list; it is one branch
+  in `withHeadingIds`.
+- **Live Studio check (Bob's last gate on PR #114), 2026-10-03.** Charlie ran the local Studio
+  (`pnpm dev` in `studio/`, `http://localhost:3333`, branch `feat/blog-faq-accordion` at `f27f83e`)
+  against the production dataset and reported steps 4–7 "all expected", in his own words: title H2 /
+  questions H4 blocked Publish; a blank answer blocked Publish; title H2 / questions H3 with a real
+  answer cleared the errors; nothing was published, and the draft was deleted. This is Charlie's
+  report, not an observation by Andy or Bob: no screenshot was taken, and he did not tell me the exact
+  error wording or the post list contents.
+
+## 48. Redirect targets must end in `/` — 2026-10-03
+
+**Gap (Bob, review of PR #118).** An editor could publish a redirect to `/blog`. Cloudflare answers a
+page path without a trailing slash with a 307 to `/blog/`, so that redirect took two hops (§46 records
+the live `/blogs` → `/blog` case). Guideline §14 and CORE-20 require one hop.
+
+**Rule.** For an internal `To`, the part before any `?` or `#` must end in `/` or in a file extension
+(`/logo.png`). `/`, `/blog/`, `/#pricing`, `/blog/?page=2` and `/files/report.pdf?dl=1` pass; `/blog`,
+`/blog#faq` and `/about-us` fail. `https://` targets are not ours to rewrite and are unchanged. Enforced
+at publish time in Studio (`validateRedirectTo`, `pathIsSettled`) and again by the build merge
+(`mergeRedirects`), which skips a violating entry with a warning. The parity table in
+`assert-merge-redirects.mjs` runs the new cases through both. Order of checks: unsafe characters,
+scheme, loop, length, then this one.
+
+**Limits.** A directory whose name contains a dot would be treated as a file. Nothing here checks that
+the target page exists, or that a file target is really served. Redirects already published in Sanity
+are not rewritten: the build now skips any that violate the rule, and Studio shows the error the next
+time that document is opened.
+
+**Revised after Bob's review of PR #119 (head `df7b9a6`): Blocked on one finding, confirmed by reading
+the code.** The slash rule only looked at paths, so a copied full address of this site
+(`https://mathematicsmalaysia.com/blog`) passed Studio and was emitted, and still took a second hop;
+`https://www…` adds the `www` redirect on top. Fix: an `https://` target whose parsed hostname is
+`mathematicsmalaysia.com` or `www.mathematicsmalaysia.com` (any case, optional trailing dot or port) is
+rejected with "write it as a path instead"; look-alikes (`…com.evil.example`, `…com@evil.example`,
+`sub.…`) are other sites and stay allowed; an `https://` with no valid host is rejected. Same check in
+Studio and the build, covered by the parity table. A target on this site therefore can only be written as
+a path, so the slash rule always applies to it. The site host is a constant in both files; if the domain
+ever changes, change both (the parity test fails if only one is changed and the inputs use the old host).
+Still outstanding: the live Studio Publish check, to be done on the revised head.
+
+**Live Studio check (Bob's last gate on PR #119), 2026-10-03.** Charlie ran the local Studio
+(`pnpm dev` in `studio/`, `http://localhost:3333`, branch `feat/redirect-trailing-slash-rule` at
+`dad584b`) against the production dataset and reported the steps "all expected", in his own words, for:
+a draft with To `/blog` showing an error and blocking Publish; To
+`https://mathematicsmalaysia.com/blog/` showing an error and blocking Publish; To `/blog/` clearing the
+errors; the draft deleted and the redirect list checked, nothing published. This is Charlie's report,
+not an observation by Andy or Bob: no screenshot was taken, and the exact error wording and the list's
+contents were not recorded.

@@ -93,6 +93,7 @@ Allowed custom objects:
 - `callout`
 - `imageWithAlt`
 - `postTable` — caption, row-header choice and a table grid edited with Studio's built-in table editor (`docs/DECISIONS.md` §45)
+- `faqAccordion` — FAQ title + question list with two heading-level settings (`docs/DECISIONS.md` §47)
 
 No raw HTML object is allowed.
 
@@ -249,7 +250,7 @@ simplicity. If modelled in Sanity, use:
 | Field | Type | Validation / notes |
 | --- | --- | --- |
 | `from` | `string` | Required. Single leading `/`, not `/` alone. No spaces or line breaks, no `*` `:` `?` `#`. Enforced in Studio |
-| `to` | `string` | Required. Path starting with a single `/`, or an `https://` URL. No spaces or line breaks, not equal to `from`. `from` + `to` + 5 ≤ 1,000 characters. Enforced in Studio |
+| `to` | `string` | Required. Path starting with a single `/` and ending in `/` (before any `?`/`#`) or in a file extension, or an `https://` URL of another site (this site's own `mathematicsmalaysia.com` / `www` address must be written as a path). No spaces or line breaks, not equal to `from`. `from` + `to` + 5 ≤ 1,000 characters. Enforced in Studio |
 | `permanent` | `boolean` | Default true |
 | `note` | `text` | Optional reason/source |
 

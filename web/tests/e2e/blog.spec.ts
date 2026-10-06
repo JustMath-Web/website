@@ -258,6 +258,125 @@ test.describe("blog post tables (Portable Text `table`)", () => {
 	});
 });
 
+test.describe("blog post FAQ accordion (Portable Text `faqAccordion`)", () => {
+	const POST = "/blog/why-surds-trip-up-students/";
+
+	test("title and question headings use the levels set in the two settings", async ({
+		page,
+	}) => {
+		await page.goto(POST);
+		// FAQ 1: title H2, questions H3.
+		const first = page.getByRole("region", {
+			name: "Common questions about surds",
+		});
+		await expect(first).toBeVisible();
+		await expect(
+			first.getByRole("heading", {
+				level: 2,
+				name: "Common questions about surds",
+			}),
+		).toBeVisible();
+		await expect(first.getByRole("heading", { level: 3 })).toHaveCount(3);
+		// FAQ 2: title H3, questions H4 — a different valid pair, same component. The question level is
+		// always exactly one below the title (Bob, PR #114 P1): no skipped H4 inside the FAQ.
+		const second = page.getByRole("region", { name: "More about indices" });
+		await expect(
+			second.getByRole("heading", { level: 3, name: "More about indices" }),
+		).toBeVisible();
+		await expect(second.getByRole("heading", { level: 4 })).toHaveCount(2);
+		await expect(second.getByRole("heading", { level: 5 })).toHaveCount(0);
+	});
+
+	test("answers start closed and several can be open at once (multiple)", async ({
+		page,
+	}) => {
+		await page.goto(POST);
+		const faq = page.getByRole("region", {
+			name: "Common questions about surds",
+		});
+		const items = faq.locator("details");
+		await expect(items).toHaveCount(3);
+		for (const item of await items.all())
+			await expect(item).not.toHaveAttribute("open", "");
+
+		await faq
+			.getByRole("heading", { name: "Is a surd always irrational?" })
+			.click();
+		await faq.getByRole("heading", { name: "Can I add two surds?" }).click();
+		// Opening the second did not close the first.
+		await expect(items.nth(0)).toHaveAttribute("open", "");
+		await expect(items.nth(1)).toHaveAttribute("open", "");
+		await expect(items.nth(2)).not.toHaveAttribute("open", "");
+		await expect(items.nth(0).locator(".faq__answer")).toBeVisible();
+
+		// A click closes just that one.
+		await faq
+			.getByRole("heading", { name: "Is a surd always irrational?" })
+			.click();
+		await expect(items.nth(0)).not.toHaveAttribute("open", "");
+		await expect(items.nth(1)).toHaveAttribute("open", "");
+	});
+
+	test("maths in an answer renders, and the toggle works from the keyboard", async ({
+		page,
+	}) => {
+		await page.goto(POST);
+		const faq = page.getByRole("region", {
+			name: "Common questions about surds",
+		});
+		const item = faq.locator("details").nth(1);
+		await item.locator("summary").focus();
+		await page.keyboard.press("Enter");
+		await expect(item).toHaveAttribute("open", "");
+		await expect(item.locator(".math-inline .katex").first()).toBeVisible();
+		await page.keyboard.press("Space");
+		await expect(item).not.toHaveAttribute("open", "");
+	});
+
+	test("the question reads as the summary's own text, not as a post heading", async ({
+		page,
+	}) => {
+		await page.goto(POST);
+		const question = page
+			.getByRole("region", { name: "Common questions about surds" })
+			.locator(".faq__question")
+			.first();
+		await expect(question).toHaveCSS("margin-top", "0px");
+		await expect(question).toHaveCSS("margin-bottom", "0px");
+		await expect(question).toHaveCSS("font-size", "16px");
+	});
+
+	test("works with JavaScript disabled (native details)", async ({
+		browser,
+	}) => {
+		const context = await browser.newContext({ javaScriptEnabled: false });
+		const page = await context.newPage();
+		try {
+			await page.goto(POST);
+			const item = page
+				.getByRole("region", { name: "Common questions about surds" })
+				.locator("details")
+				.first();
+			await item.locator("summary").click();
+			await expect(item).toHaveAttribute("open", "");
+		} finally {
+			await context.close();
+		}
+	});
+
+	test("390px: no horizontal overflow with answers open", async ({ page }) => {
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.goto(POST);
+		const faq = page.getByRole("region", {
+			name: "Common questions about surds",
+		});
+		for (const summary of await faq.locator("summary").all())
+			await summary.click();
+		await assertNoHorizontalOverflow(page);
+		await assertMinTapTarget(page, ".faq__summary");
+	});
+});
+
 test.describe("KaTeX self-hosting and CSS scoping (VS-KaTeX)", () => {
 	test("no external CDN/font-host requests for CSS, fonts, or scripts on the post page", async ({
 		page,
@@ -358,14 +477,19 @@ test.describe("blog post table of contents", () => {
 		"worked-example-2",
 		"adding-under-the-root",
 		"see-it-step-by-step",
+		// FAQ section titles are post sections too (Bob, PR #114 P2): same pass, same TOC.
+		"common-questions-about-surds",
+		"more-about-indices",
 	];
 
 	test("every H2–H4 gets a unique id, and each TOC link points at one", async ({
 		page,
 	}) => {
 		await page.goto(POST);
+		// An FAQ's title is a post section and gets an id; its question headings are not sections and
+		// carry none, so they are left out of this count.
 		const ids = await page
-			.locator(".prose :is(h2, h3, h4)")
+			.locator(".prose :is(h2, h3, h4):not(.faq__question)")
 			.evaluateAll((els) => els.map((el) => el.id));
 		expect(ids).toEqual(EXPECTED_IDS);
 

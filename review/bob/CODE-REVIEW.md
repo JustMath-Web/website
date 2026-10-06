@@ -1,5 +1,856 @@
 # Bob Code Review — Just Math Malaysia Vertical Slice Review
 
+## 2026-10-03 — PR #119 post-merge and Studio-deploy report
+
+GitHub confirms PR #119 merged on 2026-10-03 at 15:27:36 UTC as `6bc0f8ab9def23e049506ac65ac971d31f090edc`; local `main` matches `origin/main` at that commit. The exact PR head was `bbb15116e557ed93965fbddcb48be4811ca16fc1`, which Bob **explicitly re-reviewed and approved** after the docs-only main merge. Andy reports `pnpm deploy` in `studio/` printed “Deployed 1/1 schemas” and a successful Studio URL. Bob did not run that deploy. A read-only request to `https://justmath.sanity.studio/` returned a 302 to Sanity's hosted Studio/auth flow, with a `Last-Modified` timestamp after the merge; this confirms the endpoint responds, not which validation code a signed-in editor sees. The hosted `/blog` error check remains optional post-deploy observation.
+
+### [P3] Gitignored #119 merge log misstates Bob's approval head
+
+`log/2026-10-03_PR119_redirect-target-trailing-slash.md:20-21` says Bob approved only `c56f045` and `bbb1511` was pushed after that approval. The dated reviewer record immediately below this section and the prior assistant verdict show Bob approved **both** `c56f045` and exact head `bbb1511` before the user merged. Andy owns correction of those two log lines. The `log/` folder is gitignored; Bob cannot edit it under Rule 0. This record error does not reopen the merged PR's source verdict.
+
+**Scoped verdict: Approved** remains in force for the merged implementation. No new code or production defect was found in this post-merge check. Bob did not merge, deploy, create a Sanity draft, or edit Andy-owned files.
+
+---
+
+## 2026-10-03 — PR #119 merged-main re-review at `bbb1511`
+
+Reviewed exact open PR #119 head `bbb15116e557ed93965fbddcb48be4811ca16fc1` against previously approved `c56f0452d9349960e922f67546eafffd5c26425f` and current PR base `a292b14497734900a464497ef66abffb915649cf`. Merge commit `bbb1511` brings in only 24 lines in `docs/DECISIONS.md` §46 from merged PR #118. Bob inspected that delta and confirmed §46, §47, §48 remain in order; no application, Studio schema, validator, test, configuration, or other decision text changed relative to approved `c56f045`. `git diff --check` passes for both the merge delta and the current PR diff. The PR is open and mergeable; exact-head GitHub `web`, `studio`, and Workers Builds checks all pass.
+
+The independent source/guard/schema checks and Charlie's attributed live Studio evidence from the `c56f045` approval therefore carry forward unchanged. The imported §46 production-verification record was independently reviewed and approved as PR #118 at `adad45d`, and GitHub confirms #118 merged as `a292b14`. No scoped finding remains open. **Verdict: Approved** for Charlie's manual merge of PR #119 at `bbb1511`. After merge, deploy Studio to make the new publish-time rule available in the hosted editor. Bob did not merge, deploy, commit, write Sanity content, or edit Andy-owned files.
+
+---
+
+## 2026-10-03 — PR #119 final-head re-review at `c56f045`
+
+Reviewed exact open PR #119 head `c56f0452d9349960e922f67546eafffd5c26425f` against previously reviewed `df7b9a6dee382bdaa3dd19e4078ff83824625a08` and actual PR base `f9cd4d24687fb220ec798a4afa5b736efb841387`, under `02-INFORMATIVE-BLOG.md` v1.12.1/shared core v1.12.1. Intermediate commit `dad584b` changes Studio/build validation, parity/guard tests, field guidance, and docs to reject this site's apex and `www` absolute URLs. Final commit `c56f045` adds only the live Studio evidence record in §48. `git diff --check` passes; exact-head `web`, `studio`, and Workers Builds checks pass.
+
+### Closure of the previous P2
+
+Both validators now parse the hostname of an `https://` target and reject `mathematicsmalaysia.com` and `www.mathematicsmalaysia.com`, including case, trailing-dot, and port variants, with guidance to use a relative path. They allow genuinely different hosts. Bob inspected the two implementations, ran the web merge guard, Studio validation guard, and Sanity schema validation (0 errors, 0 warnings), and directly probed `/blog`, `/blog/`, `/#pricing`, the site's apex/`www` full URLs, and an external URL. Studio rejects `/blog` and both own-host full URLs; the build skips the own-host examples and emits the external one. The Studio guard's first sandbox attempt hit `tsx` IPC `EPERM`; its approved rerun passed. The parity table now includes the own-host and look-alike cases. **The P2 same-site absolute-URL bypass is resolved.** Bob did not independently run Andy's Sanity-backed build.
+
+### Closure of the live editor-flow gate
+
+§48 records Charlie's manual test in local Studio at `dad584b` against the production dataset. As reported to Andy, Charlie said the requested steps were “all expected”: `To /blog` and `To https://mathematicsmalaysia.com/blog/` showed errors and blocked Publish; changing `To` to `/blog/` cleared the errors; the temporary draft was deleted without publishing and the redirect list was checked. This is Charlie's report relayed by Andy, **not Bob's direct observation**. The record does not give exact error wording, a screenshot, or the list contents. Together with Bob's independent source, guard, and schema checks, this is sufficient to close the scoped pre-merge Studio evidence gate. No source/schema file changed after the tested `dad584b` head.
+
+**Scoped verdict: Approved** for Charlie's manual merge of PR #119. No scoped P0/P1/P2/P3 finding remains open. Deploy the revised Studio schema after merge before relying on its new publish-time rule. PR #118 remains a separate, previously approved docs PR awaiting Charlie's merge. Bob did not merge, deploy, create/edit Sanity content, commit, or modify Andy-owned files.
+
+---
+
+## 2026-10-03 — PR #119 redirect-target rule at `df7b9a6`
+
+Reviewed exact open PR #119 head `df7b9a6dee382bdaa3dd19e4078ff83824625a08` against base `f9cd4d24687fb220ec798a4afa5b736efb841387`, under `02-INFORMATIVE-BLOG.md` v1.12.1/shared core v1.12.1. The seven-file diff adds a trailing-slash-or-file rule in Studio and build validation, parity/guard cases, field guidance, and §48/content-model documentation. `git diff --check` passes; exact-head GitHub `web`, `studio`, and Workers Builds statuses are successful. Bob independently ran the web merge guard, Studio validation guard (its first attempt hit sandbox `tsx` IPC `EPERM`; the approved rerun passed), and Sanity schema validation (0 errors, 0 warnings). Bob did not rerun a Sanity-backed site build; Andy reports three applied Sanity redirects and one expected `/pricing/` skip because the static rule owns that exact source. That duplicate is a content-cleanup choice, not a functional failure in this PR.
+
+The relative-path cases work in source and tests: `/blog` is rejected, while `/blog/`, `/#pricing`, `/blog/?page=2`, and `/logo.png` pass. Studio and build agree for the tested table. Cloudflare's current [Static Assets HTML-handling documentation](https://developers.cloudflare.com/workers/static-assets/routing/advanced/html-handling/) describes the automatic slash redirect for a folder index; Bob also observed live `/blog` return `307 Location: /blog/`.
+
+### [P2] Same-site absolute URLs bypass the new one-hop rule
+
+- **Category:** objective validation gap / incomplete task correction.
+- **Evidence:** both validators classify every `https://` target as external and apply `pathIsSettled` only when the target starts with `/`. Bob directly invoked `validateRedirectTo('https://mathematicsmalaysia.com/blog', '/old')`; it returned `true`. `mergeRedirects('', [{from:'/old',to:'https://mathematicsmalaysia.com/blog'}])` emitted `/old https://mathematicsmalaysia.com/blog 301` with no skipped item. The live destination `/blog` returns a further `307` to `/blog/`. A `www.mathematicsmalaysia.com` absolute target can also encounter the existing www-to-apex rule. The parity table cannot catch this because both validators accept it.
+- **Failure scenario:** an editor copies this site's full `/blog` URL into `To` instead of the relative path. Studio permits Publish and the build emits the rule, recreating the two-hop failure the PR is meant to prevent.
+- **Required correction / owner:** Andy treats the site's apex and `www` absolute URLs as internal for this rule, or rejects same-site absolute targets with actionable guidance to use a relative path. Keep genuinely external `https://` URLs allowed. Add apex and `www` bypass cases to Studio, build, and parity tests; update §48 and the content model to state the precise policy.
+- **Status:** open.
+
+### Remaining evidence and verdict
+
+The new validation message and blocked Publish state have not been observed in local Studio. After Andy resolves the P2, Charlie can test the revised head in local Studio or explicitly authorize Andy one temporary unpublished production-dataset redirect draft. Verify `To /blog` displays an error and blocks Publish, `To /blog/` clears it and makes Publish available, then delete without publishing and check the redirect list. Bob cannot write Sanity under Rule 0. **Scoped verdict: Blocked** on essential live Studio evidence, with the P2 source correction required before an eligible merge review. No P0/P1 finding is open. PR #118 is a separate approved, still-open docs PR; Bob did not merge either PR, deploy, or edit Andy-owned files.
+
+---
+
+## 2026-10-03 — PR #118 redirect production-verification record at `adad45d`
+
+Reviewed exact open PR #118 head `adad45d5ee497a526e7f348255d5226fd8793b21` against base `f9cd4d24687fb220ec798a4afa5b736efb841387`, under `02-INFORMATIVE-BLOG.md` v1.12.1/shared core v1.12.1. The PR changes only `docs/DECISIONS.md` §46; `git diff --check` passes. Exact-head GitHub `web`, `studio`, and Workers Builds statuses are successful. No code changed, so Bob did not rerun the application test suite for this documentation-only PR.
+
+Bob independently checked production: `/blogs` and `/blogs/` each return `301 Location: /blog/` and reach a 200 page after one redirect; `/pricing` and `/pricing/` each return `301 Location: /#pricing` and reach the homepage after one redirect. This closes the previously open `/blogs/` P2 production coverage gap. `https://www.mathematicsmalaysia.com/` returns one `301` to the apex and reaches 200. The rule's dashboard location, phase, and creation date are supported by the dated internal `HANDOFF.md` entry at lines 130–145, not by Bob viewing the current Cloudflare dashboard. §46 appropriately distinguishes that provenance.
+
+Bob independently ran `pnpm exec sanity hooks logs`: 09:38:20Z and 09:43:59Z entries returned success/200. A filtered detailed-log read identified `_type: 'redirect'` for both entries. This establishes that redirect-document events reached the Sanity webhook. The live changed redirect output and Charlie's report of no manual build support the §46 end-to-end editorial-flow conclusion. Bob did not inspect a matching Cloudflare deployment record because Wrangler access under the current OAuth account failed per Andy's report; the log does not itself supply a deployment ID. §46 discloses this limitation. The www rule's live effect was directly checked; the rule's current dashboard configuration was not.
+
+**Scoped verdict: Approved** for Charlie's manual merge of this documentation-only PR. No finding in the PR #118 diff remains open. The separate P2 source-prevention gap in `mergeRedirects.ts` remains: an editor can still choose an uncanonicalized internal target such as `/blog` and create a Cloudflare 307 second hop. Andy owns that future guard or editor guidance; this documentation PR does not claim to fix it. Bob edited only reviewer outputs, and did not merge, deploy, write Sanity content, or modify `docs/DECISIONS.md` or application code.
+
+---
+
+## 2026-10-03 — `/blogs/` trailing-slash source follow-up
+
+Bob checked production: `/blogs/` returns `404`, while `/blogs` returns one-hop `301 Location: /blog/`. These are distinct source paths in the current redirect setup. Studio's `validateRedirectFrom` and the build's `validate` both accept the literal `/blogs/` as a source, distinct from `/blogs`. The safe content correction is a **new** Sanity Redirect document, `From: /blogs/`, `To: /blog/`, permanent 301; keep the existing `/blogs` document. After publication and deployment, verify each source independently reaches `/blog/` in one hop. Bob did not create the document.
+
+The current editor/build rules intentionally reject `*` and `:` in `From`, and they do not provide regex syntax. [Cloudflare's `_redirects` format](https://developers.cloudflare.com/workers/static-assets/redirects/) supports splats and placeholders, but a splat is greedy and could also catch descendants beyond these two intended URLs. Two exact rules are proportionate and reviewable. **P2 production coverage gap open** until `/blogs/` is redirected. The separate canonical-target prevention gap recorded below also remains open for Andy.
+
+---
+
+## 2026-10-03 — `/blogs` one-hop live retest
+
+After Charlie reported changing the Sanity target to `/blog/`, Bob first observed the old `301 /blog` live response at 09:29:28 UTC. On the next check, the live response had changed: at 09:30:14 UTC both HEAD and GET returned `301 Location: /blog/`, and a following GET ended at `/blog/` with `200` after exactly **one redirect**. The concrete `/blogs` production one-hop defect recorded below is **resolved**. This is direct HTTP evidence, not a Sanity document or deployment-log inspection. The change appearing shortly after Charlie's edit is consistent with the reported publish/build path, but Bob has not correlated a particular hook delivery and build with this edit.
+
+The general prevention gap remains: `mergeRedirects.ts` checks explicit `_redirects` chains but cannot detect Cloudflare's automatic trailing-slash redirect for a target such as `/blog`. Andy owns a guard or editor-facing canonical-target rule and regression test if the §46 one-hop promise is to hold for future editor redirects. **P2 source prevention finding remains open; the specific live route is fixed.** Bob did not change Sanity, code, docs/DECISIONS.md, or deployment settings.
+
+---
+
+## 2026-10-03 — PR #115 post-merge redirect operation
+
+This is a production follow-up to the already merged PR #115, not a change to its prior pre-merge approval. Bob made read-only live HTTP requests on 2026-10-03: `/blogs` returned `301 Location: /blog`; `/blog` returned `307 Location: /blog/`; `/blog/` returned `200`. A GET following redirects ended at `/blog/` after **two redirects**. Both `/pricing` and `/pricing/` returned `301 Location: /#pricing` in one hop. `/blogs` is absent from the repository's static `web/public/_redirects`; the live rule is consistent with the reported Sanity-managed redirect being deployed, but HTTP alone cannot identify which build or webhook caused it.
+
+### [P2] Live `/blogs` redirect violates the one-hop rule
+
+- **Category:** production behavior / one-hop redirect correctness.
+- **Gate:** governing guideline CORE-20 and `docs/DECISIONS.md` §46's one-hop contract.
+- **Evidence:** the live chain above. `web/src/lib/content/mergeRedirects.ts` checks whether `c.to` is a source in its explicit `taken` set; `/blog` is absent from that set, but the deployed site redirects it to `/blog/`. `web/wrangler.jsonc` does not override HTML handling; [Cloudflare's Static Assets HTML-handling documentation](https://developers.cloudflare.com/workers/static-assets/routing/advanced/html-handling/) describes the default automatic trailing-slash redirect for folder index assets. This matches the observed `307`.
+- **Impact:** visitors and crawlers make two redirect requests where the project's redirect contract promises one.
+- **Required correction:** Charlie changes the Sanity document's `To` from `/blog` to `/blog/`, publishes it, waits for the next deployment, then checks `/blogs` returns a single `301` directly to `/blog/` and the destination returns `200`. Andy should extend the source/build guard or editor guidance to account for canonical site paths, with a regression case for this failure mode; the current explicit-rule chain test cannot catch it.
+- **Status:** open; no Sanity edit was made by Bob.
+
+Andy reports two Sanity webhook deliveries returned HTTP 200 at 01:05:11Z and 01:05:19Z, but could not associate either with the `/blogs` publish. He reports `wrangler deployments list` failed with authentication code 10000 for an account without Worker access. Bob did not run either CLI. The live rule establishes a deployed redirect, while redirect-specific webhook causality remains unproven from the supplied logs. Wrangler access is optional for fixing and retesting this route; no account change is needed for Bob's HTTP check. Bob did not edit application code, decisions, Sanity, or deployment configuration.
+
+---
+
+## 2026-10-03 — PR #114 final-head Studio-evidence re-review at `01a8a7a`
+
+Reviewed exact open head `01a8a7ac64b8c08307677a8a80c7360ca0789a8d` against previously reviewed `f27f83e4f72ecd8a0a36ec1fb6b52ac841d55afe`, under `02-INFORMATIVE-BLOG.md` v1.12.1/shared core v1.12.1. The only delta is nine added/replaced lines in `docs/DECISIONS.md` §47; no application, schema, test, or deployment file changed. `git diff --check 4eb2672...HEAD` passes. GitHub's exact-head PR status rollup reports `web`, `studio`, and Workers Builds successful. The independent source, schema, guard, and focused-browser results from the `e8c905d` review remain applicable; Bob did not rerun them for this documentation-only commit.
+
+### Closure of the live Studio evidence gate
+
+§47 now records Charlie's 2026-10-03 manual check in local Studio on the feature branch at `f27f83e`, using the production Sanity dataset. Charlie's report, as relayed by Andy, says steps 4–7 were “all expected”: H2 title/H4 questions blocked Publish, a blank answer blocked Publish, H2/H3 with a real answer cleared the errors, nothing was published, and the temporary draft was deleted. This is secondhand evidence, **not Bob's observation**. The record does not give exact error text, a screenshot, or the post list contents. “All expected” refers to the previously specified valid-state Publish availability and post-list check, but those two observations are less explicit than the invalid-state observations. Given the targeted manual check and Bob's prior independent source/tests, the evidence is sufficient to close the scoped pre-merge editor-flow gate. It does not prove a Studio-authored FAQ renders on the public site or VoiceOver/NVDA behavior.
+
+The prior P1/P2/P3 findings remain closed and no scoped finding is open. **Verdict: Approved** for Charlie's manual PR #114 merge. Approval is not a merge or deployment instruction from Bob; the user controls both. After merge, deploy the updated Studio schema and verify a real authored FAQ when a suitable post is published. Bob did not create/edit Sanity content, commit, merge, deploy, or edit Andy-owned files.
+
+---
+
+## 2026-10-02 — PR #114 documentation cleanup at `f27f83e`
+
+Reviewed exact open head `f27f83e4f72ecd8a0a36ec1fb6b52ac841d55afe` against previously reviewed `e8c905da8f0c8edb8069e2d4bdc34b144ebb4238`. The only delta removes the extra blank EOF line in `docs/DECISIONS.md`; `git diff --check 4eb2672...HEAD` is clean. The previous P3 whitespace finding is closed. No FAQ implementation or test file changed, so the source and focused-browser conclusions of the `e8c905d` review carry forward without claiming a new runtime test.
+
+The PR's exact-head status rollup reports `web`, `studio`, and `Workers Builds: justmathwebsite` successful at `f27f83e`. A direct GitHub check-runs query also confirmed all three succeeded at `e8c905d`. The earlier missing Workers status was a `gh pr checks` listing gap, not a missing or failed build. Bob did not independently run a Cloudflare build or open its dashboard artifact.
+
+**Scoped verdict: Blocked** solely on the revised FAQ's live Studio editorial-flow evidence. No P0/P1/P2/P3 source finding remains open. Charlie can test in local Studio at this head or expressly authorize Andy to create and delete one temporary unpublished post draft in the production dataset. Observe FAQ insertion and controls; H2/H4 skipped-level and blank-answer errors each blocking Publish; valid H2/H3 with substantive answer clearing the errors and making Publish available; then delete the draft without publishing and verify the post list. Record who observed it and the tested head. Bob cannot write Sanity under Rule 0 and has not observed this flow. VoiceOver/NVDA and a Studio-authored published FAQ also remain unverified; they are separate from this pre-merge gate. Bob did not merge, deploy, commit, or edit Andy-owned files.
+
+---
+
+## 2026-10-02 — PR #114 FAQ correction re-review at `e8c905d`
+
+Reviewed exact open head `e8c905da8f0c8edb8069e2d4bdc34b144ebb4238` against merged PR base `4eb267247f8d011e70d4472d2340fd28a73e12bf` under `02-INFORMATIVE-BLOG.md` v1.12.1/shared core v1.12.1. The local `main` ref is stale, so Bob used the actual PR base and the `e8c905d` correction delta. PR #115 is merged into this branch. Exact-head GitHub checks show `web` and `studio` passing; a Workers Builds check is absent from the returned check list. The GitHub `web` job runs `pnpm build` and the full Playwright suite. Bob independently ran `pnpm test:post-heading-ids`, `pnpm test:faq-validation`, `pnpm exec sanity schema validate` (0 errors, 0 warnings), and 14 focused FAQ/contents Playwright tests against a fresh build; all passed. The Studio guard's first sandbox attempt hit `tsx` IPC `EPERM`; the approved rerun passed. No live Studio FAQ was edited by Bob.
+
+### Closure of the three previous findings
+
+- **P1 FE-06 skipped heading — resolved in source and built browser tests.** `studio/schemaTypes/lib/faqValidation.ts:24-38` requires a question level exactly one below the title; `portableTextObjects.ts` binds the rule as an error and offers only H3–H5. The renderer derives the question rank from the title for older/script-written data. The fixture's second FAQ is H3/H4. The guard tests valid H2/H3, H3/H4, H4/H5 and invalid gaps. The focused browser tests pass.
+- **P2 blank answer — resolved in source and guard.** `validateFaqAnswer` checks trimmed text runs or nonblank inline maths; `portableTextObjects.ts` attaches it after the array's required/minimum rule. Empty paragraphs and whitespace fail; maths-only and real text pass in the guard. Whether this message is visible and publish-blocking in the nested Studio editor remains a live-flow check.
+- **P2 contents-list decision mismatch — resolved.** `postHeadings.ts:38-50,107-118` adds a visible FAQ's H2–H4 title through the same unique-id pass as ordinary headings; `FaqAccordion.astro` consumes that id and shared title-level helper. The guard covers collisions and hidden/empty FAQs; focused TOC browser tests pass. Inclusion follows the existing §42 decision, so no new owner preference decision is needed to keep it.
+
+### [P3] PR diff has a trailing blank line
+
+`git diff --check 4eb267247f8d011e70d4472d2340fd28a73e12bf...HEAD` reports `docs/DECISIONS.md:2829: new blank line at EOF.` This is minor document cleanup for Andy; it has no FAQ runtime effect. Re-run the diff check after removal.
+
+### Remaining evidence and verdict
+
+The revised FAQ's actual Studio insert/edit/validation path has not been observed. The earlier table PR showed that schema and fixture tests can pass while an editor control is unreachable, so this remains a pre-merge evidence gate for this new editor feature. Use local Studio from this PR head (hosted Studio may have the prior schema), create one temporary **unpublished** post draft only with Charlie's authorization or have Charlie do the test, and populate other required post fields. Verify the FAQ insert menu, title and level controls, question/answer editing, H2/H4 skipped-level error and blocked Publish, blank-answer error and blocked Publish, then valid H2/H3 with a substantive answer clearing the FAQ errors and making Publish available. Do not publish; delete the draft and verify the original post list. Record the exact head and non-sensitive observed result. Bob cannot write Sanity under Rule 0. VoiceOver/NVDA and a real published FAQ remain unverified; Chromium's heading exposure is not a screen-reader check.
+
+Workers Builds did not report on this head when checked; `web` and `studio` passed. Confirm whether Cloudflare runs a PR build for this head or provide equivalent Cloudflare build evidence before merge. The absent status is an evidence gap, not a claimed Cloudflare failure. **Scoped verdict: Blocked** on live Studio editorial-flow evidence, with the missing Workers check to reconcile and P3 whitespace cleanup. No P0/P1/P2 source finding remains open. Bob did not merge, deploy, commit, or edit application code, docs, the project handoff, or Sanity content.
+
+---
+
+## 2026-10-02 — PR #115 final-head re-review at `4a9dd00`
+
+Reviewed exact open head `4a9dd00734b46a8de89c6c4eab6f4a81d8281770` against previously reviewed `5ebe9f2e7a5d94e09503fe7694b2e4747b275bb8`. The only delta is nine added lines in `docs/DECISIONS.md` §46; `git diff --check` passes. Exact-head `web`, `studio`, and Workers Builds checks pass. No application code, schema, test, or deployment setting changed, so the independent source, validator, schema, and direct-probe results from the `5ebe9f2` review remain applicable.
+
+### Closure of the editor-flow evidence gate
+
+`docs/DECISIONS.md` §46 now records Charlie's dated manual test using local Studio on branch `feat/sanity-redirects` at `5ebe9f2` against the production dataset. Charlie reports that a temporary redirect draft with trailing-space `From` `/pricing ` showed an error and blocked Publish; changing it to valid `/review-test` → `/blog/` cleared the error and made Publish available; the valid draft was **not** published, was deleted, and the redirect list was checked. This is Charlie's report relayed by Andy, **not Bob's direct observation**; no screenshot, recording, or Sanity audit log was supplied. The record is specific enough to close the missing-UI-evidence blocker for this scoped pre-merge gate when combined with Bob's prior independent source/schema/test checks. The `/` invalid-source case was unit-tested but not exercised in live Studio; the one observed trailing-space case is sufficient for the earlier P1's concrete failure scenario.
+
+The four earlier findings remain resolved. No scoped P0/P1/P2/P3 finding remains open. No PR #115 redirect was verified on the deployed Worker, and no `redirect` document publish was observed triggering the Sanity webhook; those are operational checks after Charlie's merge and deploy. The existing `/pricing/` rule must retain its 301 while the new `/pricing` rule produces its own one-hop 301.
+
+### Scoped verdict
+
+**Approved** for the next gate: Charlie's manual merge of PR #115. This approval does not certify the new redirect on production or redirect-specific webhook delivery. Bob did not create a Sanity draft, commit, merge, deploy, or edit application code.
+
+---
+
+## 2026-10-02 — PR #115 redirect re-review at `5ebe9f2`
+
+Reviewed exact open head `5ebe9f2e7a5d94e09503fe7694b2e4747b275bb8` against prior reviewed `02b7e9299957451b474b2ada85488b24c79a1cd3`. Nine-file follow-up; `git diff --check` passes. Exact-head `web`, `studio`, and Workers Builds checks pass. Bob independently ran `pnpm test:merge-redirects`, `pnpm test:redirect-validation` (the first attempt hit sandbox tsx IPC `EPERM`; the approved rerun passed), and `pnpm exec sanity schema validate` (0 errors, 0 warnings). Bob also invoked both validation functions and the merge directly for the prior failure inputs. [Sanity's validation documentation](https://www.sanity.io/docs/studio/validation) confirms custom field rules receive `context.document` and error-level validation blocks publishing; the UI effect here has not been observed in Studio.
+
+### Re-verification of the four previous findings
+
+- **P1 Studio/build disagreement — resolved in source and tests.** `studio/schemaTypes/documents/redirect.ts:1-26` attaches `validateRedirectFrom` and `validateRedirectTo`, with the latter reading `context.document.from`. `studio/schemaTypes/lib/redirectValidation.ts:24-52` rejects entry-local invalid cases. `studio/scripts/assert-redirect-validation.ts` checks valid and invalid cases; `web/scripts/assert-merge-redirects.mjs` compares both validators over the same input table. Bob's direct probe found `/pricing ` rejected in Studio and skipped by the merge, while `/pricing` → `/#pricing` passed both. **Live Studio Publish blocking is still unverified**, so this closure is limited to source/test behavior.
+- **P2 unsupported source rules/line length — resolved.** `web/src/lib/content/mergeRedirects.ts:68-83` now rejects `?`/`#` sources and a declaration over 1,000 characters. Bob's direct probes confirmed both are skipped and not counted as applied; valid `/pricing` is counted. Tests cover exactly 1,000 and one character over.
+- **P2 duplicate 301/302 status — resolved.** `mergeRedirects.ts:109-115` sorts by status after source and target, so 301 wins. Bob reversed two same-source/same-target documents and got `/dup /new 301` both times; the revised guard asserts the same.
+- **P3 webhook note — resolved in the decision record.** `docs/DECISIONS.md` §46 now references §35's dated end-to-end publish/hook/deploy evidence and §39's single current-project hook, while explicitly leaving redirect-document trigger behavior and current dashboard settings unverified. Andy reports `npx sanity hooks list` still shows the hook on 2026-10-02; Bob did not independently run that CLI or inspect its dashboard settings.
+
+### Essential evidence still missing
+
+No one has opened the revised redirect form in live Studio and attempted an invalid publish. Source binding, schema validation, and pure-function parity tests cannot prove that an editor sees the message and Publish remains blocked in the actual form. The earlier P1 was specifically an editorial publish-flow defect, so the requested manual check remains a pre-merge evidence gate. Bob cannot create or modify a production Sanity draft under Rule 0. Andy may do one controlled temporary-draft test only with Charlie's explicit authorization, or Charlie may test it directly. Use **local Studio running the PR head** against the production dataset; the hosted Studio may still have the pre-merge schema. Test `/pricing ` (trailing space) and `/` as invalid sources, observe the messages and blocked Publish, then enter valid `/review-test` → `/blog/` values in the same draft and confirm validation clears and Publish becomes available; delete the draft **without publishing** and verify the redirect list. Record non-sensitive evidence and exact commit tested. Publishing valid `/pricing` would create a duplicate of the existing Sanity source. The separate post-merge operational check is one redirect edit → Sanity hook → Cloudflare build → live HTTP response, including both `/pricing` and `/pricing/`.
+
+Bob did not rerun the full Playwright suite or a Sanity-backed site build at this head; exact-head CI is green, and Andy reports a local build adding `/pricing /#pricing 301`. No live Worker response from this unmerged head has been verified.
+
+### Scoped verdict
+
+**Blocked** on the missing live Studio publish-flow evidence. The four source/documentation findings are closed at this head; no new P0/P1/P2/P3 source finding is open. After the manual form check, Bob will inspect its evidence and current head before issuing an eligible verdict. Bob did not merge, deploy, write Sanity content, or edit Andy-owned files.
+
+---
+
+## 2026-10-02 — PR #115 Sanity redirects at `02b7e92`
+
+Reviewed exact open head `02b7e9299957451b474b2ada85488b24c79a1cd3` against `main` `e677a43be185abbf40dfb40ebfdf63734cf224b0` under `02-INFORMATIVE-BLOG.md` v1.12.1/shared core v1.12.1. This is a scoped pre-merge feature review. All three exact-head GitHub checks pass. Bob independently ran `git diff --check`, `pnpm test:merge-redirects` (pass), and `pnpm build` (pass, but the local config process had no Sanity environment variables and retained only static redirects). Bob did not access the Sanity dashboard or make a production-dataset write. Andy's production-dataset build result is his report, not Bob's independent build result. Cloudflare's current [Workers Static Assets redirect documentation](https://developers.cloudflare.com/workers/static-assets/redirects/) confirms `_redirects` parsing, first-rule precedence, supported destination fragments, unsupported source query matching, and the 1,000-character declaration limit.
+
+### [P1] Studio accepts redirects the build silently discards for editors
+
+- Category: objective defect / content-model mismatch
+- Gate: guideline §20 editorial publishing flow; P1 task completion
+- Evidence: `studio/schemaTypes/documents/redirect.ts:8-29` validates `from` only with `startsWith('/')` and `to` only with `startsWith('/')` or `startsWith('https://')`. It therefore accepts `/pricing `, `/`, `/blog/*`, `//host`, and a `to` value with a space. `web/src/lib/content/mergeRedirects.ts:47-67` rejects those entries; `sanityRedirectsIntegration.ts:58-67` logs a warning and continues the build. The editor does not see the build log or a publish-blocking error. The content model §9 still describes the weaker Studio rules.
+- Failure scenario: an editor accidentally leaves a trailing space in `from`, publishes, and sees a successful Studio publish and site build, but no redirect appears on the live site.
+- Why it matters: this feature promises editor-managed redirects. A common typo becomes a successful-looking publish with no working redirect, so the basic editorial task can fail without feedback to the person who can correct it. Build-time rejection is a sound defense, but cannot replace Studio validation of entry-local rules.
+- Required correction: make Studio block publication for the build's entry-local invalid cases (single leading slash, non-root source, no whitespace/control characters or wildcard/placeholder syntax, valid target, no self-loop). Keep the build validator as a second boundary. Add Studio validation tests and one manual editor check. Cross-document duplicates/chains can remain build warnings if the limitation and owner action are clear.
+- Owner: Andy
+- Verification: inspect and run the new Studio rule tests; in Studio, confirm `/pricing ` and `/` cannot publish, while a valid `/pricing` → `/#pricing` can.
+- Status: open
+
+### [P2] The merge counts unsupported Cloudflare source rules as applied
+
+- Category: objective defect
+- Gate: redirect correctness / guideline §20
+- Evidence: `mergeRedirects.ts:47-68,126-128` rejects whitespace but does not reject `?` or `#` in `from`, or enforce Cloudflare's 1,000-character per-declaration limit. Bob directly invoked `mergeRedirects`: `/old?ref=1` and `/old#part` were reported in `applied`, and a 1,207-character line was emitted and reported as applied. Cloudflare documents that source fragments are not evaluated, source query-parameter matching is unsupported, and declarations over 1,000 characters exceed its limit. The committed guard script has no cases for these inputs.
+- Failure scenario: an editor enters a query-specific old URL or a very long source/target; the build reports one redirect added, but Cloudflare cannot apply the intended rule.
+- Why it matters: the build success count is not evidence of a usable redirect for these editor inputs.
+- Required correction: reject unsupported `from` query/fragment syntax and over-limit emitted lines, with explicit reasons and tests. Do not claim a successful redirect merely because a line was written.
+- Owner: Andy
+- Verification: direct validator tests for query, fragment, and exactly-at/over-limit declarations; inspect the generated file and a Cloudflare preview if available.
+- Status: open
+
+### [P2] Duplicate status can change with Sanity result order
+
+- Category: objective defect
+- Gate: redirect determinism / FE-24
+- Evidence: `mergeRedirects.ts:86-106` sorts duplicates by `from` and `to` only. Two documents with the same source and target but different `permanent` values compare equal, so the first fetched status wins. Bob ran the merge twice with the documents reversed: one output was `/dup /new 301`, the other `/dup /new 302`. The guard test at `web/scripts/assert-merge-redirects.mjs:123-136` covers different targets, not this tie.
+- Failure scenario: two Sanity redirect documents point `/dup` to `/new`, one permanent and one temporary. A change in GROQ result order changes the deployed HTTP status without either document changing.
+- Why it matters: crawlers and caches treat 301 and 302 differently, and the decision record currently claims duplicates resolve deterministically.
+- Required correction: define and test a stable tie policy, or reject/report conflicting duplicates so no ambiguous status is deployed.
+- Owner: Andy
+- Verification: reverse same-source/same-target documents with different `permanent` values and compare output and warnings.
+- Status: open
+
+### [P3] The webhook note overlooks recorded end-to-end evidence
+
+- Category: documentation mismatch
+- Gate: operational handoff / guideline §20
+- Evidence: `docs/DECISIONS.md:2718-2723` says the webhook's existence is unverified and editors must manually build until it is confirmed. The same file's §35 (`2161-2185`) records Charlie's two real Studio publishes, successful Sanity hook delivery, a new Cloudflare deployment, and live content verification; §39 (`2359-2360`) records one webhook pointed at the current project.
+- Failure scenario: an editor follows §46 and triggers a redundant manual build after every redirect publish, or an operator incorrectly treats the previously verified hook as never configured.
+- Why it matters: the operational instruction conflicts with the project's own dated evidence. The *current* dashboard state and whether this `redirect` document type triggers the hook still merit a targeted check.
+- Required correction: distinguish the historically verified webhook/deploy chain from the still unverified redirect-specific publish and current hook configuration; name the post-merge check.
+- Owner: Andy
+- Verification: inspect the revised decision note and, after merge, one redirect edit's hook log, Cloudflare build, and HTTP response.
+- Status: open
+
+### Production baseline and remaining evidence
+
+Read-only `curl` on 2026-10-02 found `https://mathematicsmalaysia.com/pricing` returns **404** and `/pricing/` returns **301** with `Location: /#pricing`. This is the expected pre-merge baseline for the two distinct paths, not a test of PR #115 on the deployed Worker. A local `pnpm build` completed but warned that `PUBLIC_SANITY_PROJECT_ID`/`PUBLIC_SANITY_DATASET` were not in the config process, so Bob did not independently reproduce Andy's Sanity-backed output. The PR's actual Cloudflare response and a redirect-document webhook event are unverified. After a corrected PR is merged by Charlie, verify `/pricing` returns one-hop 301 to `/#pricing`, `/pricing/` retains its 301, and a subsequent published redirect change triggers a build without manual action.
+
+### Scoped verdict
+
+**Revision required.** The open P1 editor-validation gap prevents approval for an editor-managed redirect feature. Resolve the P2 provider-format and duplicate-status defects, correct the operational note, and return the revised exact head for re-review. Bob did not merge, deploy, or edit Andy-owned files.
+
+---
+
+## 2026-10-01 — PR #114 FAQ accordion at `2cd9106`
+
+Reviewed exact open head `2cd9106e8a171fa55849f84d94964e5eb409274f` against `main` `e677a43be185abbf40dfb40ebfdf63734cf224b0` under `02-INFORMATIVE-BLOG.md` v1.12.1/shared core v1.12.1. This is a scoped pre-merge feature review. Three exact-head checks pass. Bob ran `git diff --check`, `pnpm test:faq-validation`, and the six targeted FAQ Playwright tests against a fresh build; all pass. In Chromium, the built FAQ had no page overflow at 320/560/768/1024/1440px, 54px summary targets, a 2px visible focus outline, and visible open answers with reduced motion. Bob did not operate live Studio, create a Sanity draft, or inspect VoiceOver/NVDA.
+
+### [P1] A warning permits a skipped question heading level
+
+- Category: guideline mismatch
+- Gate: FE-06 heading hierarchy; [W3C WAI heading guidance](https://www.w3.org/WAI/tutorials/page-structure/headings/)
+- Evidence: `studio/schemaTypes/lib/faqValidation.ts:36-45` returns only a warning for a gap; `studio/schemaTypes/objects/portableTextObjects.ts:435-437` attaches it with `.warning()`, so it does not block Publish. `web/src/lib/content/defaultBlogData.ts:309-318` supplies title H3/questions H5, and `web/tests/e2e/blog.spec.ts:278-287` asserts five-level questions without an H4. The renderer honors the gap at `web/src/components/portabletext/FaqAccordion.astro:21-28`.
+- Failure scenario: an editor picks H3 for the FAQ title and H5 for its directly nested questions. The published outline jumps over H4 within that FAQ.
+- Why it matters: the question is a direct child of the FAQ title. The surrounding article cannot supply a missing heading *inside* that parent-child relation. WAI says skipped ranks can confuse heading navigation; FE-06 requires levels to express actual structure. This is an FE gate failure, not a claim that a skipped rank alone automatically fails WCAG 1.3.1.
+- Required correction: require the question level to be exactly one deeper than the FAQ title, retaining the offered H3–H6 range for valid pairs; change the fixture and tests to exercise valid pairs and a rejected skipped pair. If the owner wants a different content hierarchy, record and approve that structural requirement first.
+- Owner: Andy
+- Verification: inspect the revised schema/validator and test, run the guard, and confirm built heading sequence for every fixture FAQ.
+- Status: open
+
+### [P2] A one-block answer can contain no answer text
+
+- Category: objective defect
+- Gate: content resilience / FE-22
+- Evidence: `studio/schemaTypes/objects/portableTextObjects.ts:403-424` validates `answer` with only `Rule.required().min(1)`. That checks array presence/length, not the contents of its Portable Text block. [Sanity's validation documentation](https://www.sanity.io/docs/studio/validation) provides a separate custom rule for rejecting empty Portable Text paragraphs. The renderer sends the array unchanged to `PortableText` at `web/src/components/portabletext/FaqAccordion.astro:55-60`.
+- Failure scenario: a question has one empty or whitespace-only paragraph. The length rule passes and the published disclosure opens onto an empty answer.
+- Why it matters: the editor promise is a question *with an answer*; a blank panel is a broken content state.
+- Required correction: validate meaningful answer content, including inline maths where present, and add cases for an empty block, whitespace-only spans, and a valid answer.
+- Owner: Andy
+- Verification: run the validator test, then in authorized live Studio attempt to publish a question with one blank answer block and confirm Publish is blocked.
+- Status: open; source-based until the Studio interaction is tested
+
+### [P2] FAQ H2–H4 titles are missing from the post contents list
+
+- Category: guideline/record mismatch
+- Gate: `docs/DECISIONS.md` §42 post table of contents; content navigation
+- Evidence: §42 defines the blog contents list for H2–H4. `web/src/lib/content/postHeadings.ts:25-27,66-86` collects only top-level Portable Text heading blocks, while `FaqAccordion.astro:31-46` renders an H2–H4 FAQ title separately. §46 explicitly records that it has no contents entry or section anchor. `web/tests/e2e/blog.spec.ts` changed the ID test to ignore FAQ headings.
+- Failure scenario: a long article contains a prominent H2 FAQ section; the floating contents list omits it even though other H2 sections appear.
+- Why it matters: navigation no longer reflects all article sections at the level the owner requested. The decision note acknowledges the gap but does not show an owner-approved change to §42.
+- Required correction: include the FAQ title in the heading-ID/contents pass, with a linkable section ID and collision handling, or obtain and record the owner's decision that FAQ sections are intentionally excluded.
+- Owner: Andy / Charlie for a scope change
+- Verification: built-page test shows a matching FAQ title anchor and contents link, or review a recorded owner decision and adjusted contents contract.
+- Status: open
+
+### Essential evidence still missing
+
+No one has exercised this `faqAccordion` insert/edit/validation path in live Studio. A successful schema build and fixture tests do not prove that title and level controls, question array, answer editor, warning/error messages, and Publish blocking are usable. Andy's proposed one temporary production-dataset draft needs **Charlie's explicit authorization**; Bob cannot grant it. The test should include the blank-answer and skipped-level cases after their validators are corrected, then delete the draft and confirm the prior post list. A screen-reader check of heading-in-summary remains unverified; Chromium recognizes the heading, and the [HTML Standard](https://html.spec.whatwg.org/multipage/interactive-elements.html) permits heading content in `summary`, but those facts do not establish VoiceOver/NVDA behavior.
+
+### Scoped verdict
+
+**Revision required.** The open FE-06 P1 prevents approval of PR #114 at this head. The two P2s and live Studio evidence also need resolution before a pre-merge approval. No merge or deployment was performed.
+
+---
+
+## 2026-10-01 — PR #111 final-head re-review at `41c965c`
+
+Reviewed exact open PR head `41c965c69b22e3b6342d84c071e9765e3bbf7129` against the previously reviewed `0642c8e4a14e21c44bfef4bb4997d92ad36c3859`. Governing guideline: `02-INFORMATIVE-BLOG.md` v1.12.1/shared core v1.12.1. This commit changes only `docs/DECISIONS.md` §45a; `git diff --check` passes. Exact-head GitHub `web`, `studio`, and Cloudflare checks pass. Bob did not edit application code, create a Sanity draft, deploy, commit, or merge.
+
+### Closure of the blocked editor-flow gate
+
+`docs/DECISIONS.md:2677-2685` now records dated manual UAT in Studio 6.16.0 against head `0642c8e`: with Charlie's recorded authorization, Andy created a second temporary production-dataset draft, saw **Table** in the body insert menu, opened its wrapper with Caption/row-header switch/nested Table field, inserted a 3×3 grid, saw whitespace-caption and blank-header errors, and confirmed Publish stayed blocked. The draft was deleted and the list reportedly returned to the original four posts. This is Andy's dated manual test record, **not Bob's direct observation**; no screenshot, recording, or Sanity audit log was provided. The record is precise enough to close the missing-UI-evidence blocker for this scoped pre-merge gate when combined with Bob's prior independent source, schema, validator, and built-browser checks. It must not be described as Bob's live Studio test.
+
+The one-grid and stray-text validation messages were not exercised in live Studio; `studio/scripts/assert-table-validation.ts:34-46` tests their validator paths. No Studio-authored table was rendered on the public site; the built fixture tests cover caption, column and optional row headers, maths, responsive containment, and no-JS output. These are residual operational checks after the Studio deploy, not open code findings in this PR. No P0/P1/P2/P3 finding remains open in this scoped review.
+
+### Scoped verdict
+
+**Approved** for the next gate: user-controlled merge of PR #111. This does not certify that the new Studio is deployed or that a real published table has been viewed on production. Andy should deploy Studio after the user's merge and verify a real authored table before treating the feature as operational. The user merges manually; Bob does not merge or deploy.
+
+---
+
+## 2026-10-01 — PR #111 caption-test re-review at `0642c8e`
+
+Exact head `0642c8e4a14e21c44bfef4bb4997d92ad36c3859`. The only change since `6c5cf78` adds real caption assertions to `studio/scripts/assert-table-validation.ts:43-46`: a valid caption returns `true`; missing, null, empty, spaces, and tab/newline values return a caption error. Bob inspected the one-file diff, ran `git diff --check` and independently ran `pnpm test:table-validation` (pass). Exact-head GitHub `web`, `studio`, and Cloudflare checks pass. Andy reports a deliberate validator mutation made the test fail and restoration made it pass; Bob did not witness that mutation, so records it as Andy's report, not Bob's own verification. The previous P2 test-evidence finding is **resolved** by the committed assertions.
+
+**Scoped verdict: Blocked.** No source or test finding remains open in this PR scope, but nobody has verified the nested `postTable` editing flow in live Studio. The first live test of the original grid proved schema/build success did not guarantee a reachable caption field. The owner must authorize any second production-dataset draft separately; Bob cannot grant that permission, create the draft, merge, or deploy. After an authorized live test, Bob will re-inspect its evidence and the exact head.
+
+---
+
+## 2026-10-01 — PR #111 caption follow-up at `6c5cf78`
+
+Exact head `6c5cf782986ff9309b37a0a414afb56e6128c110` (open PR #111), reviewed against `0caa9d6274e6d31a6bb4cba965de6dc53dfa6834` under `02-INFORMATIVE-BLOG.md` v1.12.1. All three exact-head checks (`web`, `studio`, Cloudflare) passed; local diff check passed. Bob did not merge, deploy, create a Sanity draft, or edit Andy-owned files.
+
+The prior whitespace-caption **behavior** is corrected in source: `validateTableCaption` at `studio/schemaTypes/lib/tableValidation.ts:61-66` trims a string and rejects empty output, and `portableTextObjects.ts:276` attaches it to the wrapper caption. Bob independently invoked the function with `""`, spaces, tabs/newlines, `null`, `undefined`, and a valid name; the five invalid values returned the error and the valid name returned `true`. Studio schema validation and live wrapper behavior were not rerun at this head; CI's studio check is green. The new function is *not* exercised by the committed test described below.
+
+### [P2] Caption validation test is claimed but contains no caption assertions
+
+- Category: objective defect
+- Gate: guideline Section 19, verification evidence
+- Evidence: `studio/scripts/assert-table-validation.ts:3` imports `validateTableCaption`, but lines 15-41 assert only header and wrapper-content validators. Line 44 prints that blank captions were rejected even though the script never calls the caption validator. `docs/DECISIONS.md:2679-2682` calls the cases unit-tested, and the PR handoff claims empty text, whitespace, tabs/newlines, null, and missing values are covered.
+- Failure scenario: caption validation regresses or is disconnected from the Studio field; `pnpm test:table-validation` stays green and prints a misleading success message.
+- Why it matters: the earlier uncaptained-table defect escaped initial automation, so this exact guard needs real assertions.
+- Required correction: add assertions for all claimed invalid values and a valid nonblank caption; keep the success message aligned with what the test actually checks.
+- Owner: Andy
+- Verification: inspect the committed assertions and run the test; optionally mutate the validator in a disposable context to prove the test fails.
+- Status: open
+
+### Scoped verdict
+
+**Blocked.** The nested wrapper's live Studio editing and validation flow is still unverified, which is essential after the original grid's unreachable caption field. The whitespace behavior is fixed in source, but the test-evidence P2 is open. The user authorized only the first production-dataset draft; Bob cannot authorize a second one. If the owner authorizes it, Andy should correct the test first, then run one controlled temporary-draft workflow and provide inspectable evidence for re-review. No production-data action was taken by Bob.
+
+---
+
+## 2026-10-01 — PR #111 wrapper re-review at `0caa9d6`
+
+Reviewed exact head `0caa9d6274e6d31a6bb4cba965de6dc53dfa6834` against the prior reviewed head `12bab82bae8a87afe46a7f0af76c06f5f9e8d6ae` under `02-INFORMATIVE-BLOG.md` v1.12.1. PR remains open; exact-head `web`, `studio`, and Cloudflare checks pass. This is a scoped re-review of the five previous findings and the new wrapper. Bob did not merge, deploy, edit application code, or create a Sanity draft.
+
+### Re-verification of prior findings
+
+- **P1 headerless tables — resolved in source and local validation.** `tableValidation.ts:24-39` rejects absent/zero/non-integer/out-of-range `headerRows` and blank column-header cells. It is attached to the `table` type at `portableTextObjects.ts:248`. Bob independently ran `pnpm test:table-validation` and `pnpm exec sanity schema validate`; both passed. Andy reports that the original, unwrapped table's header-off state blocked Publish in live Studio. The *new nested-wrapper* Studio flow has not been tested live, so its effective validation remains an operational unknown.
+- **P1 missing row headers — resolved in rendered fixture.** `postTable.rowHeaders` is an editor field at `portableTextObjects.ts:274-281`. `Table.astro:60-75` renders the first body cell as `<th scope="row">` when true and `<td>` when false. The fixture covers both states; Bob independently ran the four table Playwright tests against a fresh build, all passed.
+- **P2 caption optional — narrowed, still open.** The wrapper introduces a required caption field, but the current validation accepts whitespace-only strings; see the finding below. The live form's caption control is also unverified.
+- **P3 rounded table frame — resolved.** `Table.astro:88-93` uses no radius, matching `design/DESIGN.md:130`.
+- **P3 overstated test count — resolved.** `docs/DECISIONS.md` §45 now accurately lists four table Playwright tests, including the new row-header-off case.
+
+### [P2] Whitespace captions still produce unnamed tables
+
+- Category: objective defect
+- Gate: guideline Section 15, content resilience
+- Evidence: `studio/schemaTypes/objects/portableTextObjects.ts:266-272` uses only `Rule.required()` for caption. The installed Sanity 6.16.0 validation's string-presence rule checks `!value`, so `"   "` passes. `web/src/components/portabletext/Table.astro:24,34-40` trims that string, emits no `<caption>`, and falls back to `aria-label="Table"`.
+- Failure scenario: an editor enters spaces in two Table captions and publishes; both render as uncaptained tables in identically named regions.
+- Why it matters: the earlier naming/accessibility risk remains for a valid-by-schema input.
+- Required correction: validate `caption.trim().length > 0` and use the same trimmed value for the visible caption and region name. A publish-time test should cover whitespace.
+- Owner: Andy
+- Verification: enter a whitespace-only caption in the wrapper, confirm Publish is blocked, and inspect a valid table's visible caption and region name.
+- Status: open
+
+### Essential evidence still missing
+
+The first live Studio test of the original table exposed a caption field that automation could not reach. The revised `postTable` wrapper has **not** been exercised in live Studio. No reviewer has seen whether the Table insert entry opens the wrapper fields, whether the caption and checkbox can be edited, whether Insert → Table works inside `content`, or whether the one-grid/header validation blocks Publish in that nested form. Static schema validation and fixture-mode browser tests cannot establish those editor behaviors. A controlled live draft test with recorded, non-sensitive evidence is required before this feature can be approved for editors. The user's prior permission was for one draft; Bob has not treated it as authorization for another.
+
+### Checks and verdict
+
+Bob independently ran `git diff --check`, `pnpm exec sanity schema validate` (0 errors/warnings), `pnpm test:table-validation` (pass after sandbox IPC `EPERM` required an approved rerun), and the four table Playwright tests against a fresh built site (4/4 pass). The local browser test's localhost bind used approved escalation. Exact-head GitHub `web`, `studio`, and Cloudflare checks passed. No production post or live wrapper was inspected.
+
+**Blocked** for the scoped editor-feature gate: the live wrapper workflow is essential evidence and unavailable, and the whitespace-caption P2 remains open. Andy should fix that validation path before a single controlled live test, then provide the exact revised head and evidence for Bob's re-review. Bob does not merge or create the draft.
+
+---
+
+## 2026-10-01 — PR #111 blog tables, scoped pre-merge review
+
+Commit: `12bab82bae8a87afe46a7f0af76c06f5f9e8d6ae` against `main` `0a8fe57647c84c0bc6e85b0ed688aa6b6349cae3`. Governing guideline: `02-INFORMATIVE-BLOG.md` v1.12.1/shared core v1.12.1. Astro 7, Sanity Studio 6.16.0, Cloudflare Workers static assets. This reviews the table feature, not the whole site's production readiness.
+
+### [P1] The editor can publish a data table with no headers
+
+- Category: objective defect
+- Gate: WCAG 2.2 SC 1.3.1; guideline Section 15
+- Evidence: `studio/schemaTypes/objects/portableTextObjects.ts:203,247` leaves `headerRows` unvalidated and requires only one row. Sanity's documented table menu permits turning the header row off. `web/src/components/portabletext/Table.astro:12-18,36-65` then renders only `<td>` cells when `headerRows` is zero or absent. Current tests exercise only `headerRows: 1`.
+- Failure scenario: an editor inserts a table, turns off its header row, fills in data, and publishes; the table has no programmatic headers.
+- Why it matters: screen-reader users lose the column context for data cells.
+- Required correction: enforce a meaningful header row for publishable data tables, including a bounded `headerRows` value and populated header cells, or provide and validate another semantic header model.
+- Owner: Andy
+- Verification: attempt a header-toggle-off table in Studio and inspect published markup; test this path.
+- Status: open
+
+### [P1] The sample tables' first-column labels are not row headers
+
+- Category: objective defect
+- Gate: WCAG 2.2 SC 1.3.1; guideline Section 15
+- Evidence: `web/src/lib/content/defaultBlogData.ts:165-195` uses “Surd” and “Law” as first-column row identifiers. `web/src/components/portabletext/Table.astro:53-62` renders every body cell as `<td>`. Bob's browser inspection found zero `th[scope=row]` in both sample tables. `docs/DECISIONS.md` §45 records this limitation, but no user acceptance of an accessibility risk exists.
+- Failure scenario: when reading “Simplest form” or “Result” by table navigation, the surd or law identifying that row is not associated as a header.
+- Why it matters: the visible row-label relationship is missing from the semantics. [W3C's two-header table guidance](https://www.w3.org/WAI/tutorials/tables/two-headers/) calls for `<th scope="row">` when the first column labels rows.
+- Required correction: support row headers and render these sample first-column labels as `<th scope="row">`; provide an editor choice for tables where the first column is ordinary data.
+- Owner: Andy
+- Verification: inspect both rendered fixture tables and test an editor-authored table with row labels.
+- Status: open
+
+### [P2] Captions are optional while unnamed tables share the same region name
+
+- Category: material risk
+- Gate: guideline Section 15, content resilience
+- Evidence: `studio/schemaTypes/objects/portableTextObjects.ts:197-202` does not require `caption`; `web/src/components/portabletext/Table.astro:19,29-35` omits `<caption>` and falls back to `aria-label="Table"` on the focusable region.
+- Failure scenario: two uncaptained tables in one article expose two indistinguishable “Table” regions, and neither table has a caption.
+- Why it matters: readers cannot identify which table they are entering via region or table navigation.
+- Required correction: require a descriptive caption or another distinct, visible and accessible table name.
+- Owner: Andy
+- Verification: try to publish an uncaptained table and inspect the resulting region/table names.
+- Status: open
+
+### [P3] The table frame conflicts with the approved square-corner treatment
+
+- Category: guideline mismatch
+- Gate: design authority; FE-13
+- Evidence: `design/DESIGN.md:130` prescribes zero radius on tables; `web/src/components/portabletext/Table.astro:78` applies `--radius-lg` (6px) to the frame.
+- Failure scenario: blog tables appear with rounded outer corners.
+- Why it matters: limited visual drift in a new component.
+- Required correction: use square corners or record an owner-approved exception for this frame.
+- Owner: Andy / client for a design change
+- Verification: compare rendered table frame at approved widths with the design rule.
+- Status: open
+
+### [P3] Decision record overstates the number of new tests
+
+- Category: objective defect
+- Gate: verification evidence
+- Evidence: `docs/DECISIONS.md` §45 says “Four new Playwright tests”; `web/tests/e2e/blog.spec.ts:195-244` adds three, and the suite count rose from 60 to 63.
+- Failure scenario: a future reviewer assumes a fourth scenario was verified.
+- Why it matters: the evidence record is inaccurate.
+- Required correction: state three tests and name the three scenarios.
+- Owner: Andy
+- Verification: compare the corrected record with the test diff.
+- Status: open
+
+### Verification and scope
+
+- Exact-head GitHub checks: `web`, `studio`, and Cloudflare Workers Builds passed. Local `git diff --check` passed. Bob ran `pnpm exec sanity schema validate` (0 errors/warnings) and the three table Playwright tests against a fresh build (3 passed). The sandbox initially denied the localhost bind (`EPERM`); the approved rerun passed.
+- Bob inspected the built fixture post in Chromium at 320, 390, 560, 768, and 1440px. Page `scrollWidth === clientWidth` at each width; the wide table scrolled 40px after ArrowRight while focused. No page errors. Both fixture tables had captions and column headers; neither had row headers.
+- The schema/config match [Sanity's documented built-in table editor](https://www.sanity.io/docs/studio/portable-text-editor-configuration), with no new package. The live Studio UI, real Sanity-authored table, deployed PR preview, and production post were not inspected. Graphify had no persisted graph; building one would write outside Bob's review outputs, so source was read directly. Vercel Web Interface Guidelines and W3C table guidance were consulted.
+
+### Scoped verdict
+
+**Revision required.** Two open P1 table-semantics findings block approval. Andy makes the corrections; Bob re-reviews the revised head. Bob does not merge or deploy.
+
+---
+
+## 2026-09-29 — PR #110 final-head re-review at `f666a60`
+
+Scope: Andy's follow-up commit `f666a605757ea16bc9dc5c49d7073146bdbe6dc0`
+against the prior reviewed head `5af1fd6`, closing the website-kit header P2.
+PR #110 remains open and mergeable. All exact-head checks (`web`, `studio`,
+Cloudflare Workers Builds) pass, and `git diff --check 5af1fd6..f666a60`
+passes. This is a scoped pre-merge verdict, not a fresh site-wide audit.
+
+### Re-verification
+
+- `design/ui_kits/website/LandingShell.jsx:331-361` now draws the root mark
+  inline with the expected `0 -4 124 108` viewBox, circular cut mask, two
+  paths, and ochre dot. It no longer contains the retired operator rectangles.
+  `design/ui_kits/website/README.md:46` now describes the new mark and dates
+  the operator cluster as superseded. `docs/DECISIONS.md` §44c records the
+  update and browser check.
+- Bob served the checked-out `design/` folder read-only over localhost and
+  opened the actual `ui_kits/website/index.html` in Chrome. The page rendered
+  the new mark in its header. DOM inspection found the header mask ID
+  `header-logo-cut`, viewBox `0 -4 124 108`, and zero old operator rectangles.
+  The browser console reported zero errors. This verifies the active mockup,
+  not a copied test page.
+- The bundle still contains an old private `PageHeader` block at
+  `design/_ds_bundle.js:3260`, but this mockup loads the updated
+  `LandingShell.jsx` via Babel after the bundle and renders that source
+  `PageHeader`; the private bundled block is not assigned to the public
+  `JustMathDesignSystem_270e96` exports. Bob's prior instruction to patch that
+  bundle block was broader than needed for this active page. The old block and
+  intentionally historical mockup favicons remain documented reference debt,
+  not a current logo authority or live-site defect.
+- The earlier full-link, favicon-size evidence, design guidance, reusable
+  component, and mask-ID fixes remain as verified in the preceding passes.
+  No application code changed in this follow-up.
+
+### Scoped verdict
+
+**Approved.** The remaining PR #110 P2 is closed. No open P0–P3 finding in
+this scoped logo review. The new logo is still unverified on the production
+site while the PR is open; user performs the merge. Bob did not merge,
+deploy, or edit Andy-owned files.
+
+---
+
+## 2026-09-29 — PR #110 third re-review at `5af1fd6`
+
+Scope: Andy's follow-up commit `5af1fd65b663c486f95fa6a6d7f694a3cc4cbef0`
+against the prior reviewed head `5ab15cb`. PR #110 remains open and mergeable.
+The exact-head `web`, `studio`, and Cloudflare Workers Builds checks all pass;
+`git diff --check 5ab15cb..5af1fd6` passes. This pass rechecks the open P2,
+the P3 mask-ID issue, and the wording correction; it does not repeat the full
+site audit.
+
+### Closed: duplicate mask IDs, premature “live” wording, compiled Logo block
+
+- `design/components/brand/Logo.jsx:8-13` now uses `React.useId()` for each
+  `RootMark` mask. Two same-treatment instances no longer derive the same ID
+  from `reversed`. The corresponding `design/_ds_bundle.js:17-42` Logo block
+  uses the same hook and new root geometry. Andy reports a two-instance browser
+  reproduction before and after the fix and a browser test of the patched
+  bundle. Bob inspected source and the bundled block, not that scratch test.
+  The previous P3 is closed on the code evidence.
+- `design/BRAND-INTAKE.md:49-56` now correctly says the new mark is on the
+  open PR, not yet merged. The wording issue is closed.
+- The bundle's exported `Logo` block now renders the new mark. This narrows
+  the design-package P2 but does not close it: the same bundle contains a
+  separate old inline website header at `design/_ds_bundle.js:3260`.
+
+### [P2] Website design kit still presents the old logo as current
+
+- Category: design-authority mismatch; continuation of the original P2.
+- Evidence: `design/ui_kits/website/README.md:46` still says “The lockup is
+  the operator mark + stacked type” and calls it the 2026-08-11 owner decision.
+  `design/ui_kits/website/LandingShell.jsx:331-357` still draws the operator
+  grid inline, not through the newly corrected reusable `Logo`. The compiled
+  `PageHeader` at `design/_ds_bundle.js:3260` contains that same old SVG. The
+  only new notice in `design/ui_kits/website/index.html:5` is an HTML comment
+  about its favicon, so a person viewing the mockup sees the old header with
+  no on-page notice that it is historical. Blog HTML files likewise have
+  source comments beside old favicons; the booking mockup has a JSX comment
+  beside its old avatar. The guideline monogram card now has a visible
+  historical banner and is resolved. The remaining comments document source
+  intent but do not fulfil the visible entry-point notice option from Bob's
+  previous correction. The old kits are separate from the live Astro site.
+- Correction for Andy: either update the website kit's inline header and
+  compiled `PageHeader` to the new mark, or clearly archive that kit in its
+  README and in a visible notice on its rendered page. Apply the same visible
+  notice to any other intentionally historical mockup that still displays
+  the operator mark. Preserve the old decision as history. The §44b statement
+  that the remaining entry points are fixed should be narrowed until this is
+  done.
+- Status: open. No production Astro-logo defect or P0/P1 issue is established.
+
+### Scoped verdict
+
+**Approved with conditions.** The latest commit closes the P3 and corrects
+the intake/bundle Logo block. One design-package P2 remains because the
+website mockup still renders the old mark as if current. The user may accept
+that separate reference-package risk for later; Bob does not merge or deploy.
+
+---
+
+## 2026-09-29 — PR #110 second re-review at `5ab15cb`
+
+Scope: Andy's follow-up commit `5ab15cb769af66bbdf8db2e91b60bdbb1577fdf7`
+against the prior reviewed head `80ec3cb`. PR #110 is open and mergeable. All
+three exact-head checks (`web`, `studio`, Cloudflare Workers Builds) pass, and
+`git diff --check 80ec3cb..5ab15cb` passes. This pass addresses the three
+requested corrections and the design files they changed; it does not reopen
+the full website audit.
+
+### Closed: full design reference and small-size favicon evidence
+
+- `design/ASSETS.md:62-65` now contains the complete owner design-share URL.
+- Bob opened `review/andy/pr-110-logo/evidence-favicon-sizes.png` at its native
+  424×508 resolution. It visibly shows the new dark-square mark at labelled
+  16, 32, and 64px sizes against both light and dark grounds. Pixel inspection
+  finds 631 colours; the previous all-white capture was replaced. The four
+  header/footer screenshots accepted in the preceding pass remain in the PR.
+  The original P2 visual-evidence finding is closed.
+- `design/readme.md` and `design/BRAND-INTAKE.md` now introduce the owner-selected
+  mark and label the operator decision historical. `design/assets/mark-options.html`
+  has a conspicuous superseded notice. `design/components/brand/Logo.jsx`, its
+  declaration, and prompt now use the root geometry. Source geometry matches
+  the Astro lockup's paths, mask, and dot. Andy reports testing five component
+  uses in a scratch browser; Bob inspected source but did not independently run
+  that scratch page. These changes substantially reduce the first P2 risk.
+
+### [P2] Some design-package entry points still present the retired logo as current
+
+- Category: design-authority mismatch; continuation of the earlier P2.
+- Evidence: `design/ui_kits/website/README.md:46` still says the lockup **is** the
+  operator mark; `design/ui_kits/website/LandingShell.jsx:331-357` still draws it
+  inline. `design/_ds_bundle.js:21-75` still exports the old `OperatorMark`, and
+  the design kit HTML pages load that bundle. Other kit pages and
+  `design/guidelines/brand-monogram.card.html` still link the operator SVG files.
+  `docs/DECISIONS.md` §44a records these as known, but the remaining files do
+  not label themselves historical. The design package therefore still renders
+  the retired mark in apparently active previews. These are not live Astro
+  assets, and no production-logo defect follows from them.
+- Correction for Andy: choose a consistent state for this package. If the kits
+  remain reusable, rebuild their bundle and replace their direct old-mark use;
+  if they are archived reference work, add unmistakable dated supersession
+  notices at their entry points and in the website kit README. Preserve the
+  old decision history. The new `BRAND-INTAKE.md` §4 should also change
+  “approved and live” to “approved for the live site”: PR #110 is still open.
+- Status: open. The user may explicitly accept this separate design-package
+  risk for a later pass; that would not affect the live Astro logo review.
+
+### [P3] Reusable design mark repeats mask IDs
+
+`design/components/brand/Logo.jsx:9-10,50-52,69-71` derives the SVG mask ID
+only from `reversed`. Two default `<Logo />` instances on one page therefore
+emit the same `logo-mark-cut-default` ID. The masks currently have identical
+geometry, so the five-use preview can appear correct, but a reusable component
+should give each instance its own ID (for example React `useId`). This does
+not affect `web/src/components/LogoLockup.astro`, which uses separate IDs for
+its header/footer instances. Owner: Andy; follow-up quality correction.
+
+### Scoped verdict
+
+**Approved with conditions.** The full link and favicon evidence are fixed,
+and the reusable source component now draws the right mark. One P2 remains in
+the design-reference package, plus the P3 mask-ID issue. The PR's live Astro
+logo code has no new P0/P1 finding. Bob does not merge or deploy.
+
+---
+
+## 2026-09-29 — PR #110 re-review at `80ec3cb`
+
+Scope: Andy's follow-up commit `80ec3cbfe16ba698e2cccdaae34159791398a35d`
+adds `design/ASSETS.md` §1c and five image files under `review/andy/pr-110-logo/`.
+PR #110 remains open and mergeable. Exact-head `web`, `studio`, and Cloudflare
+Workers Builds checks pass. `git diff --check 2c530f9..80ec3cb` passes. This is a
+re-review of the two P2 findings below, not a new site-wide audit.
+
+### P2 design authority — partially addressed, still open
+
+`design/ASSETS.md:60-91,158-169` now states that the owner chose the root mark,
+supersedes §§1–1b's operator mark, preserves the old choice as history, and resolves
+the local §4 √ conflict. That is a meaningful correction. Its design URL is still
+truncated. More materially, `design/readme.md:20-36,97-106` still instructs consumers
+to use the operator mark as the only brand symbol and lists √ as banned imagery;
+`design/BRAND-INTAKE.md:49-60,86` still calls for sign-off on the retired redraw;
+`design/components/brand/Logo.jsx`, its prompt and declaration, and
+`design/assets/mark-options.html` remain current-looking old-mark deliverables.
+The new §1c acknowledges some of these conflicts but leaves them in place. The
+earlier finding's failure scenario therefore remains: a consumer of the design
+package can still follow an apparently current instruction to use the old mark.
+Andy should add the full design-share URL, date-stamp or label those documents and
+old renderings as historical, and update any design component still offered for
+reuse. This is design-package consistency work; it does not imply a defect in the
+live Astro logo. The owner may choose to defer that separate package refresh, but
+Bob cannot call the original P2 fully resolved on the present evidence.
+
+### P2 visual evidence — header/footer closed; favicon capture still open
+
+Bob opened the four committed 1440px/390px header/footer PNGs at their native
+resolution. The new mark, wordmark, and reversed footer variant are visible and
+aligned; no crowding or clipping is apparent in these crops. The committed
+`evidence-favicon-sizes.png` is **700×380, RGB, and every pixel is white** (verified
+with Pillow: one unique colour). It shows none of the claimed 16/32/64px comparisons
+on light/dark tab backgrounds. Bob independently opened the exact-head favicon SVG
+in Chrome and the 32×32 `favicon.ico` image; both render the dark square and light
+mark. This supports the asset itself but does not verify the promised 16px capture.
+Andy should regenerate and inspect the comparison PNG, then replace the blank file
+and PR-comment image in a new commit for Bob to recheck. The evidence problem is a capture
+artifact; no favicon rendering defect was established.
+
+### Scoped verdict
+
+**Approved with conditions.** No new P0/P1 or application-code defect was found.
+Both original P2 findings are partially addressed; the remaining actions are the
+design-package reconciliation and a valid small-size favicon comparison. This is
+not a merge instruction or production verification.
+
+---
+
+## 2026-09-29 — PR #110 new logo, scoped pre-merge review
+
+Governing guideline: `02-INFORMATIVE-BLOG.md` v1.11.0, shared core v1.11.1.
+Framework: static Astro, Sanity content, Cloudflare Workers static assets. Review head
+`2c530f9f3d00aa63fe64fab09d11eaeee818d0e0` against merged `main`
+`b0689158284b8357a713646d26bc57c5dd657271`. Five changed files; no
+application dependency, route, or security-policy change. The owner-directed newer
+Claude design canvas linked in the PR supersedes the operator mark **for the logo**;
+the repository's older design package has not yet recorded that supersession.
+
+### [P2] The checked-in design package still declares the retired mark authoritative
+
+- Category: guideline mismatch / material risk
+- Gate: guideline Section 8, design-package authority and handoff
+- Evidence: `design/ASSETS.md:13-25,48-57` records the operator grid as the adopted mark;
+  `design/readme.md:20-36,97-106` says it is the only brand symbol and forbids √ imagery;
+  `design/BRAND-INTAKE.md:51-60` still requires sign-off on that redraw. The `design/`
+  SVGs, brand component, card and UI-kit headers still render it. PR #110 updates only
+  `web/` and adds `docs/DECISIONS.md` §44, whose design-artifact ID is truncated and
+  does not explicitly retire the earlier design-package decision.
+- Failure scenario: a later developer follows the repository's stated design authority
+  and restores the old operator mark, or uses the old mark in a new asset.
+- Why it matters: the approved owner change is not portable as a clear source of truth.
+  This does not challenge the owner's newer logo decision.
+- Required correction: Andy records that the owner-approved new root mark supersedes
+  the 2026-08-11 operator-mark decision, with the full design URL and date, then adds
+  a dated supersession note to the design package and updates logo-bearing design
+  assets that remain intended for reuse. Preserve the old decision as history.
+- Owner: Andy, with owner confirmation only if the newer design's approval record is
+  disputed.
+- Verification: Bob checks the decisions record and design package for one current
+  logo authority, with no current-use artifact pointing to the retired mark.
+- Status: open
+
+### [P2] Claimed visual checks are not available to the reviewer
+
+- Category: material risk
+- Gate: guideline Sections 8 and 19; reviewer evidence rules for responsive behavior
+- Evidence: PR body and `docs/DECISIONS.md` §44 report screenshots at 390/1440px and
+  favicon renders at 16/32/64px, but neither a preview URL nor the captures are
+  attached to the PR. The GitHub deployments query for this head returned none.
+  Bob viewed the owner design boards and the PR's standalone SVGs in Chrome, but
+  could not inspect the proposed header/footer in a running PR build.
+- Failure scenario: the larger inline mark crowds the mobile header, loses alignment
+  against the wordmark, or sits poorly in the dark footer despite passing overflow tests.
+- Why it matters: this change's main requirement is visual fidelity across contexts.
+- Required correction: Andy attaches the cited header/footer desktop and phone
+  captures and favicon 16/32px renders, or provides a reachable PR preview. Include
+  the commit SHA so the evidence is tied to the reviewed implementation.
+- Owner: Andy
+- Verification: Bob inspects both lockups and the small favicon against the newer
+  design boards at the named sizes.
+- Status: open
+
+### Verified in this pass
+
+- The linked owner design conversation contains a direction to adapt the new mark for
+  this website; the primary lockup and small-size boards were viewed. The PR's
+  `logo.svg` and `favicon.svg` rendered in Chrome and match the source geometry and
+  dark favicon treatment at the inspected scale. The external artboard is newer and
+  specific to this mark, so the old package's √ ban is not treated as a design veto.
+- `web/src/components/LogoLockup.astro:6-10,26-57` uses separate mask IDs for the
+  normal and inverted instances; the header and footer each render one. The new
+  SVG is decorative (`aria-hidden`) and the visible wordmark remains in the link.
+  `MALAYSIA` now uses the existing medium-weight token.
+- `web/public/logo.svg` remains a 512×512 standalone mark referenced by the
+  Organization JSON-LD in `BaseLayout.astro`. The existing Playwright test fetches
+  it and confirms it decodes as an image. The social image was inspected previously:
+  it has no operator mark and is unaffected by this PR.
+- `web/public/favicon.ico` is a 32×32 PNG bitstream with an `.ico` filename, the
+  same packaging pattern documented for the prior asset; this is not a new regression.
+- `git diff --check` passed. CI run `36515654302` at the exact PR head passed
+  `web`, `studio`, and Cloudflare Workers Builds. The web log reports 60 passed
+  Playwright tests. Bob did not rerun a local PR build or inspect a running PR page.
+
+### Scoped verdict
+
+**Approved with conditions.** No open P0/P1 finding in the implementation. The two
+P2 items above need correction in the next controlled step. This is approval of the
+PR scope, not site-wide brand-system or production-readiness approval, and is not a
+merge instruction.
+
+---
+
+## 2026-09-29 — PR #109 final-head and live-deployment re-review
+
+Review stage: post-merge verification of the prior scoped approval below. PR #109 gained
+documentation-only commit `e9991155a1a15e1bc2a2aa465a68e284281d79c1` after Bob's
+first pass and merged as `b0689158284b8357a713646d26bc57c5dd657271` at
+2026-09-29 02:46 UTC. The final-head CI run `36513998888` passed `web` and `studio`, and
+the PR's Cloudflare Workers Builds check passed. The added commit changes only
+`docs/DECISIONS.md:2475-2478`, narrowing the analytics claim to the observed 24-hour
+window; `git diff --check dc6c6eb..e999115` passed.
+
+### Findings
+
+No new P0–P3 finding. The earlier overbroad statement about Cloudflare analytics never
+having worked was corrected in the final PR head.
+
+### Live evidence
+
+- Two published posts, `/blog/differentiation-using-the-first-principle/` and
+  `/blog/skills-needed-to-perform-well-in-secondary-mathematics-form-1-form-2-and-form-3/`,
+  both link `/_astro/_slug_.ChVmnjN6.css`. Neither response contains the Cloudflare beacon
+  script or `data-cf-beacon` marker.
+- The deployed CSS returns HTTP 200 with `text/css`. It contains zero `data:font`
+  references and a normal same-origin `KaTeX_Size3` `.woff2` URL. That `.woff2` returns
+  HTTP 200 with `font/woff2`; the unchanged live CSP is `font-src 'self'`.
+- The live home page also lacks Cloudflare beacon markers and still references Google
+  Tag Manager. This verifies presence of the tag reference, not GA4 visitor counting.
+- Andy reports no browser errors on the two posts and attributes Google's font requests
+  on the Differentiation post to its YouTube embed. Bob did not independently inspect
+  the browser console or requests: the available in-app browser was unavailable, and
+  HTTP response checks cannot establish console state or request initiator.
+
+### Scoped verdict
+
+**Approved.** The font and beacon corrections are verified in public production
+responses. This remains a scoped review of PR #109 and its deployment, not a new
+site-wide production-readiness review. No merge or application edit was performed by Bob.
+
+---
+
+## 2026-09-29 — PR #109, CSP font and Cloudflare beacon follow-up
+
+Review stage: narrow pre-merge review. Governing guideline:
+`02-INFORMATIVE-BLOG.md` v1.11.0 (shared core v1.11.1). Framework: static Astro with
+Sanity content on Cloudflare Workers static assets; no commerce backend. Reviewed PR head
+`dc6c6eb5d2665b22ce104f73885d126ff3192994` against `main`
+`68561c105941d02b80ade3c823fabc1f3819ce9e`. This is approval of the PR's three-file
+change, not a new site-wide or production-readiness verdict.
+
+### Findings
+
+No P0–P3 finding in the PR diff. The claim that zero Cloudflare page views over the last 24
+hours proves the counter *never* worked is broader than the evidence: it describes only that
+window. The blocked script and now-absent beacon support the operational decision without
+needing that historical claim.
+
+### Evidence
+
+- `web/astro.config.mjs:35-42` uses Vite's documented `assetsInlineLimit` callback: `false`
+  excludes font extensions from inlining; `undefined` keeps default behavior for other assets.
+  No CSP or dependency change is in the diff. Official Vite build-options documentation
+  confirms both return values.
+- `web/tests/e2e/blog.spec.ts:236-250` requests every stylesheet linked from the built
+  fixture post and rejects `url(data:font...)`. The existing adjacent test checks that the
+  post bundle contains KaTeX styles. The new assertion directly covers the observed failure.
+- `docs/DECISIONS.md:2464-2478` records the cause, chosen code fix, and Cloudflare dashboard
+  decision. `git diff --check` passed; exactly these three files changed.
+- GitHub CI run `36512363380` built PR merge commit `03835d1` from this head and base.
+  Its `web`, `studio`, and Cloudflare Workers Builds checks passed; the `web` log reports
+  **60 passed** Playwright tests, including the new font test. CI runs format, Astro check,
+  build, guardrails, and Playwright on built output. I did not rerun the PR build locally or
+  verify Andy's claimed red/green mutation test independently.
+- Public HTML for `/`, `/blog/`, and a published post lacked both
+  `static.cloudflareinsights.com` and `data-cf-beacon` markers. The home page still
+  referenced Google Tag Manager. The currently deployed post CSS
+  `/_astro/_slug_.UQRz33V-.css` contained **one** `data:font` reference, as expected before
+  PR #109 reaches production. These are response inspections, not a browser console test.
+- The fixture test URL `/blog/why-surds-trip-up-students/` returns 404 on production.
+  Use an actually published route such as
+  `/blog/differentiation-using-the-first-principle/` for the post-deploy check.
+
+### Remaining release verification
+
+After the user merges and Cloudflare publishes the new `main` build, verify a published
+post loads a stylesheet with zero `data:font` references, the font files load from the same
+origin, and the browser reports no font CSP refusal. Recheck the Cloudflare beacon remains
+absent. This release check is unverified now because the PR is not live.
+
+### Scoped verdict
+
+**Approved.** Zero open or accepted-risk P0/P1 findings in PR #109. This clears the PR for
+the user's manual merge; it does not assert the font fix is live yet.
+
+---
+
 ## 2026-08-30 - Cloudflare Pages migration review
 
 Review type: scoped migration review of the current uncommitted Vercel → Cloudflare Pages changes
