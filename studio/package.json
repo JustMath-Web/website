@@ -24,11 +24,11 @@
     "sanity"
   ],
   "dependencies": {
-    "@sanity/client": "8.6.2",
-    "@sanity/vision": "6.16.0",
+    "@sanity/client": "8.9.0",
+    "@sanity/vision": "6.17.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "sanity": "6.16.0",
+    "sanity": "6.17.0",
     "styled-components": "6.5.3"
   },
   "devDependencies": {
@@ -36,8 +36,8 @@
     "@types/node": "26.6.2",
     "@types/react": "19.3.0",
     "eslint": "10.11.0",
-    "prettier": "3.9.8",
-    "tsx": "4.23.13",
+    "prettier": "3.9.9",
+    "tsx": "4.23.15",
     "typescript": "6.0.3"
   },
   "prettier": {
