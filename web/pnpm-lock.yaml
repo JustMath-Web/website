@@ -27,8 +27,8 @@ importers:
         specifier: 5.3.0
         version: 5.3.0
       '@sanity/client':
-        specifier: 8.6.2
-        version: 8.6.2
+        specifier: 8.9.0
+        version: 8.9.0
       '@sanity/image-url':
         specifier: 2.1.1
         version: 2.1.1
@@ -792,8 +792,8 @@ packages:
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
 
-  '@sanity/client@8.6.2':
-    resolution: {integrity: sha512-e/rKvOxMy3hP+4p1fdVfONKrdmlNQQyjzHai/cQYPTe/CLLsxVQZWcPsXOq+rgZ3gitxXHtqx1H4nrYmBG97Qg==}
+  '@sanity/client@8.9.0':
+    resolution: {integrity: sha512-V6kFNH6xvz29ot66zTVVyzZ34dIGzVJHzQJXEV2ljGVZEelHRoMayhErsTDac/ZR7ej8Spz39qEMYCaJWg176g==}
     engines: {node: '>=22.12.0'}
 
   '@sanity/image-url@2.1.1':
@@ -1243,12 +1243,12 @@ packages:
   eventemitter3@5.0.4:
     resolution: {integrity: sha512-mlsTRyGaPBjPedk6Bvw+aqbsXDtoAyAzm5MO7JgU+yVRyMQ5O8bD4Kcci7BS85f93veegeCPkL8R4GLClnjLFw==}
 
-  eventsource-parser@4.1.0:
-    resolution: {integrity: sha512-+DHvQ1wLO//MK+1OZgcuXCbZFKgu3YjKPJt7n98rxX8vezL0ni+7s3ZQiM8bJkUEOk7MsuCycrPLj0FzUNf7Og==}
+  eventsource-parser@4.1.1:
+    resolution: {integrity: sha512-zaWNqeSLeyzEAAt2Q6aDBRDRk/VnPmsKqvToyGvv6aahvLv71A4Jw7jG93Hckf11zXurbqgsffvpSgKPoeU1Qw==}
     engines: {node: '>=22.12'}
 
-  eventsource@5.1.1:
-    resolution: {integrity: sha512-onrlI7l612Ee3xnBqZNTq4djf6Fho/0yIpO/rYjRG/FzjMyPJquNx9SS3QyjglnVFxwxrube1XmX41zB+0Rdgw==}
+  eventsource@5.1.2:
+    resolution: {integrity: sha512-VJnwqqp+fOT3WDkjnUy49Zuyh48+kH0JdJApZkslrRQyx35zIZJeJYJl0+a+LrTzh5TFv6MdmXnBDv71UXFyWQ==}
     engines: {node: '>=22.12.0'}
 
   execa@5.1.1:
@@ -2876,9 +2876,9 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.1': {}
 
-  '@sanity/client@8.6.2':
+  '@sanity/client@8.9.0':
     dependencies:
-      eventsource: 5.1.1
+      eventsource: 5.1.2
       get-it: 9.6.0
       obug: 3.0.0
       rxjs: 7.8.2
@@ -3415,11 +3415,11 @@ snapshots:
 
   eventemitter3@5.0.4: {}
 
-  eventsource-parser@4.1.0: {}
+  eventsource-parser@4.1.1: {}
 
-  eventsource@5.1.1:
+  eventsource@5.1.2:
     dependencies:
-      eventsource-parser: 4.1.0
+      eventsource-parser: 4.1.1
 
   execa@5.1.1:
     dependencies:
