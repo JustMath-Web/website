@@ -1,5 +1,171 @@
 # Bob FE Gate Audit — Vertical Slice Review
 
+## 2026-10-07 — PR #124 web Sharp update at `5378405`
+
+| Gate | Andy self-check | Bob result | Evidence / disagreement |
+| --- | --- | --- | --- |
+| FE-40 dependency control | Indirect lockfile update; Sharp makes site images at build time | Pass with scope correction | Only `web/pnpm-lock.yaml` changes: optional `sharp` 0.35.4 → 0.35.5, platform packages, and bundled libvips 1.3.3 → 1.3.4. Site portrait/blog components use Sanity CDN URLs; no direct Sharp or `astro:assets` use found. Upstream releases checked. |
+| FE-50 verification | Exact-head checks green; images build and show | Pass for PR scope | Actions run `37624842512` targets `5378405`: frozen install, audit, format, Astro check, build, guards, and Playwright pass; Studio and Workers Builds pass. Cloudflare commit preview home page and portrait JPEG return 200; JPEG is 600×750. The preview image is delivered by Sanity CDN, so it does not test Sharp transformation directly. |
+
+Other FE gates were not reopened by this indirect lockfile update. **Scoped verdict: Approved** for Charlie's manual merge of exact head `5378405`.
+
+---
+
+## 2026-10-07 — PR #121 web smol-toml update at `de6f3c4`
+
+| Gate | Andy self-check | Bob result | Evidence / disagreement |
+| --- | --- | --- | --- |
+| FE-40 dependency control | Indirect lockfile update | Pass for PR scope | Only `web/pnpm-lock.yaml` changes: `smol-toml` 1.8.0 → 1.9.0, integrity, and Astro/internal-helper references. Upstream notes describe parser changes and the reviewed advisory identifies 1.9.0 as patched. |
+| FE-50 verification | Exact-head checks green | Pass for PR scope | Actions run `37621687836` targets `de6f3c4`. Web frozen install, audit, format, Astro check, build, guards, and Playwright pass; Studio and Workers Builds also pass. Bob did not install or run the branch locally. |
+
+Other FE gates were not reopened by this indirect lockfile update. **Scoped verdict: Approved** for Charlie's manual merge of exact head `de6f3c4`.
+
+---
+
+## 2026-10-07 — PR #123 Studio smol-toml update at `a2ec8bd`
+
+| Gate | Andy self-check | Bob result | Evidence / disagreement |
+| --- | --- | --- | --- |
+| FE-40 dependency control | Indirect lockfile update | Pass for PR scope | Only `studio/pnpm-lock.yaml` changes: `smol-toml` 1.8.0 → 1.9.0, integrity, and `@sanity/cli`/`@vercel/frameworks` references. Upstream notes describe parser changes and the reviewed advisory identifies 1.9.0 as patched. |
+| FE-50 verification | Exact-head checks green | Pass for PR scope | Actions run `37610266372` targets `a2ec8bd`. Studio frozen install, audit, format, typecheck, lint, three validation guards, and `sanity build` pass; web and Workers Builds also pass. CI does not run `sanity deploy` or arbitrary TOML input checks; Bob did not install or run the branch locally. |
+
+Other FE gates were not reopened by this indirect lockfile update. **Scoped verdict: Approved** for Charlie's manual merge of exact head `a2ec8bd`.
+
+---
+
+## 2026-10-07 — PR #122 Studio source-map-js update at `37d9026`
+
+| Gate | Andy self-check | Bob result | Evidence / disagreement |
+| --- | --- | --- | --- |
+| FE-40 dependency control | Indirect lockfile patch | Pass for PR scope | Only `studio/pnpm-lock.yaml` changes: `source-map-js` 1.2.1 → 1.2.2, integrity, and `css-tree`/`postcss` references. Upstream 1.2.2 fixes a browser CSP crash and indexed source-map denial of service; the reviewed advisory names 1.2.2 as patched. |
+| FE-50 verification | Exact-head checks green | Pass for PR scope | Actions run `37608428092` targets `37d9026`. Studio frozen install, audit, format, typecheck, lint, three validation guards, and build pass; web and Workers Builds also pass. Bob did not run a local branch build. |
+
+Other FE gates were not reopened by this indirect lockfile update. **Scoped verdict: Approved** for Charlie's manual merge of exact head `37d9026`.
+
+---
+
+## 2026-10-07 — PR #116 indirect devalue update at `28a5a51`
+
+| Gate | Andy self-check | Bob result | Evidence / disagreement |
+| --- | --- | --- | --- |
+| FE-40 dependency control | Indirect lockfile patch | Pass for PR scope | Only `web/pnpm-lock.yaml` changes: `devalue` 5.9.2 → 5.9.4 under Astro, with integrity and snapshot updated. Upstream 5.9.3/5.9.4 notes checked. |
+| FE-50 verification | Exact-head checks green | Pass for PR scope | Actions run `37560261910` targets `28a5a51`; web frozen install, audit, format, check, build, guards, and Playwright pass. Studio and Workers Builds also pass. Bob did not run local checks at the PR head. |
+
+Other FE gates were not reopened by this indirect lockfile update. **Scoped verdict: Approved** for Charlie's manual merge of exact head `28a5a51`.
+
+---
+
+## 2026-10-07 — PR #108 Portable Text renderer update at `1598a61`
+
+| Gate | Andy self-check | Bob result | Evidence / disagreement |
+| --- | --- | --- | --- |
+| FE-40 dependency control | Pinned renderer patch and lockfile | Pass for PR scope | Only web manifest and lockfile change: `astro-portabletext` 1.0.0 → 1.0.1. Upstream release notes describe an inbound-payload mutation fix. |
+| FE-50 verification | Exact-head checks green | Pass for PR scope | Actions run `37556294193` targets `1598a61`; web frozen install, check, build, guards, and Playwright pass, as do Studio and Workers Builds. Fixture assertions cover all custom Portable Text blocks, maths, tables, and FAQ behavior. The commit preview also renders published table and FAQ blocks in real posts. Published math was not separately observed. |
+
+Other FE gates were not reopened by this dependency-only update. **Scoped verdict: Approved** for Charlie's manual merge of exact head `1598a61`.
+
+---
+
+## 2026-10-07 — PR #106 web Prettier update at `6bc2ee3`
+
+| Gate | Andy self-check | Bob result | Evidence / disagreement |
+| --- | --- | --- | --- |
+| FE-40 dependency control | Pinned development-tool patch with lockfile | Pass for PR scope | Only web manifest and lockfile change: Prettier 3.9.6 → 3.9.9, including expected peer-resolution updates. Upstream 3.9.7–3.9.9 notes checked. |
+| FE-50 verification | Exact-head checks green | Pass for PR scope | Actions run `37490311567` targets `6bc2ee3`; web frozen install, audit, `format:check`, Astro check, build, guards, and Playwright pass. Studio and Workers Builds also pass. Bob did not run local 3.9.9 checks because local Prettier remains 3.9.6. |
+
+Other FE gates were not reopened by this formatter-only update. **Scoped verdict: Approved** for Charlie's manual merge of exact head `6bc2ee3`.
+
+---
+
+## 2026-10-06 — PR #104 web Sanity client update at `bdfe110`
+
+| Gate | Andy self-check | Bob result | Evidence / disagreement |
+| --- | --- | --- | --- |
+| FE-40 dependency control | Reported client 8.6.2 → 8.8.0 | Pass with version correction | Exact PR diff pins 8.9.0; lockfile also updates `eventsource` and `eventsource-parser`. Upstream 8.7.0, 8.8.0, and 8.9.0 release notes checked. |
+| FE-50 verification | Exact-head checks green; real-content build concern raised | Pass for PR scope | Exact-head web CI frozen install, check, build, guards, and Playwright pass; Studio and Workers Builds pass. Cloudflare commit preview shows five published Sanity posts matching a direct dataset query, and a post page renders. A separate installed client 8.9.0 read-only query fetched a published post. CI alone uses fixture blog content, and Bob did not inspect the complete Cloudflare build log. |
+
+Other FE gates were not reopened by this dependency-only update. **Scoped verdict: Approved** for Charlie's manual merge of exact head `bdfe110`.
+
+---
+
+## 2026-10-06 — PR #103 KaTeX update at `5d4d36a`
+
+| Gate | Andy self-check | Bob result | Evidence / disagreement |
+| --- | --- | --- | --- |
+| FE-40 dependency control | Pinned KaTeX patch and lockfile | Pass for PR scope | Only web manifest and lockfile change: KaTeX 0.18.7 → 0.18.9; upstream 0.18.8/0.18.9 notes checked. |
+| FE-50 verification | Exact-head checks green | Pass for PR scope | Actions run `37446549439` targets `5d4d36a`; web frozen install, check, build, guards, and Playwright pass, as do Studio and Workers Builds. The fixture blog tests exercise math, MathML, CSS, fonts, tables, and FAQ answers. Bob did not run a local 0.18.9 build. |
+
+Other FE gates were not reopened by this dependency-only update. **Scoped verdict: Approved** for Charlie's manual merge of exact head `5d4d36a`.
+
+---
+
+## 2026-10-06 — PR #101 Astro update at `eab0940`
+
+| Gate | Andy self-check | Bob result | Evidence / disagreement |
+| --- | --- | --- | --- |
+| FE-40 dependency control | Pinned Astro patch with lockfile | Pass for PR scope | Only web manifest and lockfile change: Astro 7.3.3 → 7.3.5, with expected transitive updates. Upstream 7.3.4/7.3.5 notes checked. |
+| FE-50 verification | Exact-head checks green | Pass for PR scope | GitHub Actions run `37444266407` has head `eab0940`; web job passed frozen install, audit, format, check, build, guards, and Playwright. Studio and Workers Builds also pass. Local installed Astro is 7.3.3, so Bob did not claim a local 7.3.5 build. |
+
+Other FE gates were not reopened by this dependency-only update. **Scoped verdict: Approved** for Charlie's manual merge of exact head `eab0940`.
+
+---
+
+## 2026-10-06 — PR #105 Studio tsx update at `32303c2`
+
+| Gate | Andy self-check | Bob result | Evidence / disagreement |
+| --- | --- | --- | --- |
+| FE-40 dependency control | Pinned tsx patch after rebase | Pass for PR scope | Only Studio manifest and lockfile change; dev dependency `tsx` 4.23.13 → 4.23.15, with integrity and peer-reference updates. Upstream patch release notes checked. |
+| FE-50 verification | Exact-head CI green | Pass for PR scope | `web`, `studio`, and Workers Builds pass at `32303c2`; Studio CI runs frozen install, audit, format, typecheck, lint, three `tsx`-run validation guards, and build. Bob did not rerun locally. |
+
+Other FE gates were not reopened by this development-tool update. **Scoped verdict: Approved** for Charlie's manual merge of exact head `32303c2`.
+
+---
+
+## 2026-10-06 — PR #107 Studio formatter update at `0322d56`
+
+| Gate | Andy self-check | Bob result | Evidence / disagreement |
+| --- | --- | --- | --- |
+| FE-40 dependency control | Pinned Prettier patch | Pass for PR scope | Only Studio manifest and lockfile change; dev dependency `prettier` 3.9.8 → 3.9.9. No runtime package or source changes. |
+| FE-50 verification | Exact-head CI green | Pass for PR scope | `web`, `studio`, and Workers Builds pass at `0322d56`; Studio CI runs frozen install, critical audit, format check, typecheck, lint, three validation guards, and build. Bob did not rerun locally. |
+
+Other FE gates were not reopened by this development-tool update. **Scoped verdict: Approved** for Charlie's manual merge of exact head `0322d56`.
+
+---
+
+## 2026-10-06 — PR #112 Studio lockfile update at `c94a1fc`
+
+| Gate | Andy self-check | Bob result | Evidence / disagreement |
+| --- | --- | --- | --- |
+| FE-40 dependency control | Dependabot indirect update | Pass for PR scope | Only `studio/pnpm-lock.yaml` changes; `dompurify` 3.4.14 → 3.4.16 with updated integrity and graph references. Cure53 release notes checked. |
+| FE-50 verification | Exact-head CI green | Pass for PR scope | `web`, `studio`, and Workers Builds pass at `c94a1fc`; Studio CI runs frozen install, critical audit, format, typecheck, lint, three validation guards, and build. Bob did not rerun locally. |
+
+No Studio source or editor-flow code changed, so other FE gates were not reopened. **Scoped verdict: Approved** for Charlie's manual merge of exact head `c94a1fc`.
+
+---
+
+## 2026-10-05 — PR #113 lockfile patch at `bb733eb`
+
+| Gate | Andy self-check | Bob result | Evidence / disagreement |
+| --- | --- | --- | --- |
+| FE-40 dependency control | Dependabot transitive patch | Pass for PR scope | Only `studio/pnpm-lock.yaml` changes; `brace-expansion` 5.0.9 → 5.0.12 under `minimatch`. GitHub advisory lists 5.0.9 affected and 5.0.10 patched. |
+| FE-50 verification | Exact-head CI green | Pass for PR scope | `web`, `studio`, and Workers Builds pass at `bb733eb`; Studio CI runs frozen install, audit, format, typecheck, lint, three validation guards, and build. Bob did not rerun locally. |
+
+No Studio source or editor behavior changed, so other FE gates were not reopened. **Scoped verdict: Approved** for Charlie's manual merge of exact head `bb733eb`.
+
+---
+
+## 2026-10-05 — PR #117 dependency update at `e0077e2`
+
+| Gate | Andy self-check | Bob result | Evidence / disagreement |
+| --- | --- | --- | --- |
+| FE-40 dependency control | Three pinned Sanity updates with lockfile | Pass for PR scope | Only `studio/package.json` and `studio/pnpm-lock.yaml` differ from `main`; direct versions are pinned. Upstream 6.17.0 and client 8.9.0 release notes checked. |
+| FE-50 verification | Exact-head CI green | Pass for PR scope | `web`, `studio`, and Workers Builds succeed at `e0077e2`. Studio CI uses frozen install, audit, format, typecheck, lint, three validation guards, and build. Bob did not rerun locally. |
+| §20 Studio redirect editor flow | Charlie reports invalid target blocked and valid target cleared | Pass on attributed manual evidence | `HANDOFF.md` records Charlie's local Studio 6.17.0 test on `e0077e2`, relayed by Andy; Bob did not witness the UI. The temporary draft was reportedly deleted without publication, and a later search found none. |
+
+No other FE gate was reopened by the two-file dependency update. **Scoped verdict: Approved** for Charlie's manual merge of exact head `e0077e2`.
+
+---
+
 ## 2026-10-03 — PR #119 merge and Studio report
 
 GitHub confirms merge commit `6bc0f8a` of approved head `bbb1511`; local `main` matches `origin/main`. Andy reports a successful `pnpm deploy` with one schema deployed. Bob's read-only hosted Studio URL check reaches Sanity's auth flow and cannot inspect the signed-in editor rule. The pre-merge FE/CORE-20 approval remains valid. A P3 merge-log attribution error says Bob approved only `c56f045`, omitting Bob's explicit `bbb1511` re-review; Andy should correct the gitignored log. No new FE failure is established.
