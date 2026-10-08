@@ -1,5 +1,159 @@
 # Bob Code Review — Just Math Malaysia Vertical Slice Review
 
+## 2026-10-07 — PR #124 web Sharp update at `5378405`
+
+Reviewed exact open head `5378405f775049c87d83e1a9cea1fb662b899d8b` against merged `main` at `1fd3d01d1a9eb74991a2b152e9777e094f269558`, under `02-INFORMATIVE-BLOG.md` v1.13.0. The entire PR diff is in `web/pnpm-lock.yaml`: optional indirect `sharp` 0.35.4 → 0.35.5 under Astro, matching platform packages and integrity values, and bundled `@img/sharp-libvips` 1.3.3 → 1.3.4. No manifest, project source, route, content, or configuration changes. The [upstream 0.35.5 release](https://github.com/lovell/sharp/releases/tag/v0.35.5) lists bounds checks for certain array options, improved WebAssembly fallback errors, TypeScript corrections, and image-operation updates. The [libvips bundle release](https://github.com/lovell/sharp-libvips/releases/tag/v1.3.4) identifies the native library versions.
+
+Andy's note that Sharp makes this site's images at build time is too broad for the source reviewed. Bob found no direct `sharp` import, `astro:assets`, or Astro `<Image>`/`getImage` use in `web/src` or the Astro config. The portrait and blog image components build Sanity CDN URLs through `@sanity/image-url`; Sanity supplies the resized bytes. Sharp remains an optional Astro dependency in the lockfile, so CI build compatibility is still relevant.
+
+GitHub reports CLEAN/mergeable. Bob verified [Actions run `37624842512`](https://github.com/JustMath-Web/website/actions/runs/37624842512) targets this exact head: web frozen install, critical audit, format, Astro check, build, content/security guards, and Playwright pass; Studio and Workers Builds also pass. GitHub's Cloudflare comment links the successful deployment to commit `5378405` and its [commit preview](https://36c84d5d-justmathwebsite.charlie-kong.workers.dev/). Bob fetched that preview home page (200), extracted its portrait URL, and fetched the corresponding Sanity CDN JPEG (200, 600×750 pixels). This is a real-image delivery check, not a Sharp transformation test. Bob did not install the PR branch or run a local 0.35.5 build. No scoped image regression was found.
+
+**Scoped verdict: Approved** for Charlie's manual merge of PR #124 at `5378405`. No scoped finding remains open. A later head requires re-review. Bob did not merge, install, deploy, or edit Andy-owned files. This is the last PR in the four-PR Dependabot batch; the separate Studio redeploy for #122/#123 remains an operational follow-up.
+
+---
+
+## 2026-10-07 — PR #121 web smol-toml update at `de6f3c4`
+
+Reviewed exact open head `de6f3c40992ef987004c45f7a7bdcae83b5b23e1` against merged `main` at `774c345820548bdfb7eb8bc5d601d26ebd778029`, under `02-INFORMATIVE-BLOG.md` v1.13.0. The entire PR diff is in `web/pnpm-lock.yaml`: indirect `smol-toml` 1.8.0 → 1.9.0, its integrity, and references from Astro 7.3.5 and `@astrojs/internal-helpers`. No manifest, web source, route, content, or configuration changes. The [upstream 1.9.0 release](https://github.com/squirrelchat/smol-toml/releases/tag/v1.9.0) describes a parser rewrite, stricter parsing, and parsed objects with null prototypes. GitHub's [reviewed advisory](https://github.com/advisories/GHSA-r4xh-jqrq-34v2) identifies 1.8.0 as affected by quadratic-time parsing and 1.9.0 as patched. The project has no checked-in web TOML file; this does not prove every external TOML input is covered.
+
+GitHub reports CLEAN/mergeable. Bob verified [Actions run `37621687836`](https://github.com/JustMath-Web/website/actions/runs/37621687836) targets this exact head. The web job passes frozen install, critical audit, format, Astro check, production build, content/security guards, and Playwright. The Studio job and Workers Builds check also pass. The exact-head web build and browser suite are relevant compatibility evidence for Astro's use of the parser. Bob did not install the branch or run a local 1.9.0 build. No new application flow is introduced by this lockfile-only update.
+
+**Scoped verdict: Approved** for Charlie's manual merge of PR #121 at `de6f3c4`. No scoped finding remains open. A later head requires re-review. Bob did not merge, install, deploy, or edit Andy-owned files. Review #124 only after its branch is updated against the merged result.
+
+---
+
+## 2026-10-07 — PR #123 Studio smol-toml update at `a2ec8bd`
+
+Reviewed exact open head `a2ec8bd72d455469570951fe593a75e1d611ce8f` against merged `main` at `f4cedf06b2a97a62f3190293104c7faa166bc612`, under `02-INFORMATIVE-BLOG.md` v1.13.0. The entire PR diff is in `studio/pnpm-lock.yaml`: indirect `smol-toml` 1.8.0 → 1.9.0, its integrity, and references from `@sanity/cli` and `@vercel/frameworks`. No manifest, Studio source, schema, validator, or configuration changes. The [upstream 1.9.0 release](https://github.com/squirrelchat/smol-toml/releases/tag/v1.9.0) describes a parser rewrite, stricter parsing, and parsed objects with null prototypes. GitHub's [reviewed advisory](https://github.com/advisories/GHSA-r4xh-jqrq-34v2) marks 1.8.0 affected by quadratic-time parsing and 1.9.0 patched. The project has no checked-in Studio TOML file; this does not prove every external TOML input is covered.
+
+GitHub reports CLEAN/mergeable. Bob verified [Actions run `37610266372`](https://github.com/JustMath-Web/website/actions/runs/37610266372) targets this exact head and its Studio job passes frozen install, critical audit, format, typecheck, lint, table/FAQ/redirect validation guards, and `sanity build`. The web job and Workers Builds check also pass. The successful Studio build is relevant CLI compatibility evidence for the parser change. CI does not execute `sanity deploy` or test arbitrary TOML files. Bob did not install the branch, run a local 1.9.0 build, or deploy. No new editor content flow is introduced by the lockfile patch.
+
+**Scoped verdict: Approved** for Charlie's manual merge of PR #123 at `a2ec8bd`. No scoped finding remains open. A later head requires re-review. Bob did not merge, install, deploy, or edit Andy-owned files. Review #121 only after its branch is updated against the merged result.
+
+---
+
+## 2026-10-07 — PR #122 Studio source-map-js update at `37d9026`
+
+Reviewed exact open head `37d9026393ec3febb870f835d5175b62a6523ae9` against merged `main` at `9201dc2a6a8b58825a5521e7702ff3e457a902f0`, under `02-INFORMATIVE-BLOG.md` v1.13.0. The entire PR diff is in `studio/pnpm-lock.yaml`: indirect `source-map-js` 1.2.1 → 1.2.2, its integrity, and the `css-tree` and `postcss` dependency references. No manifest, Studio source, schema, validator, or configuration changes. The [upstream 1.2.2 release](https://github.com/7rulnik/source-map-js/releases/tag/v1.2.2) fixes a browser CSP crash and a denial of service from malicious indexed source maps. GitHub's [reviewed advisory](https://github.com/advisories/ghsa-68fv-2mgg-jv7q) marks versions before 1.2.2 affected and 1.2.2 patched. This review does not assert that the Studio exposes an attacker-controlled source-map path.
+
+GitHub reports CLEAN/mergeable. Bob verified [Actions run `37608428092`](https://github.com/JustMath-Web/website/actions/runs/37608428092) has this exact head and a successful Studio job: frozen install, critical audit, format, typecheck, lint, table/FAQ/redirect validation guards, and build. The web job and Workers Builds check also pass. Bob inspected the PR diff and upstream primary sources; he did not install the branch or run a local 1.2.2 build. This lockfile-only patch adds no Studio editor flow to smoke test.
+
+**Scoped verdict: Approved** for Charlie's manual merge of PR #122 at `37d9026`. No scoped finding remains open. A later head requires re-review. Bob did not merge, install, deploy, or edit Andy-owned files. Review #123 only after its branch is updated against the merged result.
+
+---
+
+## 2026-10-07 — PR #116 indirect devalue update at `28a5a51`
+
+Reviewed exact open head `28a5a515308b794228f6c58e92830f4705c8ef5e` against merged `main` at `4232bea916a70e5e03ce95aaea416a36813c7bba`, under `02-INFORMATIVE-BLOG.md` v1.13.0. The entire PR diff is four replacement pairs in `web/pnpm-lock.yaml`: indirect `devalue` 5.9.2 → 5.9.4, its integrity, and Astro's dependency/snapshot references. There is no manifest, application source, or configuration change, and project source does not import `devalue` directly. Upstream 5.9.3 release notes list serialization and parsing fixes, including rejection of non-string null-prototype keys and serialization of only visible Node Buffer bytes; 5.9.4 annotates unused operation tables for tree shaking.
+
+GitHub reports CLEAN/mergeable. Bob verified Actions run `37560261910` targets `28a5a51`; web CI passed frozen install, critical audit, format check, Astro check, production build, guard tests, and Playwright. Studio and Workers Builds checks also pass. Bob inspected the lockfile and upstream release notes; he did not install the PR branch or run a local 5.9.4 build. No new application flow is introduced by this indirect lockfile patch.
+
+**Scoped verdict: Approved** for Charlie's manual merge of PR #116 at `28a5a51`. No scoped finding remains open. A later head requires re-review. Bob did not merge, install, deploy, or edit Andy-owned files. This is the final queued Dependabot PR in the batch.
+
+---
+
+## 2026-10-07 — PR #108 Portable Text renderer update at `1598a61`
+
+Reviewed exact open head `1598a61dd52a2c8892674b1e29e722106bedfb48` against merged `main` at `04c015fd25e8dfcd5603ada9f232fdbb90955d70`, under `02-INFORMATIVE-BLOG.md` v1.13.0. Only `web/package.json` and `web/pnpm-lock.yaml` change: pinned `astro-portabletext` 1.0.0 → 1.0.1, with matching integrity and peer snapshot; no other package or project source changes. Upstream 1.0.1 release notes describe a fix that avoids mutating inbound Portable Text data. This package renders the post body and nested table/FAQ content, so silent loss of a custom block is the main regression risk.
+
+GitHub reports CLEAN/mergeable. Bob verified Actions run `37556294193` targets `1598a61`; web CI passed frozen install, audit, format, Astro check, build, guard tests, and Playwright. Studio and Workers Builds also pass. The blog Playwright suite uses a built fixture post and explicitly asserts custom callout, mistake, working, block and inline math, image, and embed output; separate tests assert captioned tables, inline math in table cells, FAQ answer math, and keyboard behavior. These are positive rendering assertions rather than merely a successful page load.
+
+GitHub's Cloudflare comment links commit `1598a61` to a successful preview at `https://4045fe19-justmathwebsite.charlie-kong.workers.dev`. Bob fetched three published preview posts (all 200). The Learning Matrix post contains two rendered tables and FAQ details; a read-only published Sanity query confirms its body has `postTable` and `faqAccordion` blocks. Another published FAQ post renders details. These preview checks add real-content evidence for tables and FAQs; they do not establish published math rendering, which the fixture test covers. Bob did not run a local 1.0.1 build or browser flow because local web `node_modules` remains at 1.0.0 and Rule 0 prohibits installs.
+
+**Scoped verdict: Approved** for Charlie's manual merge of PR #108 at `1598a61`. No scoped finding remains open. A later head requires re-review. Bob did not merge, install, deploy, write Sanity content, or edit Andy-owned files.
+
+---
+
+## 2026-10-07 — PR #106 web Prettier update at `6bc2ee3`
+
+Reviewed exact open head `6bc2ee3c1808a37688ffa7643f4e621a62c28ae6` against merged `main` at `34177407332f91ee4e24dca2d199feb6506c8bbd`, under `02-INFORMATIVE-BLOG.md` v1.13.0. Only `web/package.json` and `web/pnpm-lock.yaml` change: pinned development dependency Prettier 3.9.6 → 3.9.9, with integrity and peer references propagated through Astro check, the language server, and formatter plugins. No project source, runtime dependency, configuration, or content changes. Upstream 3.9.7–3.9.9 notes cover formatter fixes, including Markdown handling. The relevant compatibility check is this project's exact-head format run.
+
+GitHub reports CLEAN/mergeable. Bob verified Actions run `37490311567` targets `6bc2ee3`; web CI passed frozen install, critical audit, `format:check`, Astro check, production build, guard tests, and Playwright. Studio and Workers Builds checks also pass. Local web `node_modules` still has Prettier 3.9.6, so Bob did not claim a local 3.9.9 run or install dependencies under Rule 0. No browser flow was reopened for this formatter-only patch.
+
+**Scoped verdict: Approved** for Charlie's manual merge of PR #106 at `6bc2ee3`. No scoped finding remains open. A later head requires re-review. Bob did not merge, install, deploy, or edit Andy-owned files.
+
+---
+
+## 2026-10-06 — PR #104 web Sanity client update at `bdfe110`
+
+Reviewed exact open head `bdfe1100cbb8cca58e1a0dc34137fd34261184f8` against merged `main` at `e46b8a91a01dcb80a2c80322a53a911b46adce1f`, under `02-INFORMATIVE-BLOG.md` v1.13.0. The actual PR changes pinned `@sanity/client` **8.6.2 → 8.9.0**, not 8.8.0 as relayed in the handoff. Only `web/package.json` and `web/pnpm-lock.yaml` change; the lockfile also advances `eventsource` 5.1.1 → 5.1.2 and `eventsource-parser` 4.1.0 → 4.1.1. The site's `createClient` settings, GROQ queries, and redirect integration are unchanged. Upstream 8.7.0 adds event-stream handling and type registries (release notes explicitly say `client.fetch` is unchanged); 8.8.0 updates collaboration and context APIs; 8.9.0 updates Context API types. None of those release notes identifies a change to this site's ordinary published GROQ fetch path.
+
+GitHub reports CLEAN/mergeable. Exact-head `web`, `studio`, and Workers Builds checks pass. Bob verified Actions run `37488377487` targets `bdfe110`; web CI passed a frozen install, audit, format, Astro check, build, guards, and Playwright. GitHub CI is configured without Sanity credentials and its Playwright blog uses fixtures, so those checks alone are not proof of a live Sanity read. The Cloudflare PR comment associates commit `bdfe110` with its successful commit preview at `https://bd8e8899-justmathwebsite.charlie-kong.workers.dev`. Bob fetched that preview's `/blog/` (200): its five post titles/slugs match a separate read-only query to the published Sanity dataset. The preview's `/blog/differentiation-using-the-first-principle/` also returned 200 with the matching title. In a separate read-only smoke check, the already installed `studio/node_modules/@sanity/client` 8.9.0 fetched a published post from that dataset using the web client's `apiVersion`, `useCdn: false`, and `perspective: "published"`. These checks show real content retrieval and preview rendering; Bob did not inspect Cloudflare's full build log or run a local web 8.9.0 build. Local web `node_modules` remains at client 8.6.2.
+
+**Scoped verdict: Approved** for Charlie's manual merge of PR #104 at `bdfe110`. No scoped finding remains open. A later head requires re-review. Bob did not merge, install, deploy, write Sanity content, or edit Andy-owned files.
+
+---
+
+## 2026-10-06 — PR #103 KaTeX update at `5d4d36a`
+
+Reviewed exact open head `5d4d36a2f7fb50c8c372bd4012dc78023a29300c` against merged `main` at `5ca06cd6001b8db35a96dbe2e514237367b6cf4f`, under `02-INFORMATIVE-BLOG.md` v1.13.0. Only `web/package.json` and `web/pnpm-lock.yaml` change: pinned KaTeX 0.18.7 → 0.18.9, with the importer, package integrity, and snapshot updated. The dependency graph is otherwise unchanged. KaTeX's 0.18.8 release fixes trailing rows in `align`; 0.18.9 adds contributed-module type declarations. The project's inline, block, and worked-step renderers still call `renderToString` at build time with `trust: false` and default HTML plus MathML output; no renderer source changes are in this PR.
+
+GitHub reports CLEAN/mergeable. Exact-head `web`, `studio`, and Workers Builds checks pass. Bob verified Actions run `37446549439` targets `5d4d36a` and its web job passed a frozen install, audit, format, Astro check, build, guard tests, and Playwright. The Playwright suite builds the site with a fixture post and checks inline and block math, visible KaTeX with MathML while JavaScript is disabled, inline math in a table and FAQ answer, and local CSS/font delivery. This verifies the fixture rendering path on the new KaTeX version; it does not prove the appearance of every live post. Bob did not run a local 0.18.9 build or browser flow because local `web/node_modules` still contains 0.18.7 and Rule 0 prohibits installing dependencies.
+
+**Scoped verdict: Approved** for Charlie's manual merge of PR #103 at `5d4d36a`. No scoped finding remains open. A later head requires re-review. Bob did not merge, install, deploy, or edit Andy-owned files.
+
+---
+
+## 2026-10-06 — PR #101 Astro framework update at `eab0940`
+
+Reviewed exact open head `eab094096c4ff38d0a50b372064068eb711bc843` against merged `main` at `38936470d975948039d769cd878899ae0eeddaef`, under `02-INFORMATIVE-BLOG.md` v1.13.0. The PR changes only `web/package.json` and `web/pnpm-lock.yaml`: pinned Astro 7.3.3 → 7.3.5, plus Astro-owned compiler bindings, Markdown helper, and other transitive lockfile references. No project source, routes, configuration, or content change. Astro's 7.3.4 release fixes incremental build and Markdown rendering issues; 7.3.5 adds an experimental container render API. A reported 7.3.5 container regression does not apply to the project code searched: it does not use `astro/container`, `?container`, or incremental builds. No scoped defect was found in the dependency graph.
+
+GitHub reports the PR CLEAN and mergeable. The `web`, `studio`, and Workers Builds checks pass. Bob inspected GitHub Actions run `37444266407`: its head SHA is exactly `eab0940`; the web job completed a frozen install, critical audit, format check, Astro check, production build, content/security guard tests, and Playwright end-to-end tests. Bob did not run a local 7.3.5 build: the installed local Astro is still 7.3.3, and Bob does not install dependencies under Rule 0. The exact-head CI build is the build evidence for this review.
+
+**Scoped verdict: Approved** for Charlie's manual merge of PR #101 at `eab0940`. No scoped finding remains open. A later head requires re-review. Bob did not merge, install, deploy, or edit Andy-owned files.
+
+---
+
+## 2026-10-06 — PR #105 Studio tsx update at `32303c2`
+
+Reviewed rebased exact open head `32303c2b26ca91fccc1cfb34cc17a603243a032b` against merged `main` at `4027abbdf86e1a66ff541851fb9b4a9fd3a3edd8`, under `02-INFORMATIVE-BLOG.md` v1.13.0. The PR changes only `studio/package.json` and `studio/pnpm-lock.yaml`: pinned development dependency `tsx` moves from 4.23.13 to 4.23.15, with the package integrity and propagated lockfile peer references updated. No Studio schema, validator, application, or deployment source changes. Upstream 4.23.14/4.23.15 release notes describe CommonJS/ESM interop and type-declaration bug fixes. GitHub reports CLEAN/mergeable after the rebase; exact-head `web`, `studio`, and Workers Builds checks pass. Studio CI uses frozen install and runs audit, format, typecheck, lint, the `tsx`-backed table/FAQ/redirect validation guards, and build. Bob inspected the diff and CI configuration; he did not install the PR branch or rerun tests locally.
+
+This is the final queued Studio dependency PR in this batch. The hosted Studio still needs a separately authorized deploy from merged `main` to incorporate the project bundle updates, followed by an editor smoke check; this deployment is not part of the PR merge verdict.
+
+**Scoped verdict: Approved** for Charlie's manual merge of PR #105 at `32303c2`. No scoped finding remains open. A later head requires re-review. Bob did not merge, install, deploy, write Sanity content, or edit Andy-owned files.
+
+---
+
+## 2026-10-06 — PR #107 Studio Prettier update at `0322d56`
+
+Reviewed exact open head `0322d5649f1b872c052a1e4a1aa2921202e8eeb0` against merged `main` at `90ab6c4a26fcfcdd39ee99b85f59c27b747e89b1`, under `02-INFORMATIVE-BLOG.md` v1.13.0. The PR changes only `studio/package.json` and `studio/pnpm-lock.yaml`: the pinned development dependency `prettier` moves from 3.9.8 to 3.9.9, with its integrity and lockfile references updated. No Studio runtime package, schema, validator, application, or deployment file changes. GitHub reports CLEAN/mergeable; exact-head `web`, `studio`, and Workers Builds checks pass. Studio CI uses a frozen lockfile and runs `format:check`, audit, typecheck, lint, table/FAQ/redirect validation guards, and build. Bob inspected the PR diff and CI configuration; he did not install the PR branch or rerun checks locally.
+
+The formatter is a development tool and the exact-head format check passed, so no browser or live Studio flow was reopened for this patch. The planned hosted Studio deploy after the remaining Studio dependency PRs is separate from this merge review.
+
+**Scoped verdict: Approved** for Charlie's manual merge of PR #107 at `0322d56`. No scoped finding remains open. A later head requires re-review. Bob did not merge, install, deploy, write Sanity content, or edit Andy-owned files.
+
+---
+
+## 2026-10-06 — PR #112 Studio DOMPurify update at `c94a1fc`
+
+Reviewed exact open head `c94a1fcc4c66443b1fc7631281c1a2f84b6a3f3e` against merged `main` at `3002ee6e75ddcfb1550f7031660bd9a0d181cb26`, under `02-INFORMATIVE-BLOG.md` v1.13.0. The PR changes only `studio/pnpm-lock.yaml`: indirect `dompurify` 3.4.14 → 3.4.16, updating its integrity and references in the Studio dependency graph. No manifest, Studio schema, validator, application, or deployment file changes. Cure53's 3.4.15 and 3.4.16 release notes describe sanitization hardening and fixes. GitHub reports CLEAN/mergeable; exact-head `web`, `studio`, and Workers Builds checks pass. Studio CI uses a frozen lockfile and runs audit, format, typecheck, lint, table/FAQ/redirect validation guards, and build. Bob inspected the PR diff and CI configuration; he did not install the PR branch or rerun tests locally.
+
+No new editor flow is introduced by this lockfile-only change. A fresh hosted Studio deploy is still planned after the remaining Studio dependency PRs so the project bundle incorporates their reviewed versions; that operational step is outside this merge verdict.
+
+**Scoped verdict: Approved** for Charlie's manual merge of PR #112 at `c94a1fc`. No scoped P0/P1/P2 finding remains open. A later head requires re-review. Bob did not merge, install, deploy, write Sanity content, or edit Andy-owned files.
+
+---
+
+## 2026-10-05 — PR #113 Studio transitive dependency at `bb733eb`
+
+Reviewed exact open head `bb733eb76a96a70b9a8126a607d000ed4a80fb16` against merged `main` at `916d82d348e24856d14b7788c6d352273149a992`, under `02-INFORMATIVE-BLOG.md` v1.13.0. The entire PR diff is one lockfile change: `studio/pnpm-lock.yaml` resolves `brace-expansion` 5.0.9 to 5.0.12 for `minimatch`, with the package integrity and snapshot updated. No manifest, Studio schema, validator, application, or deployment file changes. GitHub reports CLEAN/mergeable; exact-head `web`, `studio`, and Workers Builds checks pass. Studio CI includes frozen install, critical advisory audit, format, typecheck, lint, table/FAQ/redirect validation guards, and build. Bob inspected the diff and CI configuration; he did not run local branch tests.
+
+GitHub's reviewed advisory `GHSA-6j4f-fj2g-mc7p` lists 5.0.9 as affected by a denial-of-service issue and 5.0.10 as patched; 5.0.12 is beyond that fix. This is a dependency-only review, so no new Studio browser flow was required. The earlier #117 Studio smoke check remains attributed manual evidence, not Bob's observation.
+
+**Scoped verdict: Approved** for Charlie's manual merge of PR #113 at `bb733eb`. No scoped finding is open. A later head requires re-review. Bob did not merge, install, deploy, or edit Andy-owned files.
+
+---
+
+## 2026-10-05 — PR #117 Sanity dependency update at `e0077e2`
+
+Reviewed exact open head `e0077e2545affa23416daede4e1f5086d47dded4` against `main` at `87a5f3fef9a08d42becca57f86db123b27547c4d`, under `02-INFORMATIVE-BLOG.md` v1.13.0. The PR changes only `studio/package.json` and `studio/pnpm-lock.yaml`: `sanity` and `@sanity/vision` move from 6.16.0 to 6.17.0, and `@sanity/client` from 8.6.2 to 8.9.0. The Studio release includes form and structure changes; the client release changes Context API types. No project schema or validator source changed. GitHub reports the PR open and mergeable with a CLEAN merge state; exact-head `web`, `studio`, and Workers Builds checks pass. Studio CI uses a frozen lockfile and runs audit, format, typecheck, lint, table/FAQ/redirect validation guards, and build. Bob inspected the package diff and CI configuration; he did not run those commands locally on the PR branch.
+
+`HANDOFF.md` records Charlie's local Studio 6.17.0 test on this head, relayed by Andy: a temporary `From /smoke-test` draft with invalid `To /blog` showed an error and blocked Publish; valid `To /blog/` cleared it; the draft was deleted without publishing. Andy reports a later Sanity search found no `/smoke-test` redirect. This is owner-reported evidence, **not Bob's browser observation**; no screenshot, exact error wording, or audit log was supplied. The attributed result plus the exact-head source/CI evidence closes the scoped editor-flow gate. It does not establish production deployment of this dependency update.
+
+**Scoped verdict: Approved** for Charlie's manual merge of PR #117 at `e0077e2`. No scoped P0/P1/P2 finding remains open. Any later head needs re-review. Bob did not create or delete a Sanity draft, install dependencies, switch branches, edit Andy-owned files, or merge the PR.
+
+---
+
 ## 2026-10-03 — PR #119 post-merge and Studio-deploy report
 
 GitHub confirms PR #119 merged on 2026-10-03 at 15:27:36 UTC as `6bc0f8ab9def23e049506ac65ac971d31f090edc`; local `main` matches `origin/main` at that commit. The exact PR head was `bbb15116e557ed93965fbddcb48be4811ca16fc1`, which Bob **explicitly re-reviewed and approved** after the docs-only main merge. Andy reports `pnpm deploy` in `studio/` printed “Deployed 1/1 schemas” and a successful Studio URL. Bob did not run that deploy. A read-only request to `https://justmath.sanity.studio/` returned a 302 to Sanity's hosted Studio/auth flow, with a `Last-Modified` timestamp after the merge; this confirms the endpoint responds, not which validation code a signed-in editor sees. The hosted `/blog` error check remains optional post-deploy observation.

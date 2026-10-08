@@ -1,6 +1,112 @@
 # Bob Reviewer Handoff - Just Math Malaysia
 
-Date: 2026-08-16
+Last updated: 2026-10-08
+
+## 2026-10-08 — Dependabot review batch closed; review files ready for Andy's PR
+
+Bob verified local `main` at `ca81db4a936cd0ea7649b8c2df5736e6564c73a3`, the #124 merge, with all 15 reviewed Dependabot merge commits in first-parent history. GitHub confirms #124 merged at the exact head Bob approved, and a read-only open-PR query returns zero Dependabot PRs. The pending diff contains only Bob's four owned review outputs and passes `git diff --check`. The records below preserve each exact-head review and attributed manual evidence. Andy may put those four files in one docs-only PR; Charlie reviews and merges it manually. Bob did not branch, commit, push, or merge.
+
+The hosted Studio still reflects the deploy from `3893647`; #122 and #123 subsequently changed its lockfile. A redeploy and `/blog` versus `/blog/` validation check remain a separate operational follow-up. Bob did not deploy or operate the editor.
+
+---
+
+## 2026-10-07 — Development review: PR #124 web Sharp update
+
+Bob reviewed exact open head `5378405f775049c87d83e1a9cea1fb662b899d8b` against merged `main` at `1fd3d01d1a9eb74991a2b152e9777e094f269558`, under `02-INFORMATIVE-BLOG.md` v1.13.0. Only `web/pnpm-lock.yaml` changes: optional indirect Sharp 0.35.4 → 0.35.5, platform packages/integrity, and bundled libvips 1.3.3 → 1.3.4. No manifest or web source changes. Upstream Sharp/libvips release notes checked. The site's portrait and blog images use Sanity CDN URLs, not direct Sharp calls; no `astro:assets` use was found. GitHub reports CLEAN/mergeable. Bob verified Actions run `37624842512` targets this SHA: web frozen install, audit, format, Astro check, build, guards, and Playwright pass; Studio and Workers Builds pass. GitHub's successful Cloudflare deployment comment links the head to a commit preview; Bob fetched the preview home page (200) and its real portrait JPEG from Sanity CDN (200, 600×750). This checks image delivery, not Sharp transformation. Bob did not install or run a local 0.35.5 build. No scoped finding is open. **Verdict: Approved** for Charlie's manual merge at this head; a later head requires re-review. This is the last PR of the new four-PR Dependabot batch. The Studio redeploy for #122/#123 remains open. Bob did not merge, deploy, or edit Andy-owned files.
+
+---
+
+## 2026-10-07 — Development review: PR #121 web smol-toml update
+
+Bob reviewed exact open head `de6f3c40992ef987004c45f7a7bdcae83b5b23e1` against merged `main` at `774c345820548bdfb7eb8bc5d601d26ebd778029`, under `02-INFORMATIVE-BLOG.md` v1.13.0. Only `web/pnpm-lock.yaml` changes: indirect `smol-toml` 1.8.0 → 1.9.0, integrity, and Astro/internal-helper references. No manifest or web source changes. The upstream release describes a parser rewrite, stricter parsing, and null-prototype result objects; GitHub's reviewed advisory lists 1.9.0 as the fix for quadratic-time parsing. GitHub reports CLEAN/mergeable. Bob verified Actions run `37621687836` targets this SHA: web frozen install, audit, format, Astro check, build, guards, and Playwright pass; Studio and Workers Builds also pass. Bob did not install or run a local 1.9.0 build. No scoped finding is open. **Verdict: Approved** for Charlie's manual merge at this head; a later head requires re-review. Andy updates #124 after #121 merges. Bob did not merge, deploy, or edit Andy-owned files.
+
+---
+
+## 2026-10-07 — Development review: PR #123 Studio smol-toml update
+
+Bob reviewed exact open head `a2ec8bd72d455469570951fe593a75e1d611ce8f` against merged `main` at `f4cedf06b2a97a62f3190293104c7faa166bc612`, under `02-INFORMATIVE-BLOG.md` v1.13.0. Only `studio/pnpm-lock.yaml` changes: indirect `smol-toml` 1.8.0 → 1.9.0, integrity, and `@sanity/cli`/`@vercel/frameworks` references. No manifest or Studio source changes. The upstream release describes a parser rewrite, stricter parsing, and null-prototype result objects; GitHub's reviewed advisory lists 1.9.0 as the fix for quadratic-time parsing. GitHub reports CLEAN/mergeable. Bob verified Actions run `37610266372` targets this SHA: Studio frozen install, audit, format, typecheck, lint, three validation guards, and `sanity build` pass; web and Workers Builds also pass. CI does not run `sanity deploy` or arbitrary TOML input checks, and Bob did not install or run a local 1.9.0 build. No scoped finding is open. **Verdict: Approved** for Charlie's manual merge at this head; a later head requires re-review. Andy updates #121 after #123 merges. Bob did not merge, deploy, or edit Andy-owned files.
+
+---
+
+## 2026-10-07 — Development review: PR #122 Studio source-map-js update
+
+Bob reviewed exact open head `37d9026393ec3febb870f835d5175b62a6523ae9` against merged `main` at `9201dc2a6a8b58825a5521e7702ff3e457a902f0`, under `02-INFORMATIVE-BLOG.md` v1.13.0. Only `studio/pnpm-lock.yaml` changes: indirect `source-map-js` 1.2.1 → 1.2.2, integrity, and `css-tree`/`postcss` references. No manifest or Studio source changes. The upstream release fixes an indexed source-map denial of service and a browser CSP crash; GitHub's reviewed advisory lists 1.2.2 as patched. GitHub reports CLEAN/mergeable. Bob verified Actions run `37608428092` targets this SHA and its Studio frozen install, audit, format, typecheck, lint, three validation guards, and build pass; web and Workers Builds also pass. Bob did not install the PR branch or run a local 1.2.2 build. No scoped finding is open. **Verdict: Approved** for Charlie's manual merge at this head; a later head requires re-review. Andy updates #123 after #122 merges. Bob did not merge, deploy, or edit Andy-owned files.
+
+---
+
+## 2026-10-07 — Development review: PR #116 indirect devalue update
+
+Bob reviewed exact open head `28a5a515308b794228f6c58e92830f4705c8ef5e` against merged `main` at `4232bea916a70e5e03ce95aaea416a36813c7bba`, under `02-INFORMATIVE-BLOG.md` v1.13.0. Entire diff is `web/pnpm-lock.yaml`: indirect `devalue` 5.9.2 → 5.9.4 and corresponding integrity/Astro snapshot references. No manifest or application source changed; project code does not import `devalue` directly. Upstream 5.9.3 release notes describe parsing and serialization fixes, including Node Buffer visible-byte handling; 5.9.4 describes tree-shaking optimization. GitHub reports CLEAN/mergeable. Bob verified Actions run `37560261910` targets this SHA; web CI passes frozen install, audit, format, Astro check, build, guards, and Playwright; studio and Workers Builds checks also pass. Bob did not install the PR branch or run a local 5.9.4 build. No scoped finding is open. **Verdict: Approved** for Charlie's manual merge at this head; a later head requires re-review. This is the last queued Dependabot PR in the batch. Bob did not merge, deploy, or edit Andy-owned files.
+
+---
+
+## 2026-10-07 — Development review: PR #108 Portable Text renderer update
+
+Bob reviewed exact open head `1598a61dd52a2c8892674b1e29e722106bedfb48` against merged `main` at `04c015fd25e8dfcd5603ada9f232fdbb90955d70`, under `02-INFORMATIVE-BLOG.md` v1.13.0. Only web manifest and lockfile change: pinned `astro-portabletext` 1.0.0 → 1.0.1, with no unrelated dependency or project source edits. Upstream 1.0.1 release notes describe preventing mutation of inbound Portable Text data. GitHub reports CLEAN/mergeable. Bob verified Actions run `37556294193` targets this head; web frozen install, audit, format, Astro check, build, guards, and Playwright pass, as do Studio and Workers Builds. The built fixture post tests positively assert all custom blocks, including maths, tables, and FAQ answers. GitHub's Cloudflare comment links this head to a successful commit preview; Bob fetched three published post pages (200), including the Learning Matrix post with rendered tables and FAQ details matching a read-only Sanity body-type query. Published math was not separately observed. Local renderer remains 1.0.0, so Bob did not install or claim a local 1.0.1 build. No scoped finding is open. **Verdict: Approved** for Charlie's manual merge at this head; a later head requires re-review. Bob did not merge, deploy, write Sanity content, or edit Andy-owned files.
+
+---
+
+## 2026-10-07 — Development review: PR #106 web Prettier update
+
+Bob reviewed exact open head `6bc2ee3c1808a37688ffa7643f4e621a62c28ae6` against merged `main` at `34177407332f91ee4e24dca2d199feb6506c8bbd`, under `02-INFORMATIVE-BLOG.md` v1.13.0. Only web manifest and lockfile change: pinned development dependency Prettier 3.9.6 → 3.9.9 with expected peer-reference propagation. Upstream 3.9.7–3.9.9 release notes checked. GitHub reports CLEAN/mergeable; exact-head web, studio, and Workers Builds checks pass. Bob verified Actions run `37490311567` targets this SHA and web CI passes frozen install, audit, `format:check`, Astro check, build, guards, and Playwright. Local web Prettier remains 3.9.6; Bob did not install or run local 3.9.9 checks. No scoped finding is open. **Verdict: Approved** for Charlie's manual merge at this head; a later head requires re-review. Bob did not merge, deploy, or edit Andy-owned files.
+
+---
+
+## 2026-10-06 — Development review: PR #104 web Sanity client update
+
+Bob reviewed exact open head `bdfe1100cbb8cca58e1a0dc34137fd34261184f8` against merged `main` at `e46b8a91a01dcb80a2c80322a53a911b46adce1f`, under `02-INFORMATIVE-BLOG.md` v1.13.0. The actual update is `@sanity/client` 8.6.2 → **8.9.0**, correcting Andy's 8.8.0 description. Only the web manifest and lockfile change, including two expected event-stream transitives. Upstream 8.7.0/8.8.0/8.9.0 release notes checked; this project's read-only GROQ fetch setup is unchanged. GitHub reports CLEAN/mergeable; exact-head web, studio, and Workers Builds checks pass. Bob verified Actions run `37488377487` targets this SHA and web CI passes frozen install, build, guards, and Playwright. CI's blog content uses fixtures, so Bob checked the Cloudflare commit preview linked to `bdfe110`: `/blog/` returned 200 with five posts matching a separate published-dataset Sanity query, and a preview post page returned 200 with the matching title. An independently installed `@sanity/client` 8.9.0 also fetched a published post using the web client's API version and read settings. Bob did not inspect the full Cloudflare build log or run a local web 8.9.0 build. No scoped finding is open. **Verdict: Approved** for Charlie's manual merge at this head; a later head requires re-review. Bob did not install, merge, deploy, write Sanity content, or edit Andy-owned files.
+
+---
+
+## 2026-10-06 — Development review: PR #103 KaTeX update
+
+Bob reviewed exact open head `5d4d36a2f7fb50c8c372bd4012dc78023a29300c` against merged `main` at `5ca06cd6001b8db35a96dbe2e514237367b6cf4f`, under `02-INFORMATIVE-BLOG.md` v1.13.0. Only web manifest and lockfile change: pinned KaTeX 0.18.7 → 0.18.9 with corresponding integrity/snapshot, no other dependency update. Upstream 0.18.8/0.18.9 release notes checked. GitHub reports CLEAN/mergeable. Exact-head `web`, `studio`, and Workers Builds checks pass; Bob confirmed Actions run `37446549439` targets this SHA. Web CI uses a frozen install, builds, and runs Playwright against a built fixture blog post; the tests cover inline/block math, MathML with JavaScript disabled, math in tables and FAQ answers, and local KaTeX CSS/fonts. This is fixture evidence, not a visual inspection of every live post. Local installed KaTeX is 0.18.7; Bob did not install 0.18.9 or run a local build/browser. No scoped finding is open. **Verdict: Approved** for Charlie's manual merge at this head; a later head requires re-review. Bob did not merge, deploy, or edit Andy-owned files.
+
+---
+
+## 2026-10-06 — Development review: PR #101 Astro update
+
+Bob reviewed exact open head `eab094096c4ff38d0a50b372064068eb711bc843` against merged `main` at `38936470d975948039d769cd878899ae0eeddaef`, under `02-INFORMATIVE-BLOG.md` v1.13.0. Only web manifest and lockfile change: pinned Astro 7.3.3 → 7.3.5 with expected compiler/Markdown/transitive resolutions. Astro 7.3.4/7.3.5 release notes checked; the project does not use the new experimental container API or incremental builds. GitHub reports CLEAN/mergeable. Exact-head `web`, `studio`, and Workers Builds checks pass. Bob verified Actions run `37444266407` has this head SHA; its web job passed frozen install, audit, format, check, build, guards, and Playwright. Local installed Astro is 7.3.3, so Bob did not run or claim a local 7.3.5 build. No scoped finding is open. **Verdict: Approved** for Charlie's manual merge at this head; a later head requires re-review. Bob did not install, merge, deploy, or edit Andy-owned files.
+
+---
+
+## 2026-10-06 — Hosted Studio deployment preflight after #105 merge
+
+GitHub confirms #105 merged as `38936470d975948039d769cd878899ae0eeddaef`; local `main` matches. Andy reported `npx sanity deploy --dry-run` built the Studio and listed files without uploading; Bob did not run it. Bob read stale local installed versions before deployment: `dompurify` 3.4.14, `prettier` 3.9.8, and `tsx` 4.23.13, behind merged requirements 3.4.16, 3.9.9, and 4.23.15. `HANDOFF.md` now reports that `pnpm install --frozen-lockfile` fixed this before Charlie deployed main `3893647`; it records `Deployed 1/1 schemas` and Charlie's hosted Studio editor result as reported, not witnessed. Bob did not independently verify the post-install package versions, run the deployment, or operate the editor.
+
+---
+
+## 2026-10-06 — Development review: PR #105 Studio tsx update
+
+Bob reviewed rebased exact open head `32303c2b26ca91fccc1cfb34cc17a603243a032b` against merged `main` at `4027abbdf86e1a66ff541851fb9b4a9fd3a3edd8`, under `02-INFORMATIVE-BLOG.md` v1.13.0. Read-only `gh pr view/checks/diff`, local CI file inspection, and upstream tsx release notes were used. Only Studio manifest and lockfile change: pinned dev dependency `tsx` 4.23.13 → 4.23.15, integrity, and peer references. Exact-head web, studio, Workers Builds pass; PR is CLEAN/mergeable. Bob did not run local branch tests or a browser flow. No scoped finding is open. **Verdict: Approved** for Charlie's manual merge at this head; a later head requires re-review. This is the final queued Studio dependency PR in the batch; a separately authorized hosted Studio deployment and editor smoke check follow merge. Bob edited only reviewer outputs and did not update branches, merge, install, or deploy.
+
+---
+
+## 2026-10-06 — Development review: PR #107 Studio Prettier update
+
+Bob reviewed exact open head `0322d5649f1b872c052a1e4a1aa2921202e8eeb0` against merged `main` at `90ab6c4a26fcfcdd39ee99b85f59c27b747e89b1`, under `02-INFORMATIVE-BLOG.md` v1.13.0. Read-only `gh pr view/checks/diff` and local CI file inspection were used. Only the Studio manifest and lockfile change: pinned development dependency `prettier` 3.9.8 → 3.9.9. Exact-head web, studio, Workers Builds pass; PR is CLEAN/mergeable. Bob did not run local branch tests or a browser flow. No scoped finding is open. **Verdict: Approved** for Charlie's manual merge at this head; a later head requires re-review. Hosted Studio deployment remains a separate operational step after #105. Bob edited only reviewer outputs and did not update branches, merge, install, or deploy.
+
+---
+
+## 2026-10-06 — Development review: PR #112 Studio DOMPurify update
+
+Bob reviewed exact open head `c94a1fcc4c66443b1fc7631281c1a2f84b6a3f3e` against merged `main` at `3002ee6e75ddcfb1550f7031660bd9a0d181cb26`, under `02-INFORMATIVE-BLOG.md` v1.13.0. Read-only `gh pr view/checks/diff`, local CI file inspection, and Cure53 release notes were used. Only the Studio lockfile changes: indirect `dompurify` 3.4.14 → 3.4.16 and its dependency references. Exact-head web, studio, and Workers Builds pass; PR is CLEAN/mergeable. Bob did not run local branch tests or a browser flow. No scoped finding is open. **Verdict: Approved** for Charlie's manual merge at this head; a later head requires re-review. A hosted Studio deployment remains planned after the remaining Studio dependency PRs; that is a separate operational check. Bob edited only reviewer outputs and did not update branches, merge, install, or deploy.
+
+---
+
+## 2026-10-05 — Development review: PR #113 Studio lockfile patch
+
+Bob reviewed exact open head `bb733eb76a96a70b9a8126a607d000ed4a80fb16` against merged `main` at `916d82d348e24856d14b7788c6d352273149a992`, under `02-INFORMATIVE-BLOG.md` v1.13.0. Read-only `gh pr list/view/diff`, local CI file inspection, and GitHub's reviewed `GHSA-6j4f-fj2g-mc7p` advisory were used. Only the Studio lockfile changes: `brace-expansion` 5.0.9 → 5.0.12 under `minimatch`; 5.0.9 is affected and 5.0.10 patched per the advisory. Exact-head web, studio, Workers Builds pass; PR is CLEAN/mergeable. Bob did not rerun tests or inspect a new browser flow. No scoped finding is open. **Verdict: Approved** for Charlie's manual merge at this head; a later head requires re-review. Read-only verification of the hosted Studio's deployed bundle remains a separate follow-up; the hosted version number does not identify the deployed commit. There are ten open Dependabot PRs including #113 at this check. Bob edited only reviewer outputs and did not update branches, merge, install, or deploy.
+
+---
+
+## 2026-10-05 — Development review: PR #117 Sanity dependency update
+
+Bob reviewed exact open head `e0077e2545affa23416daede4e1f5086d47dded4` against base `87a5f3fef9a08d42becca57f86db123b27547c4d`, under `02-INFORMATIVE-BLOG.md` v1.13.0. Tools: read-only `gh pr view`, `gh pr checks`, `gh pr diff`, local file reads of CI and `HANDOFF.md`, and upstream Sanity/Client release notes. Only the Studio package manifest and lockfile change. Exact-head web, studio, and Workers Builds pass; GitHub reports CLEAN/mergeable. Bob did not run local branch tests or operate a browser.
+
+Charlie reportedly tested a temporary redirect draft in local Studio 6.17.0 at this head: `To /blog` errored and blocked Publish; `To /blog/` cleared it; draft deleted without publishing. Andy relayed the result in `HANDOFF.md` and reports a later search found no `/smoke-test` record. This is attributed manual evidence, not Bob's observation; exact error text, screenshot, and audit log remain unavailable. No scoped finding is open. **Verdict: Approved** for Charlie's manual merge of PR #117 at this head; a later head requires re-review. Bob edited only reviewer outputs and did not merge, install dependencies, deploy, or write Sanity content. The other ten Dependabot PRs require individual updated-head reviews.
+
+---
 
 ## 2026-10-03 — PR #119 merged; Studio deploy reported
 
