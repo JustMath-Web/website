@@ -509,10 +509,18 @@ surface that is not inert on preview URLs pre-cutover. Exposure is small — it 
 visitor executing no JavaScript that also loads iframes, which excludes ordinary browsers and most
 crawlers — and GA4 cannot record a session from it regardless.
 
+**Update 2026-10-09: the `<noscript>` iframe described above was removed** (see §49). It could not be
+gated, so the consent step left no way to keep it. The CSP `frame-src https://www.googletagmanager.com` entry was
+not changed by this removal. The paragraph above is kept as the record of what existed from 2026-09-05.
+
 **Consent:** still none, and none added. §12's condition ("if non-essential tags require it for the
 chosen target markets") is unresolved — Malaysia's PDPA does not impose a GDPR-style prior-consent
 rule for analytics cookies, but this has not been checked against the actual tags in the container,
 which cannot be inspected from outside. **Open item**, carried, not silently closed.
+
+**Update 2026-10-09:** "still none, and none added" is no longer true. A consent step and a privacy
+notice were built on 2026-10-09 (§49). They are still subject to §49's release gate and still have no
+recorded advice from a qualified person, so this item stays open.
 
 **Consent — accepted for now, advice still to be obtained (2026-09-22).** Charlie, on the owner's
 behalf, chose to keep the site as it is. The Google tag and the advertising-feature requests measured
@@ -524,6 +532,10 @@ This records an accepted exposure. It is not a finding that there is none: no ad
 person is recorded yet, the PDPA remark above is a note and not legal advice, and some pages are written
 for Form 1–3 students, so visitors may include minors. **Revisit when the advice arrives:** if it says a
 notice or consent step is needed, build it. Until then this item stays **open**.
+
+**Update 2026-10-09:** a consent step and privacy notice were built on 2026-10-09 (§49), chosen by
+Charlie on the owner's behalf as risk reduction. This was not triggered by advice: none is recorded yet.
+The build is still subject to §49's release gate. The `<noscript>` iframe also no longer exists (§49).
 
 **Tests:** `web/tests/e2e/analytics-host-gate.spec.ts` — the tag ships with its configuration but
 fires no Google request off-host and leaves `dataLayer` undefined; the verification meta is present
@@ -580,6 +592,7 @@ flow, so it is the listed host least shown to be needed. It stays because Google
   remarketing on purpose. The hosts stay allowed. Removing them while the ad features stay on would
   bring the refusals, and Google's diagnostic warning, back. This does not close the consent **Open
   item** above, which matters more now: these requests fire for a new visitor with no consent step.
+  *(Update 2026-10-09: these requests now come from GTM, which loads only after an accepted choice — §49.)*
 - **Cloudflare Web Analytics beacon — turned off (2026-09-22).** Every live load checked on
   2026-09-21 showed `script-src` refusing `https://static.cloudflareinsights.com/beacon.min.js`, a
   script Cloudflare injects at the edge; it is not in the repo. Charlie switched Web Analytics off in
@@ -2895,3 +2908,72 @@ a draft with To `/blog` showing an error and blocking Publish; To
 errors; the draft deleted and the redirect list checked, nothing published. This is Charlie's report,
 not an observation by Andy or Bob: no screenshot was taken, and the exact error wording and the list's
 contents were not recorded.
+
+## 49. Consent banner and privacy notice — 2026-10-09
+
+**Decision.** Charlie chose a privacy notice plus a consent step before Google tags load ("yes option 1",
+2026-10-09), on the owner's behalf. This is a **risk-reduction choice, not a finding** that Malaysian law
+expressly makes analytics cookies opt-in. Whether a GA4 identifier is "personal data" is still open.
+
+What the sources say, and no more:
+
+- Personal Data Protection Act 2010 (Act 709) s.6(1)(a) requires consent to process personal data unless a
+  s.6(2) ground applies. A WhatsApp enquiry may fit s.6(2)(b); analytics does not obviously fit any ground;
+  replying to an enquiry gives no basis for later marketing.
+- The PDPD "Data Protection by Design Guideline" (2026, issued under s.48(g)) uses prior consent for
+  additional cookies in a worked example. It is guidance, not a ruling.
+- Act s.7(1)(a)-(h) and s.7(3) set what the notice must say and require it in Malay and English.
+
+**What was built (Tasks 1-3, commits `ace6717`, `3adf63d`, `fdcccb1`).**
+
+- *Consent store and gated loader* (`web/public/consent.js`, `web/public/analytics.js`). The choice is kept
+  in `localStorage` under `jm-consent-v1`. The record is browser-local only: it shows what that browser
+  chose and is not server-side proof of consent. The host gate is kept: GTM loads only on
+  `mathematicsmalaysia.com` **and** only after acceptance. Rejecting after accepting clears the
+  `_ga*`, `_gid`, `_gat*` and `_gcl*` cookies and reloads the page, including when storage is blocked
+  (the page remembers in memory that it accepted).
+- *Banner* (`web/src/components/ConsentBanner.astro`). One step, Malay and English, equal Accept and Reject
+  buttons. On mobile it sits above the fixed WhatsApp bar through `--consent-offset`.
+- *Footer.* "Cookie settings" reopens the banner; "Privacy" links to the notice.
+- *`/privacy/` notice* (`web/src/pages/privacy.astro`), bilingual, with the owner facts in
+  `web/src/lib/privacy.ts`.
+- *Guards.* `copyApprovedOn` plus the owner facts are checked by `checkPrivacyFacts`
+  (`web/src/lib/content/assertPrivacyFacts.ts`). A production build fails through an Astro build hook in
+  `web/astro.config.mjs`; CI runs `pnpm test:privacy-facts-guard`
+  (`web/scripts/assert-privacy-facts-guard.mjs`). Previews and local builds are not blocked.
+
+**Consequences, recorded plainly.**
+
+- The `<noscript>` GTM iframe was **removed** (§12). It cannot be gated, so visitors without JavaScript are
+  no longer measured.
+- GA4 numbers will fall: only visitors who accept are counted.
+- On a first mobile visit the banner covers the blog Contents pill (z-index 15) until the visitor answers
+  (ruling R5, accepted as normal banner behaviour).
+
+**Release gate.** Tasks 1-3 ship as **one PR**. CI is expected to be red until the owner supplies the facts
+and approval: `ownerName`, `contactEmail`, bilingual `whatsappRetention` and `analyticsRetention`,
+`lastUpdated`, `copyApprovedOn`.
+
+> **WORDING GATE (before release).** The banner and notice name "Google's advertising features" because
+> first visits were measured calling `stats.g.doubleclick.net` and `www.google.com.my/ads/ga-audiences`
+> (HANDOFF 2026-09-22; §12a). Before release, someone must open GTM container `GTM-KP5SMKV` and the GA4
+> property and confirm what runs: the tags, Google signals / advertising features, and GA4 data retention.
+> A verified cookie inventory is needed before any cookie table is added. The Malay text needs a
+> native-speaker check. `copyApprovedOn` records that the owner approved the notice and banner wording
+> **after** both.
+
+**Still unadvised (not closed by this).** The seven questions in the research file remain open: whether a
+GA4 identifier is personal data; opt-in versus notice; whether the advertising-feature calls need stricter
+gating; whether the tutoring business must register with the Commissioner; minors who read the blog;
+WhatsApp retention; who is the legal data user. **No advice from a qualified Malaysian privacy professional
+is recorded yet.**
+
+**Sources.**
+
+- PDPD, Data Protection by Design Guideline (2026):
+  <https://www.pdp.gov.my/ppdpv1/wp-content/uploads/2026/04/Data-Protection-By-Design-Guideline-DpbD.pdf>
+- Act 709, Malay and English (2022 consolidated text, before the 2024 amendment):
+  <https://www.pdp.gov.my/ppdpv1/wp-content/uploads/2024/07/UNDANG-UNDANG-MALAYSIA_AKTA_PERLINDUNGAN_DATA_PERIBADI_2010_709_MALAY_AND-ENG_V2022.pdf>
+- Linklaters, Data Protected: Malaysia:
+  <https://www.linklaters.com/en/insights/data-protected/data-protected---malaysia>
+- Research notes: local-only `log/2026-10-08_privacy-consent-research.md` (gitignored).
