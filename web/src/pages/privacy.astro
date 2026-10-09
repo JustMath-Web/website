@@ -1,0 +1,284 @@
+---
+/* DRAFT COPY — not approved for publication. Needs: owner approval, native Malay check, GTM container check (advertising-features wording), qualified advice. */
+import BaseLayout from "../layouts/BaseLayout.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import { getLandingPageData } from "../lib/content/landingData";
+import { PRIVACY_FACTS } from "../lib/privacy";
+import { buildWhatsAppUrl } from "../lib/content/whatsappUrl";
+
+const { siteSettings, navigation } = await getLandingPageData();
+
+// A null fact only reaches a page in a non-production build (the build hook refuses production).
+const UNSET = "(not yet supplied)";
+const owner = PRIVACY_FACTS.ownerName ?? UNSET;
+const email = PRIVACY_FACTS.contactEmail ?? UNSET;
+const whatsappRetention = PRIVACY_FACTS.whatsappRetention ?? UNSET;
+const analyticsRetention = PRIVACY_FACTS.analyticsRetention ?? UNSET;
+const updated = PRIVACY_FACTS.lastUpdated;
+---
+
+<!-- DRAFT COPY — not approved for publication. Needs: owner approval, native Malay check, GTM container check (advertising-features wording), qualified advice. -->
+<BaseLayout
+	title="Privacy notice / Notis privasi — Just Math Malaysia"
+	description="How Just Math Malaysia handles personal data. Bahasa Melayu version included."
+	siteSettings={siteSettings}
+>
+	<SiteHeader
+		navigation={navigation}
+		siteSettings={siteSettings}
+		ctaHref={buildWhatsAppUrl(siteSettings)}
+	/>
+	<main id="main">
+		<div class="notice container">
+			<section id="notice-en" lang="en" aria-labelledby="title-en">
+				<h1 id="title-en">Privacy Notice — Just Math Malaysia</h1>
+				<p>Last updated: {updated}</p>
+				<p>
+					<em
+						>Versi Bahasa Melayu di bawah. / A Bahasa Melayu version is below.</em
+					>
+				</p>
+
+				<h2 id="who-en">Who we are</h2>
+				<p>
+					This website, mathematicsmalaysia.com, is run by {owner}, trading as
+					Just Math Malaysia ("we"). You can contact us at {email} or on WhatsApp
+					019 472 8768.
+				</p>
+
+				<h2 id="collect-en">What we collect and why</h2>
+				<ul>
+					<li>
+						<em>When you message us on WhatsApp:</em> your WhatsApp number and name,
+						and what you write (for example your child's school year). We use this
+						to reply, to book a free assessment, and to arrange lessons. WhatsApp
+						is run by Meta under its own privacy terms.
+					</li>
+					<li>
+						<em>When you visit this website:</em>
+						<strong>only if you accept</strong>
+						(see the cookie choice), we use Google Tag Manager and Google Analytics
+						to count visits and see which pages are read. If you accept, Google sets
+						cookies or similar identifiers in your browser, and receives your IP address
+						and details of your device and visit. This helps us improve the lessons
+						and the site.
+					</li>
+					<li>
+						<em
+							>Our hosting provider (Cloudflare) and our content provider
+							(Sanity)</em
+						>
+						process technical data such as your IP address so that pages and images
+						load safely.
+					</li>
+					<li>
+						<em>YouTube videos</em> use the privacy-enhanced mode. YouTube sets cookies
+						only if you play a video.
+					</li>
+				</ul>
+
+				<h2 id="voluntary-en">Giving us information is voluntary</h2>
+				<p>
+					<strong>This website itself has no forms or accounts.</strong> Through WhatsApp
+					we may ask for your child's school year and level, and what help you want.
+					Please do not send more than you need to. Giving us this information is
+					<strong>voluntary</strong>. If you choose not to, we may not be able
+					to reply properly or book a lesson.
+				</p>
+
+				<h2 id="source-en">Where the data comes from</h2>
+				<p>
+					WhatsApp details and what you write come from you. Visit data comes
+					from your browser and device. It is collected by Google's tags on this
+					website
+					<strong>only after you accept</strong> the cookie choice.
+				</p>
+
+				<h2 id="recipients-en">Who may receive your data</h2>
+				<p>
+					Google, Cloudflare, Sanity, Meta (WhatsApp) and YouTube, as described
+					above. Some of them are outside Malaysia. We do not sell your data.
+				</p>
+
+				<h2 id="children-en">Children</h2>
+				<p>
+					Our lessons are booked by parents or guardians, and the information
+					about a child (such as school year) is given by the parent or
+					guardian. If you are under 18, please ask a parent or guardian before
+					you contact us. If we learn that we hold a child's personal data
+					without a parent's or guardian's consent, we will delete it.
+				</p>
+
+				<h2 id="rights-en">Your rights</h2>
+				<p>
+					You can ask to see, correct, or delete the data we hold about you, or
+					withdraw your consent, by contacting us at {email}.
+				</p>
+
+				<h2 id="choices-en">Your choices</h2>
+				<p>
+					You can block or delete cookies in your browser settings. You can
+					change your choice at any time using "Cookie settings" in the footer.
+					Your choice not to give data may mean we cannot reply to you.
+				</p>
+
+				<h2 id="retention-en">How long we keep it</h2>
+				<p>
+					WhatsApp enquiries: {whatsappRetention}. Analytics: set in Google
+					Analytics,
+					{analyticsRetention}.
+				</p>
+
+				<h2 id="changes-en">Changes</h2>
+				<p>We will update this page and its date if this changes.</p>
+			</section>
+
+			<section id="notice-ms" lang="ms" aria-labelledby="title-ms">
+				<h1 id="title-ms">Notis Privasi — Just Math Malaysia</h1>
+				<p>Dikemas kini: {updated}</p>
+
+				<h2 id="who-ms">Siapa kami</h2>
+				<p>
+					Laman web ini, mathematicsmalaysia.com, dikendalikan oleh {owner},
+					berniaga sebagai Just Math Malaysia ("kami"). Hubungi kami di {email} atau
+					WhatsApp 019 472 8768.
+				</p>
+
+				<h2 id="collect-ms">Data yang kami kumpul dan sebabnya</h2>
+				<ul>
+					<li>
+						<em>Apabila anda menghantar mesej WhatsApp:</em> nombor dan nama WhatsApp
+						anda, serta apa yang anda tulis (contohnya tahun persekolahan anak anda).
+						Kami gunakan untuk membalas, menempah penilaian percuma dan mengatur kelas.
+						WhatsApp dikendalikan oleh Meta di bawah terma privasinya sendiri.
+					</li>
+					<li>
+						<em>Apabila anda melawat laman web ini:</em>
+						<strong>hanya jika anda bersetuju</strong>
+						(lihat pilihan kuki), kami menggunakan Google Tag Manager dan Google Analytics
+						untuk mengira lawatan dan melihat halaman yang dibaca. Jika anda bersetuju,
+						Google menetapkan kuki atau pengecam serupa dalam pelayar anda, dan menerima
+						alamat IP serta maklumat peranti dan lawatan anda. Ini membantu kami menambah
+						baik kelas dan laman web.
+					</li>
+					<li>
+						<em
+							>Penyedia hosting (Cloudflare) dan penyedia kandungan (Sanity)</em
+						> memproses data teknikal seperti alamat IP anda supaya halaman dan imej
+						dimuatkan dengan selamat.
+					</li>
+					<li>
+						<em>Video YouTube</em> menggunakan mod privasi dipertingkat. YouTube menetapkan
+						kuki hanya jika anda memainkan video.
+					</li>
+				</ul>
+
+				<h2 id="voluntary-ms">Memberi maklumat adalah sukarela</h2>
+				<p>
+					<strong>Laman web ini sendiri tiada borang atau akaun.</strong> Melalui
+					WhatsApp, kami mungkin bertanya tahun dan tahap persekolahan anak anda serta
+					bantuan yang anda perlukan. Sila jangan hantar lebih daripada yang perlu.
+					Memberi maklumat ini adalah <strong>sukarela</strong>. Jika anda
+					memilih untuk tidak memberi, kami mungkin tidak dapat membalas dengan
+					sewajarnya atau menempah kelas.
+				</p>
+
+				<h2 id="source-ms">Dari mana data datang</h2>
+				<p>
+					Butiran WhatsApp dan apa yang anda tulis datang daripada anda. Data
+					lawatan datang daripada pelayar dan peranti anda. Ia dikumpul oleh tag
+					Google di laman web ini
+					<strong>hanya selepas anda bersetuju</strong> dengan pilihan kuki.
+				</p>
+
+				<h2 id="recipients-ms">Siapa yang boleh menerima data anda</h2>
+				<p>
+					Google, Cloudflare, Sanity, Meta (WhatsApp) dan YouTube, seperti
+					dihuraikan di atas. Sebahagian berada di luar Malaysia. Kami tidak
+					menjual data anda.
+				</p>
+
+				<h2 id="children-ms">Kanak-kanak</h2>
+				<p>
+					Kelas ditempah oleh ibu bapa atau penjaga, dan maklumat tentang
+					kanak-kanak (seperti tahun persekolahan) diberi oleh ibu bapa atau
+					penjaga. Jika anda berumur di bawah 18 tahun, sila minta kebenaran ibu
+					bapa atau penjaga sebelum menghubungi kami. Jika kami mendapati kami
+					menyimpan data peribadi kanak-kanak tanpa kebenaran ibu bapa atau
+					penjaga, kami akan memadamkannya.
+				</p>
+
+				<h2 id="rights-ms">Hak anda</h2>
+				<p>
+					Anda boleh meminta untuk melihat, membetulkan atau memadam data yang
+					kami simpan, atau menarik balik persetujuan, dengan menghubungi {
+						email
+					}.
+				</p>
+
+				<h2 id="choices-ms">Pilihan anda</h2>
+				<p>
+					Anda boleh menyekat atau memadam kuki dalam tetapan pelayar. Anda
+					boleh menukar pilihan pada bila-bila masa melalui "Tetapan kuki" di
+					bahagian bawah. Jika anda tidak memberi data, kami mungkin tidak dapat
+					membalas anda.
+				</p>
+
+				<h2 id="retention-ms">Tempoh simpanan</h2>
+				<p>
+					Pertanyaan WhatsApp: {whatsappRetention}. Analitik: ditetapkan dalam
+					Google Analytics, {analyticsRetention}.
+				</p>
+
+				<h2 id="changes-ms">Perubahan</h2>
+				<p>
+					Kami akan mengemas kini halaman ini dan tarikhnya jika ada perubahan.
+				</p>
+			</section>
+		</div>
+	</main>
+	<SiteFooter navigation={navigation} siteSettings={siteSettings} />
+</BaseLayout>
+
+<style>
+	.container {
+		max-width: var(--page-max);
+		margin: 0 auto;
+		padding-inline: clamp(20px, 5vw, var(--gutter));
+	}
+
+	.notice {
+		padding-block: clamp(44px, 7vw, 104px);
+		color: var(--ink-900);
+		font: var(--weight-regular) 17px / 1.6 var(--font-sans);
+	}
+
+	section + section {
+		margin-top: clamp(48px, 7vw, 96px);
+		padding-top: clamp(32px, 5vw, 64px);
+		border-top: 1px solid var(--rule);
+	}
+
+	h1 {
+		max-width: 24ch;
+		margin: 0 0 16px;
+		font: var(--weight-semibold) clamp(28px, 4.5vw, 44px) / 1.15
+			var(--font-serif);
+	}
+
+	h2 {
+		margin: 32px 0 8px;
+		font: var(--weight-semibold) 20px / 1.3 var(--font-serif);
+	}
+
+	p,
+	ul {
+		max-width: 68ch;
+		margin: 0 0 12px;
+	}
+
+	ul {
+		padding-left: 1.2em;
+	}
+</style>

@@ -287,3 +287,48 @@ test("with JavaScript off the banner never shows and nothing tracks", async ({
 	expect(hits).toEqual([]);
 	await ctx.close();
 });
+
+test("/privacy/ has both languages and every s.7(1) heading", async ({
+	page,
+}) => {
+	await page.goto("/privacy/");
+	for (const lang of ["en", "ms"]) {
+		await expect(
+			page.locator(`section#notice-${lang}[lang="${lang}"]`),
+		).toBeVisible();
+		for (const id of [
+			"who",
+			"collect",
+			"source",
+			"rights",
+			"recipients",
+			"choices",
+			"voluntary",
+			"children",
+			"retention",
+			"changes",
+		]) {
+			await expect(page.locator(`#${id}-${lang}`)).toHaveCount(1);
+		}
+	}
+	const sitemap = await (await page.request.get("/sitemap-0.xml")).text();
+	expect(sitemap).toContain("/privacy/");
+});
+
+test("every banner and footer link to /privacy/ resolves", async ({
+	page,
+	request,
+}) => {
+	for (const path of ["/", "/blog/"]) {
+		await page.goto(path);
+		const hrefs = await page
+			.locator('a[href="/privacy/"]')
+			.evaluateAll((as) =>
+				as.map((a) => (a as HTMLAnchorElement).getAttribute("href")),
+			);
+		expect(hrefs.length).toBeGreaterThanOrEqual(2); // banner + footer
+		for (const href of new Set(hrefs)) {
+			expect((await request.get(href!)).status(), href!).toBe(200);
+		}
+	}
+});

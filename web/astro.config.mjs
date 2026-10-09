@@ -5,6 +5,8 @@ import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
 
 import { checkDeployEnv } from "./src/lib/content/assertDeployEnv.ts";
+import { checkPrivacyFacts } from "./src/lib/content/assertPrivacyFacts.ts";
+import { PRIVACY_FACTS } from "./src/lib/privacy.ts";
 import { sanityRedirects } from "./src/lib/content/sanityRedirectsIntegration.ts";
 
 /**
@@ -27,10 +29,29 @@ const deployEnvGuard = {
 	},
 };
 
+/**
+ * Fails a production build while the privacy notice carries an unfinished owner fact — see
+ * src/lib/content/assertPrivacyFacts.ts. Same reasoning as `deployEnvGuard` for living in a hook.
+ */
+const privacyFactsGuard = {
+	name: "just-math:privacy-facts-guard",
+	hooks: {
+		"astro:build:start": () => {
+			const { error } = checkPrivacyFacts(PRIVACY_FACTS, process.env);
+			if (error) throw new Error(`[privacy-facts-guard] ${error}`);
+		},
+	},
+};
+
 // https://astro.build/config
 export default defineConfig({
 	site: "https://mathematicsmalaysia.com",
-	integrations: [deployEnvGuard, sitemap(), sanityRedirects()],
+	integrations: [
+		deployEnvGuard,
+		privacyFactsGuard,
+		sitemap(),
+		sanityRedirects(),
+	],
 	vite: {
 		plugins: [tailwindcss()],
 		build: {
