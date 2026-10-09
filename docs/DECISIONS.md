@@ -2941,7 +2941,8 @@ What the sources say:
 - *Guards.* `copyApprovedOn` plus the owner facts are checked by `checkPrivacyFacts`
   (`web/src/lib/content/assertPrivacyFacts.ts`). A production build fails through an Astro build hook in
   `web/astro.config.mjs` that keys on `DEPLOY_ENV=production` (not `NODE_ENV`) and does nothing otherwise; CI runs `pnpm test:privacy-facts-guard`
-  (`web/scripts/assert-privacy-facts-guard.mjs`). Previews and local builds are not blocked.
+  (`web/scripts/assert-privacy-facts-guard.mjs`). Previews and local builds are not blocked. The hook runs at
+  `astro:build:done` (ruling R13, below), so it is the last production check to fail.
 
 **Consequences, recorded plainly.**
 
@@ -2970,16 +2971,80 @@ and approval: `ownerName`, `contactEmail`, bilingual `whatsappRetention` and `an
 >    used. Google may also use this data for its advertising features." The second sentence must be true
 >    of the container and property as configured. (Earlier copy wrongly said the advertising features
 >    are used to count visits; that is what Analytics does.)
-> 2. Four factual promises from the research file must be verified before `copyApprovedOn` is set:
->    YouTube sets cookies only when a video is played; "we will delete a child's data on discovery" is a
->    promise the owner must be able to keep; Cloudflare and Sanity are the only infrastructure
->    recipients; and the recipient list is complete after the GTM check.
+> 2. Three factual promises from the research file must be verified before `copyApprovedOn` is set:
+>    "we will delete a child's data on discovery" is a promise the owner must be able to keep;
+>    Cloudflare and Sanity are the only infrastructure recipients; and the recipient list is complete
+>    after the GTM check. (The earlier fourth promise, "YouTube sets cookies only when a video is
+>    played", is **no longer made**: the notice now states only what the code does, see R12.)
 > 3. Editing the banner or notice copy afterwards means `copyApprovedOn` must be re-set. Set
 >    `lastUpdated` to the publication date together with `copyApprovedOn` (it is currently 2026-10-09,
 >    a draft date).
 > 4. The production-build hook is bypassed by a laptop `astro build` followed by a manual
 >    `npx wrangler deploy` (no `DEPLOY_ENV`). This is the same gap as the other production guards (see
 >    the `assertDeployEnv.ts` header).
+
+**Revision round on PR #126 (Bob's review of `0c9d0ba`; rulings R12-R14 are Charlie's).**
+
+- **R12: narrow the promise, do not gate the video.** The banner and notice used to say "Google loads
+  only if you accept". That was wider than the code: `YoutubeEmbed.astro` loads a
+  `youtube-nocookie.com` iframe on blog posts that contain a video, whatever the choice (Bob captured the
+  request after Reject). The wording now promises only what is gated: "Google Analytics and these
+  advertising features load only if you accept". The notice no longer says YouTube sets cookies only when
+  a video is played (unverified, and YouTube's documentation does not warrant it). It says that blog posts
+  with a YouTube video load it from YouTube's privacy-enhanced domain when the page opens, that this does
+  not depend on the cookie choice, and that YouTube's own terms apply. YouTube stays in the recipients
+  list. The video still loads regardless of the choice; **gating it (click-to-load) is a possible later
+  product decision**, not made here. A test pins this: after Reject, no analytics or ads request is made
+  on the fixture post that carries a video, and the YouTube request is allowed on purpose (it is
+  deliberately not in the `GOOGLE` pattern). The Malay wording in this revision still needs the native check.
+- **R13: the privacy-facts guard runs last.** It moved from `astro:build:start` to `astro:build:done`. A
+  production build with unfinished facts still fails the build command, so Cloudflare does not publish, but
+  it no longer hides an earlier production failure: at `build:start` it masked the "Sanity is not
+  configured" failure that `pnpm test:blog-production-guardrail` asserts on. In `ci.yml` the
+  `pnpm test:privacy-facts-guard` step moved to the end of the web job (after `pnpm test:e2e`), so its
+  intentional red is isolated and every other step still runs. Note: a failing production build has already
+  written `dist/` by then; the non-zero exit is what stops the deploy.
+- **R14: Consent Mode v2 states, binary design kept.** On Accept, before GTM is requested, `analytics.js`
+  pushes `gtag('consent','default', ...)` with `analytics_storage`, `ad_storage`, `ad_user_data` and
+  `ad_personalization` all `denied`, then `gtag('consent','update', ...)` with all four `granted`, then the
+  existing `gtm.start` event and script load. Nothing is defined or pushed before an accepted choice (no
+  choice or Reject: no `dataLayer`, no `gtag`). `gtag` is a local function that pushes `arguments`.
+  - **OPEN, needs Charlie's decision.** The guideline (02-INFORMATIVE-BLOG.md section 16) asks for accept-all,
+    reject-all **and granular** options. The approved design is a strict binary Accept/Reject gate and
+    granular options are **not implemented**. This is a **variance from the guideline** that needs
+    Charlie's explicit decision as the client, not an implementer's call.
+  - **Unverified.** The GTM container `GTM-KP5SMKV` has still not been inspected, so whether its tags
+    consume the consent states (consent checks on tags, tag firing order) is unknown.
+- **Other Bob findings fixed.** `/privacy/` now has exactly one `<h1>` ("Privacy notice / Notis privasi");
+  each language section opens with an `<h2>` and its ten subsections are `<h3>` (FE-06). The consent
+  scripts in `web/public/` are checked by `pnpm check:public` (`web/tsconfig.public.json`, run in CI after
+  `pnpm check`), with the shared `window` shapes declared in `web/types/public-globals.d.ts` (FE-24). The
+  scripts stay static and same-origin; the CSP and `_headers` are unchanged.
+
+**FE self-check (scoped to PR #126; guideline 02-INFORMATIVE-BLOG.md section 9).** Evidence is from runs in
+the 2026-10-09 revision round, on commit `0c9d0ba` plus the revision. "e2e" is `cd web && pnpm test:e2e`
+(all pass). The last column is the evidence; Bob re-verifies independently.
+
+| Gate | Result | Evidence |
+|---|---|---|
+| FE-02 section needs a name | pass | `/privacy/` language sections carry `aria-labelledby` pointing at their `<h2>`; asserted in the "exactly one h1" e2e test |
+| FE-05 links navigate, buttons act (hard gate) | pass | banner Accept/Reject and footer "Cookie settings" are `<button type="button">`; banner and footer privacy links are `<a href="/privacy/">`; e2e "every banner and footer link to /privacy/ resolves" |
+| FE-06 heading hierarchy | pass | was RED before the change (two `<h1>`, e2e failed at `toHaveCount(1)`); now exactly one `<h1>`, no skipped level, `<h2>` per notice section, ten `<h3>` each; e2e "/privacy/ has exactly one h1..." |
+| FE-07 landmarks | pass | no landmark change; `<main>` once on `/privacy/` (existing layout) |
+| FE-14 no horizontal overflow | pass | e2e at 320 and 390 px on `/privacy/`; existing banner tests at 320/390/640 px |
+| FE-22 content separated from presentation | OPEN | the notice and banner copy sit in `.astro` source, not the CMS, because legal copy must stay behind the owner-approval gate (`copyApprovedOn`); owner facts are typed in `web/src/lib/privacy.ts`. Charlie to confirm this is accepted |
+| FE-24 business logic project-owned (hard gate) | pass | `consent.js` and `analytics.js` are in-repo, `// @ts-check` plus JSDoc, `pnpm check:public` passes; RED proof: a deliberate type error made it exit 2, reverted and green again; behaviour covered by `consent.spec.ts` (all pass) |
+| FE-31 / FE-32 hydration, no needless JS | pass | no framework island added; the banner is server-rendered `hidden` HTML and one small static script reveals it; without JavaScript nothing shows and nothing tracks (e2e "with JavaScript off...") |
+| FE-40 dependency ladder | pass | no new package; `typescript` was already a devDependency (`pnpm install --frozen-lockfile` clean) |
+| FE-50 typed, lint-clean, buildable | pass | `pnpm check` 0 errors, `pnpm check:public` clean, `pnpm build` ok, `pnpm format:check` clean |
+| FE-53 compiling is not completing | OPEN | the independent Bob code review of this revision has not happened yet |
+| FE-61 respect the codebase | pass | no unrelated refactor; changes limited to the six findings; `web/public/_headers` unchanged (`git diff` empty) |
+| Section 15 accessibility (one h1, headings, keyboard) | pass for h1 and headings (above) and the existing banner keyboard tests; **OPEN** for a full WCAG 2.2 AA audit, not run this round |
+| Section 16 consent, Consent Mode v2 | **OPEN** | states implemented for the binary design and tested (default then update, before `gtm.js`; none before a choice or after Reject). Granular options not implemented (variance, needs Charlie's decision). GTM / GA4 container audit not done |
+| Section 18 CSP, no inline script | pass | `pnpm test:headers-guard` ok; no executable inline `<script>` in built `index.html`, `privacy/index.html` or the fixture post (grep); `_headers` unchanged |
+| Section 19 testing | pass | `pnpm test:e2e` all pass against the built output; every `pnpm test:*` passes except `test:privacy-facts-guard`, which is red by design (null owner facts) |
+| Malay wording | OPEN | native-speaker check not done |
+| Legal copy, release gate | OPEN | owner facts, `copyApprovedOn`, qualified advice (see the release gate above) |
 
 **Still unadvised (not closed by this).** The seven questions in the research file remain open: whether a
 GA4 identifier is personal data; opt-in versus notice; whether the advertising-feature calls need stricter
