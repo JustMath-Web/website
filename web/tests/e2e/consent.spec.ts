@@ -468,3 +468,39 @@ for (const width of [320, 390]) {
 		await assertNoHorizontalOverflow(page);
 	});
 }
+
+for (const width of [390, 1440]) {
+	test(`at ${width}px each banner privacy link is visibly separated from the sentence before it`, async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width, height: 844 });
+		await page.goto("/");
+		await expect(page.locator("#consent-banner")).toBeVisible();
+		// Measured on the rendered page: the compiler can collapse the whitespace before the link, so
+		// the HTML alone proves nothing. Compare the right edge of the last character before the link
+		// with the link's first box, when they share a line.
+		const gaps = await page.evaluate(() =>
+			Array.from(
+				document.querySelectorAll<HTMLAnchorElement>(
+					'#consent-banner .consent__text a[href="/privacy/"]',
+				),
+			).map((a) => {
+				let node: Node | null = a.previousSibling;
+				while (node && !(node.nodeType === 3 && node.textContent!.trim()))
+					node = node.previousSibling;
+				const text = node!.textContent!;
+				const range = document.createRange();
+				range.setStart(node!, text.length - 1);
+				range.setEnd(node!, text.length);
+				const last = range.getBoundingClientRect();
+				const link = a.getClientRects()[0];
+				const sameLine = link.top < last.bottom && link.bottom > last.top;
+				return { sameLine, gap: link.left - last.right };
+			}),
+		);
+		expect(gaps).toHaveLength(2);
+		for (const g of gaps) {
+			if (g.sameLine) expect(g.gap).toBeGreaterThanOrEqual(3);
+		}
+	});
+}
