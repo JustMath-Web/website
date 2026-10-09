@@ -283,6 +283,7 @@ test("with JavaScript off the banner never shows and nothing tracks", async ({
 		if (GOOGLE.test(r.url())) hits.push(r.url());
 	});
 	await page.goto("/");
+	await expect(page.locator("#consent-banner")).toBeAttached();
 	await expect(page.locator("#consent-banner")).toBeHidden();
 	expect(hits).toEqual([]);
 	await ctx.close();
@@ -292,6 +293,13 @@ test("/privacy/ has both languages and every s.7(1) heading", async ({
 	page,
 }) => {
 	await page.goto("/privacy/");
+	// The head must be parsed as a head (a stray element before <html> pushes it into <body>).
+	expect(
+		await page.evaluate(() => document.head.querySelector("title") !== null),
+	).toBe(true);
+	expect(
+		await page.evaluate(() => document.head.childElementCount),
+	).toBeGreaterThan(0);
 	for (const lang of ["en", "ms"]) {
 		await expect(
 			page.locator(`section#notice-${lang}[lang="${lang}"]`),

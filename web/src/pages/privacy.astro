@@ -20,11 +20,6 @@ const anMs = PRIVACY_FACTS.analyticsRetention.ms ?? UNSET;
 const updated = PRIVACY_FACTS.lastUpdated;
 ---
 
-{
-	PRIVACY_FACTS.copyApprovedOn === null && (
-		<p class="draft-note">Draft — not approved</p>
-	)
-}
 <BaseLayout
 	title="Privacy notice / Notis privasi — Just Math Malaysia"
 	description="How Just Math Malaysia handles personal data. Bahasa Melayu version included."
@@ -36,6 +31,11 @@ const updated = PRIVACY_FACTS.lastUpdated;
 		ctaHref={buildWhatsAppUrl(siteSettings)}
 	/>
 	<main id="main">
+		{
+			PRIVACY_FACTS.copyApprovedOn === null && (
+				<p class="draft-note">Draft — not approved</p>
+			)
+		}
 		<div class="notice container">
 			<section id="notice-en" lang="en" aria-labelledby="title-en">
 				<h1 id="title-en">Privacy Notice — Just Math Malaysia</h1>
@@ -50,7 +50,7 @@ const updated = PRIVACY_FACTS.lastUpdated;
 				<p>
 					This website, mathematicsmalaysia.com, is run by {owner}, trading as
 					Just Math Malaysia ("we"). You can contact us at {email} or on WhatsApp
-					019 472 8768.
+					{siteSettings.phoneDisplay}.
 				</p>
 
 				<h2 id="collect-en">What we collect and why</h2>
@@ -64,11 +64,12 @@ const updated = PRIVACY_FACTS.lastUpdated;
 					<li>
 						<em>When you visit this website:</em>
 						<strong>only if you accept</strong>
-						(see the cookie choice), we use Google Tag Manager and Google Analytics,
-						and Google's advertising features, to count visits and understand how
-						the site is used. If you accept, Google sets cookies or similar identifiers
-						in your browser, and receives your IP address and details of your device
-						and visit. This helps us improve the lessons and the site.
+						(see the cookie choice), we use Google Tag Manager and Google Analytics
+						to count visits and understand how the site is used. Google may also use
+						this data for its advertising features. If you accept, Google sets cookies
+						or similar identifiers in your browser, and receives your IP address and
+						details of your device and visit. This helps us improve the lessons and
+						the site.
 					</li>
 					<li>
 						<em
@@ -147,7 +148,7 @@ const updated = PRIVACY_FACTS.lastUpdated;
 				<p>
 					Laman web ini, mathematicsmalaysia.com, dikendalikan oleh {owner},
 					berniaga sebagai Just Math Malaysia ("kami"). Hubungi kami di {email} atau
-					WhatsApp 019 472 8768.
+					WhatsApp {siteSettings.phoneDisplay}.
 				</p>
 
 				<h2 id="collect-ms">Data yang kami kumpul dan sebabnya</h2>
@@ -161,11 +162,12 @@ const updated = PRIVACY_FACTS.lastUpdated;
 					<li>
 						<em>Apabila anda melawat laman web ini:</em>
 						<strong>hanya jika anda bersetuju</strong>
-						(lihat pilihan kuki), kami menggunakan Google Tag Manager, Google Analytics
-						dan ciri pengiklanan Google untuk mengira lawatan dan memahami cara laman
-						web digunakan. Jika anda bersetuju, Google menetapkan kuki atau pengecam
-						serupa dalam pelayar anda, dan menerima alamat IP serta maklumat peranti
-						dan lawatan anda. Ini membantu kami menambah baik kelas dan laman web.
+						(lihat pilihan kuki), kami menggunakan Google Tag Manager dan Google Analytics
+						untuk mengira lawatan dan memahami cara laman web digunakan. Google juga
+						boleh menggunakan data ini untuk ciri pengiklanannya. Jika anda bersetuju,
+						Google menetapkan kuki atau pengecam serupa dalam pelayar anda, dan menerima
+						alamat IP serta maklumat peranti dan lawatan anda. Ini membantu kami menambah
+						baik kelas dan laman web.
 					</li>
 					<li>
 						<em

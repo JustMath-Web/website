@@ -2962,6 +2962,24 @@ and approval: `ownerName`, `contactEmail`, bilingual `whatsappRetention` and `an
 > A verified cookie inventory is needed before any cookie table is added. The Malay text needs a
 > native-speaker check. `copyApprovedOn` records that the owner approved the notice and banner wording
 > **after** both.
+>
+> **Wording gate, extended (final whole-branch review, 2026-10-09).** The original text above stands.
+>
+> 1. The GTM / GA4 check must also settle the **purpose statement**, not only whether the features are
+>    on: the banner and notice now say "Google Analytics to count visits and understand how the site is
+>    used. Google may also use this data for its advertising features." The second sentence must be true
+>    of the container and property as configured. (Earlier copy wrongly said the advertising features
+>    are used to count visits; that is what Analytics does.)
+> 2. Four factual promises from the research file must be verified before `copyApprovedOn` is set:
+>    YouTube sets cookies only when a video is played; "we will delete a child's data on discovery" is a
+>    promise the owner must be able to keep; Cloudflare and Sanity are the only infrastructure
+>    recipients; and the recipient list is complete after the GTM check.
+> 3. Editing the banner or notice copy afterwards means `copyApprovedOn` must be re-set. Set
+>    `lastUpdated` to the publication date together with `copyApprovedOn` (it is currently 2026-10-09,
+>    a draft date).
+> 4. The production-build hook is bypassed by a laptop `astro build` followed by a manual
+>    `npx wrangler deploy` (no `DEPLOY_ENV`). This is the same gap as the other production guards (see
+>    the `assertDeployEnv.ts` header).
 
 **Still unadvised (not closed by this).** The seven questions in the research file remain open: whether a
 GA4 identifier is personal data; opt-in versus notice; whether the advertising-feature calls need stricter
