@@ -32,11 +32,16 @@ const deployEnvGuard = {
 /**
  * Fails a production build while the privacy notice carries an unfinished owner fact — see
  * src/lib/content/assertPrivacyFacts.ts. Same reasoning as `deployEnvGuard` for living in a hook.
+ *
+ * Runs in `astro:build:done`, i.e. LAST, on purpose. The build command still exits non-zero, so
+ * Cloudflare does not publish; but every earlier production check (for example "Sanity is not
+ * configured", which `pnpm test:blog-production-guardrail` asserts on) gets to fail first with its
+ * own message instead of being masked by this one (docs/DECISIONS.md §49, ruling R13).
  */
 const privacyFactsGuard = {
 	name: "just-math:privacy-facts-guard",
 	hooks: {
-		"astro:build:start": () => {
+		"astro:build:done": () => {
 			const { error } = checkPrivacyFacts(PRIVACY_FACTS, process.env);
 			if (error) throw new Error(`[privacy-facts-guard] ${error}`);
 		},

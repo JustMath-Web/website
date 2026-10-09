@@ -5,6 +5,9 @@
  * for the same reason `deployEnvGuard` does: Cloudflare's build command is set in a dashboard, so a
  * check wired anywhere else could be bypassed. Non-production builds (previews, local) are never
  * blocked, so the notice can be reviewed on a preview before the facts are final.
+ *
+ * The hook runs at `astro:build:done`, after the other production checks, so it never hides their
+ * failures. The build still fails, so nothing is published (docs/DECISIONS.md §49, ruling R13).
  */
 export interface BilingualFact {
 	en: string | null;
