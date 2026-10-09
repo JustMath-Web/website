@@ -2991,7 +2991,7 @@ and approval: `ownerName`, `contactEmail`, bilingual `whatsappRetention` and `an
   request after Reject). The wording now promises only what is gated: "Google Analytics and these
   advertising features load only if you accept". The notice no longer says YouTube sets cookies only when
   a video is played (unverified, and YouTube's documentation does not warrant it). It says that blog posts
-  with a YouTube video load it from YouTube's privacy-enhanced domain when the page opens, that this does
+  with a YouTube video load it from YouTube's privacy-enhanced domain as the visitor scrolls to it (the iframe is `loading="lazy"`), that this does
   not depend on the cookie choice, and that YouTube's own terms apply. YouTube stays in the recipients
   list. The video still loads regardless of the choice; **gating it (click-to-load) is a possible later
   product decision**, not made here. A test pins this: after Reject, no analytics or ads request is made
