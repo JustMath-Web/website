@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * Consent store for Google measurement. Static and same-origin so the CSP (`script-src 'self'`,
  * no `'unsafe-inline'`) needs no change. Loaded before `analytics.js`, which waits for it.
@@ -11,9 +12,12 @@
 	var KEY = "jm-consent-v1";
 	var VERSION = 1;
 
+	/** @returns {ConsentChoice | null} */
 	function read() {
 		try {
-			var v = JSON.parse(window.localStorage.getItem(KEY));
+			var v = JSON.parse(
+				/** @type {string} */ (window.localStorage.getItem(KEY)),
+			);
 			if (
 				v &&
 				v.version === VERSION &&
@@ -25,6 +29,7 @@
 		return null;
 	}
 
+	/** @param {ConsentChoice} choice */
 	function write(choice) {
 		try {
 			window.localStorage.setItem(
@@ -38,6 +43,7 @@
 		} catch (e) {}
 	}
 
+	/** @returns {string[]} */
 	function googleCookieNames() {
 		return document.cookie
 			.split(";")
@@ -85,6 +91,7 @@
 	// cookie exists. Remember in memory that this page accepted, so a later Reject still reloads.
 	var acceptedThisPage = false;
 
+	/** @param {ConsentChoice} choice */
 	function set(choice) {
 		if (choice !== "accepted" && choice !== "rejected") return;
 		var previous = read();
@@ -124,15 +131,19 @@
 	window.jmConsent = { get: read, set: set };
 
 	document.addEventListener("click", function (event) {
+		var target = /** @type {Element | null} */ (event.target);
 		var el =
-			event.target && event.target.closest
-				? event.target.closest("[data-consent],[data-consent-open]")
+			target && target.closest
+				? target.closest("[data-consent],[data-consent-open]")
 				: null;
 		if (!el) return;
 		if (el.hasAttribute("data-consent-open")) {
 			event.preventDefault();
 			show();
-			var first = banner() && banner().querySelector("[data-consent]");
+			var b = banner();
+			var first =
+				b &&
+				/** @type {HTMLElement | null} */ (b.querySelector("[data-consent]"));
 			if (first) first.focus();
 			return;
 		}
