@@ -179,3 +179,111 @@ test("unavailable localStorage does not crash and does not track", async ({
 	expect(hits).toEqual([]);
 	expect(await page.evaluate(() => (window as any).jmConsent.get())).toBeNull();
 });
+
+test("banner appears with no choice, in Malay and English, with equal buttons", async ({
+	page,
+}) => {
+	await page.goto("/");
+	const banner = page.locator("#consent-banner");
+	await expect(banner).toBeVisible();
+	await expect(banner).toContainText("Accept");
+	await expect(banner).toContainText("Terima");
+	await expect(banner).toContainText("Reject");
+	await expect(banner).toContainText("Tolak");
+	await expect(banner.locator('a[href="/privacy/"]').first()).toBeVisible();
+	const a = await banner.locator('[data-consent="accept"]').boundingBox();
+	const r = await banner.locator('[data-consent="reject"]').boundingBox();
+	expect(Math.abs(a!.width - r!.width)).toBeLessThanOrEqual(2);
+	expect(Math.abs(a!.height - r!.height)).toBeLessThanOrEqual(2);
+	await expect(banner.locator('input[type="checkbox"]')).toHaveCount(0);
+});
+
+test("clicking Reject hides the banner and it stays hidden on the next page", async ({
+	page,
+}) => {
+	await page.goto("/");
+	await page.locator('#consent-banner [data-consent="reject"]').click();
+	await expect(page.locator("#consent-banner")).toBeHidden();
+	await page.goto("/blog/");
+	await expect(page.locator("#consent-banner")).toBeHidden();
+});
+
+test("footer Cookie settings reopens the banner and moves focus into it", async ({
+	page,
+}) => {
+	await page.goto("/");
+	await page.locator('#consent-banner [data-consent="reject"]').click();
+	await page.locator("[data-consent-open]").click();
+	await expect(page.locator("#consent-banner")).toBeVisible();
+	await expect(
+		page.locator('#consent-banner [data-consent="accept"]'),
+	).toBeFocused();
+});
+
+for (const width of [320, 390, 640]) {
+	test(`at ${width}px the banner clears the mobile WhatsApp bar and keeps it clickable`, async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width, height: 844 });
+		await page.goto("/");
+		const banner = page.locator("#consent-banner");
+		const bar = page.locator(".mobile-cta-bar");
+		await expect(banner).toBeVisible();
+		await expect(bar).toBeVisible();
+		const offset = await page.evaluate(() =>
+			parseFloat(
+				document.documentElement.style.getPropertyValue("--consent-offset"),
+			),
+		);
+		expect(offset).toBeGreaterThan(0); // a fixed bar must be measured, not read as zero
+		const b = (await banner.boundingBox())!;
+		const r = (await bar.boundingBox())!;
+		expect(b.height).toBeLessThanOrEqual(844 * 0.5);
+		// no overlap: the banner's bottom edge is at or above the bar's top edge
+		expect(b.y + b.height).toBeLessThanOrEqual(r.y + 1);
+		// and the bar's own button is what sits under its centre point
+		const cta = bar.locator("a").first();
+		const c = (await cta.boundingBox())!;
+		const topmostIsCta = await page.evaluate(
+			([x, y]) => !!document.elementFromPoint(x, y)?.closest(".mobile-cta-bar"),
+			[c.x + c.width / 2, c.y + c.height / 2],
+		);
+		expect(topmostIsCta).toBe(true);
+		// both banner buttons are reachable
+		for (const which of ["accept", "reject"]) {
+			const btn = banner.locator(`[data-consent="${which}"]`);
+			const box = (await btn.boundingBox())!;
+			const hit = await page.evaluate(
+				([x, y]) =>
+					!!document.elementFromPoint(x, y)?.closest("#consent-banner"),
+				[box.x + box.width / 2, box.y + box.height / 2],
+			);
+			expect(hit, which).toBe(true);
+		}
+	});
+}
+
+test("on desktop the banner is not a focus trap", async ({ page }) => {
+	await page.setViewportSize({ width: 1440, height: 900 });
+	await page.goto("/");
+	for (let i = 0; i < 12; i++) await page.keyboard.press("Tab");
+	const inside = await page.evaluate(
+		() => !!document.activeElement?.closest("#consent-banner"),
+	);
+	expect(inside).toBe(false);
+});
+
+test("with JavaScript off the banner never shows and nothing tracks", async ({
+	browser,
+}) => {
+	const ctx = await browser.newContext({ javaScriptEnabled: false });
+	const page = await ctx.newPage();
+	const hits: string[] = [];
+	page.on("request", (r) => {
+		if (GOOGLE.test(r.url())) hits.push(r.url());
+	});
+	await page.goto("/");
+	await expect(page.locator("#consent-banner")).toBeHidden();
+	expect(hits).toEqual([]);
+	await ctx.close();
+});
