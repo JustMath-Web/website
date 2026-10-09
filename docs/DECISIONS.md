@@ -518,7 +518,8 @@ chosen target markets") is unresolved — Malaysia's PDPA does not impose a GDPR
 rule for analytics cookies, but this has not been checked against the actual tags in the container,
 which cannot be inspected from outside. **Open item**, carried, not silently closed.
 
-**Update 2026-10-09:** "still none, and none added" is no longer true. A consent step and a privacy
+**Update 2026-10-09:** "still none, and none added" is no longer true. That PDPA remark was a note, not advice, and §49 treats the question as open (it
+is not a finding that opt-in is or is not required). A consent step and a privacy
 notice were built on 2026-10-09 (§49). They are still subject to §49's release gate and still have no
 recorded advice from a qualified person, so this item stays open.
 
@@ -2915,16 +2916,16 @@ contents were not recorded.
 2026-10-09), on the owner's behalf. This is a **risk-reduction choice, not a finding** that Malaysian law
 expressly makes analytics cookies opt-in. Whether a GA4 identifier is "personal data" is still open.
 
-What the sources say, and no more:
+What the sources say:
 
 - Personal Data Protection Act 2010 (Act 709) s.6(1)(a) requires consent to process personal data unless a
-  s.6(2) ground applies. A WhatsApp enquiry may fit s.6(2)(b); analytics does not obviously fit any ground;
-  replying to an enquiry gives no basis for later marketing.
+  s.6(2) ground applies. A WhatsApp enquiry may fit s.6(2)(b); our reading of s.6(2), not advice: analytics does not
+  obviously fit any ground, and replying to an enquiry gives no basis for later marketing.
 - The PDPD "Data Protection by Design Guideline" (2026, issued under s.48(g)) uses prior consent for
   additional cookies in a worked example. It is guidance, not a ruling.
 - Act s.7(1)(a)-(h) and s.7(3) set what the notice must say and require it in Malay and English.
 
-**What was built (Tasks 1-3, commits `ace6717`, `3adf63d`, `fdcccb1`).**
+**What was built (Tasks 1-3, commits `ace6717`, `3adf63d`, `b405fd6`, `fdcccb1`).**
 
 - *Consent store and gated loader* (`web/public/consent.js`, `web/public/analytics.js`). The choice is kept
   in `localStorage` under `jm-consent-v1`. The record is browser-local only: it shows what that browser
@@ -2939,7 +2940,7 @@ What the sources say, and no more:
   `web/src/lib/privacy.ts`.
 - *Guards.* `copyApprovedOn` plus the owner facts are checked by `checkPrivacyFacts`
   (`web/src/lib/content/assertPrivacyFacts.ts`). A production build fails through an Astro build hook in
-  `web/astro.config.mjs`; CI runs `pnpm test:privacy-facts-guard`
+  `web/astro.config.mjs` that keys on `DEPLOY_ENV=production` (not `NODE_ENV`) and does nothing otherwise; CI runs `pnpm test:privacy-facts-guard`
   (`web/scripts/assert-privacy-facts-guard.mjs`). Previews and local builds are not blocked.
 
 **Consequences, recorded plainly.**
