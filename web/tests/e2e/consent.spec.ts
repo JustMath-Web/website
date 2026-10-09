@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { assertNoHorizontalOverflow } from "./helpers";
 
 const GOOGLE =
 	/googletagmanager\.com|google-analytics\.com|analytics\.google\.com|doubleclick\.net|google\.com(\.my)?\/ads\//;
@@ -340,3 +341,130 @@ test("every banner and footer link to /privacy/ resolves", async ({
 		}
 	}
 });
+
+test("/privacy/ has exactly one h1 and an outline that never skips a level", async ({
+	page,
+}) => {
+	await page.goto("/privacy/");
+	await expect(page.locator("h1")).toHaveCount(1);
+	const levels = await page.evaluate(() =>
+		Array.from(document.querySelectorAll("h1,h2,h3,h4,h5,h6")).map((h) =>
+			Number(h.tagName.slice(1)),
+		),
+	);
+	expect(levels[0]).toBe(1);
+	levels.forEach((level, i) => {
+		if (i > 0) {
+			expect(
+				level,
+				`heading ${i} jumps from h${levels[i - 1]}`,
+			).toBeLessThanOrEqual(levels[i - 1] + 1);
+		}
+	});
+	for (const lang of ["en", "ms"]) {
+		const section = page.locator(`section#notice-${lang}`);
+		const first = section.locator("h1,h2,h3,h4,h5,h6").first();
+		expect(await first.evaluate((h) => h.tagName)).toBe("H2");
+		// the section is named by that h2
+		const labelledBy = await section.getAttribute("aria-labelledby");
+		expect(await first.getAttribute("id")).toBe(labelledBy);
+		// every required subsection is an h3 beneath it
+		await expect(section.locator("h3")).toHaveCount(10);
+		await expect(section.locator("h1")).toHaveCount(0);
+	}
+});
+
+test("accept pushes Consent Mode v2 default (all denied) then update (all granted) before gtm.js is requested", async ({
+	page,
+}) => {
+	const hits: string[] = [];
+	await asProduction(page, hits);
+	// Snapshot the dataLayer at the moment gtm.js is requested (registered after asProduction, so
+	// it takes precedence for this URL). gtag() pushes `arguments` objects; plain objects are
+	// GTM's own start event.
+	let atGtmRequest: unknown[] | null = null;
+	await page.route(/googletagmanager\.com\/gtm\.js/, async (route) => {
+		atGtmRequest = await page.evaluate(() =>
+			((window as any).dataLayer ?? []).map((e: unknown) =>
+				Object.prototype.toString.call(e) === "[object Arguments]"
+					? Array.from(e as ArrayLike<unknown>)
+					: e,
+			),
+		);
+		hits.push(route.request().url());
+		return route.fulfill({
+			status: 200,
+			contentType: "application/javascript",
+			body: "",
+		});
+	});
+	await page.goto("/");
+	// Nothing is defined or pushed before an accepted choice.
+	expect(await page.evaluate(() => (window as any).dataLayer)).toBeUndefined();
+	await page.evaluate(() => (window as any).jmConsent.set("accepted"));
+	await expect.poll(() => atGtmRequest).not.toBeNull();
+	const signals = (v: string) => ({
+		analytics_storage: v,
+		ad_storage: v,
+		ad_user_data: v,
+		ad_personalization: v,
+	});
+	const seen = atGtmRequest as unknown as unknown[];
+	expect(seen.slice(0, 2)).toEqual([
+		["consent", "default", signals("denied")],
+		["consent", "update", signals("granted")],
+	]);
+	expect(seen[2]).toMatchObject({ event: "gtm.js" });
+	expect(seen).toHaveLength(3);
+});
+
+test("no dataLayer with no choice and after Reject", async ({ page }) => {
+	const hits: string[] = [];
+	await asProduction(page, hits);
+	await page.goto("/");
+	expect(await page.evaluate(() => (window as any).dataLayer)).toBeUndefined();
+	expect(await page.evaluate(() => "gtag" in window)).toBe(false);
+	await page.evaluate(() => (window as any).jmConsent.set("rejected"));
+	await page.reload();
+	await page.waitForLoadState("networkidle");
+	expect(await page.evaluate(() => (window as any).dataLayer)).toBeUndefined();
+	expect(await page.evaluate(() => "gtag" in window)).toBe(false);
+	expect(hits).toEqual([]);
+});
+
+test("a blog post with a YouTube video still loads no Google analytics or ads request after Reject", async ({
+	page,
+}) => {
+	const hits: string[] = [];
+	await asProduction(page, hits);
+	// The video loads from YouTube's privacy-enhanced domain whatever the visitor chose (the notice
+	// says so; docs/DECISIONS.md §49, R12). That request is intentionally allowed and is NOT in the
+	// GOOGLE pattern. Stub it so the test is hermetic and can show it was made.
+	const youtube: string[] = [];
+	await page.route(/youtube-nocookie\.com/, (route) => {
+		youtube.push(route.request().url());
+		return route.fulfill({
+			status: 200,
+			contentType: "text/html",
+			body: "<!doctype html><title>stub</title>",
+		});
+	});
+	await page.goto("/blog/why-surds-trip-up-students/");
+	await page.evaluate(() => (window as any).jmConsent.set("rejected"));
+	await page.reload();
+	await page.waitForLoadState("networkidle");
+	await expect(page.locator(".pt-youtube iframe")).toHaveCount(1);
+	expect(youtube.length).toBeGreaterThan(0);
+	expect(hits).toEqual([]);
+	expect(await page.evaluate(() => (window as any).dataLayer)).toBeUndefined();
+});
+
+for (const width of [320, 390]) {
+	test(`/privacy/ has no horizontal overflow at ${width}px`, async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width, height: 844 });
+		await page.goto("/privacy/");
+		await assertNoHorizontalOverflow(page);
+	});
+}
