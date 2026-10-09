@@ -8,7 +8,8 @@ import type { PrivacyFacts } from "./content/assertPrivacyFacts.ts";
 export const PRIVACY_FACTS: PrivacyFacts = {
 	ownerName: null,
 	contactEmail: null,
-	whatsappRetention: null,
-	analyticsRetention: null,
+	whatsappRetention: { en: null, ms: null },
+	analyticsRetention: { en: null, ms: null },
 	lastUpdated: "2026-10-09",
+	copyApprovedOn: null,
 };

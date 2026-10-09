@@ -13,12 +13,18 @@ const { siteSettings, navigation } = await getLandingPageData();
 const UNSET = "(not yet supplied)";
 const owner = PRIVACY_FACTS.ownerName ?? UNSET;
 const email = PRIVACY_FACTS.contactEmail ?? UNSET;
-const whatsappRetention = PRIVACY_FACTS.whatsappRetention ?? UNSET;
-const analyticsRetention = PRIVACY_FACTS.analyticsRetention ?? UNSET;
+const waEn = PRIVACY_FACTS.whatsappRetention.en ?? UNSET;
+const waMs = PRIVACY_FACTS.whatsappRetention.ms ?? UNSET;
+const anEn = PRIVACY_FACTS.analyticsRetention.en ?? UNSET;
+const anMs = PRIVACY_FACTS.analyticsRetention.ms ?? UNSET;
 const updated = PRIVACY_FACTS.lastUpdated;
 ---
 
-<!-- DRAFT COPY — not approved for publication. Needs: owner approval, native Malay check, GTM container check (advertising-features wording), qualified advice. -->
+{
+	PRIVACY_FACTS.copyApprovedOn === null && (
+		<p class="draft-note">Draft — not approved</p>
+	)
+}
 <BaseLayout
 	title="Privacy notice / Notis privasi — Just Math Malaysia"
 	description="How Just Math Malaysia handles personal data. Bahasa Melayu version included."
@@ -58,11 +64,11 @@ const updated = PRIVACY_FACTS.lastUpdated;
 					<li>
 						<em>When you visit this website:</em>
 						<strong>only if you accept</strong>
-						(see the cookie choice), we use Google Tag Manager and Google Analytics
-						to count visits and see which pages are read. If you accept, Google sets
-						cookies or similar identifiers in your browser, and receives your IP address
-						and details of your device and visit. This helps us improve the lessons
-						and the site.
+						(see the cookie choice), we use Google Tag Manager and Google Analytics,
+						and Google's advertising features, to count visits and understand how
+						the site is used. If you accept, Google sets cookies or similar identifiers
+						in your browser, and receives your IP address and details of your device
+						and visit. This helps us improve the lessons and the site.
 					</li>
 					<li>
 						<em
@@ -125,9 +131,8 @@ const updated = PRIVACY_FACTS.lastUpdated;
 
 				<h2 id="retention-en">How long we keep it</h2>
 				<p>
-					WhatsApp enquiries: {whatsappRetention}. Analytics: set in Google
-					Analytics,
-					{analyticsRetention}.
+					WhatsApp enquiries: {waEn}. Analytics: set in Google Analytics,
+					{anEn}.
 				</p>
 
 				<h2 id="changes-en">Changes</h2>
@@ -156,11 +161,11 @@ const updated = PRIVACY_FACTS.lastUpdated;
 					<li>
 						<em>Apabila anda melawat laman web ini:</em>
 						<strong>hanya jika anda bersetuju</strong>
-						(lihat pilihan kuki), kami menggunakan Google Tag Manager dan Google Analytics
-						untuk mengira lawatan dan melihat halaman yang dibaca. Jika anda bersetuju,
-						Google menetapkan kuki atau pengecam serupa dalam pelayar anda, dan menerima
-						alamat IP serta maklumat peranti dan lawatan anda. Ini membantu kami menambah
-						baik kelas dan laman web.
+						(lihat pilihan kuki), kami menggunakan Google Tag Manager, Google Analytics
+						dan ciri pengiklanan Google untuk mengira lawatan dan memahami cara laman
+						web digunakan. Jika anda bersetuju, Google menetapkan kuki atau pengecam
+						serupa dalam pelayar anda, dan menerima alamat IP serta maklumat peranti
+						dan lawatan anda. Ini membantu kami menambah baik kelas dan laman web.
 					</li>
 					<li>
 						<em
@@ -227,8 +232,8 @@ const updated = PRIVACY_FACTS.lastUpdated;
 
 				<h2 id="retention-ms">Tempoh simpanan</h2>
 				<p>
-					Pertanyaan WhatsApp: {whatsappRetention}. Analitik: ditetapkan dalam
-					Google Analytics, {analyticsRetention}.
+					Pertanyaan WhatsApp: {waMs}. Analitik: ditetapkan dalam Google
+					Analytics, {anMs}.
 				</p>
 
 				<h2 id="changes-ms">Perubahan</h2>
@@ -242,6 +247,13 @@ const updated = PRIVACY_FACTS.lastUpdated;
 </BaseLayout>
 
 <style>
+	.draft-note {
+		margin: 0;
+		padding: 8px 16px;
+		background: var(--paper);
+		font-weight: 600;
+	}
+
 	.container {
 		max-width: var(--page-max);
 		margin: 0 auto;
