@@ -3036,11 +3036,18 @@ and approval: `ownerName`, `contactEmail`, bilingual `whatsappRetention` and `an
     dashboard or with `wrangler versions deploy`. Production goes live only through a `main` build, where
     the guard still fails while facts are unfinished.
   - **Assumption.** The exception assumes the Cloudflare production branch is `main`.
-  - **Task 0 (preview access) is NOT PASSED as of 2026-10-10.** Bob checked `justmathwebsite`: Version URLs
-    are enabled ("Anyone with this URL can visit"), Zero Trust is not set up, and an unauthenticated
-    `curl -I` returned HTTP 200 with `X-Robots-Tag: noindex`. Decision (Bob and Andy): protect Version URLs
-    with Cloudflare Access, and **do not push the guard change until an unauthenticated request is
-    blocked.** This is a release/push gate, owner Charlie, **not done**.
+  - **Task 0 (preview access) PASSED for the two preview links tested, 2026-10-10.** Before: Bob checked
+    `justmathwebsite` and found Version URLs enabled ("Anyone with this URL can visit"), Zero Trust not set
+    up, and an unauthenticated `curl -I` returning HTTP 200 with `X-Robots-Tag: noindex`. Fix (Charlie
+    approved, Andy applied in the dashboard): Zero Trust team `lingering-math-36c3` (Free plan); Worker
+    `justmathwebsite` > Access, scope **Previews only**, policy **Cloudflare account: Allow**, 24-hour
+    session. After: unauthenticated `curl -I` to `831f36d6-justmathwebsite.charlie-kong.workers.dev` and
+    `7ca3a26d-justmathwebsite.charlie-kong.workers.dev` returns **HTTP 302 to the Cloudflare Access login**;
+    the Worker's main URL `justmathwebsite.charlie-kong.workers.dev` still returns **200**. Andy and Bob
+    each ran the check. Scope of the claim: only those two Version URLs were tested; a future branch's new
+    Version URL is covered by the same Previews-only policy but must be re-checked with `curl -I` after its
+    first build. Only Cloudflare account members can open a preview; add a reviewer in Zero Trust if one
+    needs access.
   - **Not verified.** Where that `X-Robots-Tag: noindex` comes from, and whether Cloudflare adds it on every
     Version URL (the site's `_headers` has none). Nothing should rely on it.
 - **Other Bob findings fixed.** `/privacy/` now has exactly one `<h1>` ("Privacy notice / Notis privasi");
