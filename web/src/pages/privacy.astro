@@ -1,0 +1,119 @@
+---
+/* DRAFT COPY — not approved for publication. Needs: owner approval, native Malay check, GTM container check (advertising-features wording), qualified advice. */
+import BaseLayout from "../layouts/BaseLayout.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import { getLandingPageData } from "../lib/content/landingData";
+import NoticeBlocks from "../components/NoticeBlocks.astro";
+import { PRIVACY_NOTICE } from "../lib/content/privacyNotice";
+import { PRIVACY_FACTS } from "../lib/privacy";
+import { isPrivacyReleaseReady } from "../lib/content/assertPrivacyFacts";
+import { buildWhatsAppUrl } from "../lib/content/whatsappUrl";
+
+const { siteSettings, navigation } = await getLandingPageData();
+const { en, ms } = PRIVACY_NOTICE;
+const phone = siteSettings.phoneDisplay;
+const draft = !isPrivacyReleaseReady(PRIVACY_FACTS);
+---
+
+<BaseLayout
+	title="Privacy notice / Notis privasi — Just Math Malaysia"
+	description="How Just Math Malaysia handles personal data. Bahasa Melayu version included."
+	siteSettings={siteSettings}
+	noindex={draft}
+>
+	<SiteHeader
+		navigation={navigation}
+		siteSettings={siteSettings}
+		ctaHref={buildWhatsAppUrl(siteSettings)}
+	/>
+	<main id="main">
+		{draft && <p class="draft-note">Draft — not approved</p>}
+		<div class="notice container">
+			<h1>Privacy notice / Notis privasi</h1>
+			<section id="notice-en" lang="en" aria-labelledby="title-en">
+				<h2 id="title-en">{en.title}</h2>
+				<NoticeBlocks blocks={en.preamble} lang="en" phone={phone} />
+				{
+					en.sections.map((s) => (
+						<>
+							<h3 id={`${s.id}-en`}>{s.heading}</h3>
+							<NoticeBlocks blocks={s.blocks} lang="en" phone={phone} />
+						</>
+					))
+				}
+			</section>
+
+			<section id="notice-ms" lang="ms" aria-labelledby="title-ms">
+				<h2 id="title-ms">{ms.title}</h2>
+				<NoticeBlocks blocks={ms.preamble} lang="ms" phone={phone} />
+				{
+					ms.sections.map((s) => (
+						<>
+							<h3 id={`${s.id}-ms`}>{s.heading}</h3>
+							<NoticeBlocks blocks={s.blocks} lang="ms" phone={phone} />
+						</>
+					))
+				}
+			</section>
+		</div>
+	</main>
+	<SiteFooter navigation={navigation} siteSettings={siteSettings} />
+</BaseLayout>
+
+<style>
+	.draft-note {
+		margin: 0;
+		padding: 8px 16px;
+		background: var(--paper);
+		font-weight: 600;
+	}
+
+	.container {
+		max-width: var(--page-max);
+		margin: 0 auto;
+		padding-inline: clamp(20px, 5vw, var(--gutter));
+	}
+
+	.notice {
+		padding-block: clamp(44px, 7vw, 104px);
+		color: var(--ink-900);
+		font: var(--weight-regular) 17px / 1.6 var(--font-sans);
+	}
+
+	section + section {
+		margin-top: clamp(48px, 7vw, 96px);
+		padding-top: clamp(32px, 5vw, 64px);
+		border-top: 1px solid var(--rule);
+	}
+
+	/* The page's only h1. Each language section opens with an h2, its subsections are h3. */
+	h1 {
+		max-width: 24ch;
+		margin: 0 0 clamp(24px, 4vw, 48px);
+		font: var(--weight-semibold) clamp(28px, 4.5vw, 44px) / 1.15
+			var(--font-serif);
+	}
+
+	h2 {
+		max-width: 28ch;
+		margin: 0 0 16px;
+		font: var(--weight-semibold) clamp(22px, 3vw, 30px) / 1.2 var(--font-serif);
+	}
+
+	h3 {
+		margin: 32px 0 8px;
+		font: var(--weight-semibold) 20px / 1.3 var(--font-serif);
+	}
+
+	/* The <p>/<ul> come from NoticeBlocks.astro, outside this page's scope, so reach them via :global. */
+	.notice :global(p),
+	.notice :global(ul) {
+		max-width: 68ch;
+		margin: 0 0 12px;
+	}
+
+	.notice :global(ul) {
+		padding-left: 1.2em;
+	}
+</style>

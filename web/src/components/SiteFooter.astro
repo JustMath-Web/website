@@ -31,6 +31,20 @@ const { navigation, siteSettings } = Astro.props;
 					))
 				}
 			</ul>
+			<ul class="site-footer__list">
+				<li>
+					<a href="/privacy/" class="site-footer__link">Privacy / Privasi</a>
+				</li>
+				<li>
+					<button
+						type="button"
+						class="site-footer__link site-footer__cookie"
+						data-consent-open
+					>
+						Cookie settings / Tetapan kuki
+					</button>
+				</li>
+			</ul>
 		</nav>
 		<div class="site-footer__contact">
 			<span>WhatsApp {siteSettings.phoneDisplay}</span>
@@ -76,6 +90,12 @@ const { navigation, siteSettings } = Astro.props;
 		gap: var(--space-3);
 	}
 
+	.site-footer__nav {
+		display: grid;
+		align-content: start;
+		gap: var(--space-3);
+	}
+
 	.site-footer__list {
 		display: grid;
 		align-content: start;
@@ -98,6 +118,14 @@ const { navigation, siteSettings } = Astro.props;
 	.site-footer__link:hover {
 		color: var(--paper);
 		text-decoration-color: var(--paper);
+	}
+
+	.site-footer__cookie {
+		background: none;
+		border: 0;
+		padding: 0;
+		cursor: pointer;
+		text-align: start;
 	}
 
 	.site-footer__contact {

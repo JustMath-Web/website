@@ -582,6 +582,17 @@ test.describe("blog post table of contents", () => {
 		page,
 	}) => {
 		await page.setViewportSize({ width: 390, height: 844 });
+		// A returning visitor: the consent banner shares this bottom strip with the pill.
+		await page.addInitScript(() =>
+			window.localStorage.setItem(
+				"jm-consent-v1",
+				JSON.stringify({
+					choice: "rejected",
+					version: 1,
+					at: "2026-01-01T00:00:00Z",
+				}),
+			),
+		);
 		await page.goto(POST);
 		const pill = page.getByRole("button", { name: "Contents" });
 		await expect(pill).toBeVisible();

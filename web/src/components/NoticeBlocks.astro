@@ -1,0 +1,70 @@
+---
+import type { Block, FactKey, Run } from "../lib/content/privacyNotice";
+import { PRIVACY_FACTS } from "../lib/privacy";
+
+interface Props {
+	blocks: Block[];
+	lang: "en" | "ms";
+	phone: string;
+}
+const { blocks, lang, phone } = Astro.props;
+
+// A null fact only reaches a page in a non-production build; production refuses to build.
+const UNSET = "(not yet supplied)";
+
+function fact(key: FactKey): string {
+	switch (key) {
+		case "ownerName":
+			return PRIVACY_FACTS.ownerName ?? UNSET;
+		case "contactEmail":
+			return PRIVACY_FACTS.contactEmail ?? UNSET;
+		case "phone":
+			return phone;
+		case "whatsappRetention":
+			return PRIVACY_FACTS.whatsappRetention[lang] ?? UNSET;
+		case "analyticsRetention":
+			return PRIVACY_FACTS.analyticsRetention[lang] ?? UNSET;
+		case "lastUpdated":
+			return PRIVACY_FACTS.lastUpdated;
+	}
+}
+const isString = (r: Run): r is string => typeof r === "string";
+---
+
+{
+	blocks.map((b) =>
+		"p" in b ? (
+			<p>
+				{b.p.map((r) =>
+					isString(r) ? (
+						r
+					) : "em" in r ? (
+						<em>{r.em}</em>
+					) : "strong" in r ? (
+						<strong>{r.strong}</strong>
+					) : (
+						fact(r.fact)
+					),
+				)}
+			</p>
+		) : (
+			<ul>
+				{b.ul.map((item) => (
+					<li>
+						{item.map((r) =>
+							isString(r) ? (
+								r
+							) : "em" in r ? (
+								<em>{r.em}</em>
+							) : "strong" in r ? (
+								<strong>{r.strong}</strong>
+							) : (
+								fact(r.fact)
+							),
+						)}
+					</li>
+				))}
+			</ul>
+		),
+	)
+}

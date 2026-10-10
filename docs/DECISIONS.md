@@ -509,10 +509,19 @@ surface that is not inert on preview URLs pre-cutover. Exposure is small — it 
 visitor executing no JavaScript that also loads iframes, which excludes ordinary browsers and most
 crawlers — and GA4 cannot record a session from it regardless.
 
+**Update 2026-10-09: the `<noscript>` iframe described above was removed** (see §49). It could not be
+gated, so the consent step left no way to keep it. The CSP `frame-src https://www.googletagmanager.com` entry was
+not changed by this removal. The paragraph above is kept as the record of what existed from 2026-09-05.
+
 **Consent:** still none, and none added. §12's condition ("if non-essential tags require it for the
 chosen target markets") is unresolved — Malaysia's PDPA does not impose a GDPR-style prior-consent
 rule for analytics cookies, but this has not been checked against the actual tags in the container,
 which cannot be inspected from outside. **Open item**, carried, not silently closed.
+
+**Update 2026-10-09:** "still none, and none added" is no longer true. That PDPA remark was a note, not advice, and §49 treats the question as open (it
+is not a finding that opt-in is or is not required). A consent step and a privacy
+notice were built on 2026-10-09 (§49). They are still subject to §49's release gate and still have no
+recorded advice from a qualified person, so this item stays open.
 
 **Consent — accepted for now, advice still to be obtained (2026-09-22).** Charlie, on the owner's
 behalf, chose to keep the site as it is. The Google tag and the advertising-feature requests measured
@@ -524,6 +533,10 @@ This records an accepted exposure. It is not a finding that there is none: no ad
 person is recorded yet, the PDPA remark above is a note and not legal advice, and some pages are written
 for Form 1–3 students, so visitors may include minors. **Revisit when the advice arrives:** if it says a
 notice or consent step is needed, build it. Until then this item stays **open**.
+
+**Update 2026-10-09:** a consent step and privacy notice were built on 2026-10-09 (§49), chosen by
+Charlie on the owner's behalf as risk reduction. This was not triggered by advice: none is recorded yet.
+The build is still subject to §49's release gate. The `<noscript>` iframe also no longer exists (§49).
 
 **Tests:** `web/tests/e2e/analytics-host-gate.spec.ts` — the tag ships with its configuration but
 fires no Google request off-host and leaves `dataLayer` undefined; the verification meta is present
@@ -580,6 +593,7 @@ flow, so it is the listed host least shown to be needed. It stays because Google
   remarketing on purpose. The hosts stay allowed. Removing them while the ad features stay on would
   bring the refusals, and Google's diagnostic warning, back. This does not close the consent **Open
   item** above, which matters more now: these requests fire for a new visitor with no consent step.
+  *(Update 2026-10-09: these requests now come from GTM, which loads only after an accepted choice — §49.)*
 - **Cloudflare Web Analytics beacon — turned off (2026-09-22).** Every live load checked on
   2026-09-21 showed `script-src` refusing `https://static.cloudflareinsights.com/beacon.min.js`, a
   script Cloudflare injects at the edge; it is not in the repo. Charlie switched Web Analytics off in
@@ -2895,3 +2909,191 @@ a draft with To `/blog` showing an error and blocking Publish; To
 errors; the draft deleted and the redirect list checked, nothing published. This is Charlie's report,
 not an observation by Andy or Bob: no screenshot was taken, and the exact error wording and the list's
 contents were not recorded.
+
+## 49. Consent banner and privacy notice — 2026-10-09
+
+**Decision.** Charlie chose a privacy notice plus a consent step before Google tags load ("yes option 1",
+2026-10-09), on the owner's behalf. This is a **risk-reduction choice, not a finding** that Malaysian law
+expressly makes analytics cookies opt-in. Whether a GA4 identifier is "personal data" is still open.
+
+What the sources say:
+
+- Personal Data Protection Act 2010 (Act 709) s.6(1)(a) requires consent to process personal data unless a
+  s.6(2) ground applies. A WhatsApp enquiry may fit s.6(2)(b); our reading of s.6(2), not advice: analytics does not
+  obviously fit any ground, and replying to an enquiry gives no basis for later marketing.
+- The PDPD "Data Protection by Design Guideline" (2026, issued under s.48(g)) uses prior consent for
+  additional cookies in a worked example. It is guidance, not a ruling.
+- Act s.7(1)(a)-(h) and s.7(3) set what the notice must say and require it in Malay and English.
+
+**What was built (Tasks 1-3, commits `ace6717`, `3adf63d`, `b405fd6`, `fdcccb1`).**
+
+- *Consent store and gated loader* (`web/public/consent.js`, `web/public/analytics.js`). The choice is kept
+  in `localStorage` under `jm-consent-v1`. The record is browser-local only: it shows what that browser
+  chose and is not server-side proof of consent. The host gate is kept: GTM loads only on
+  `mathematicsmalaysia.com` **and** only after acceptance. Rejecting after accepting clears the
+  `_ga*`, `_gid`, `_gat*` and `_gcl*` cookies and reloads the page, including when storage is blocked
+  (the page remembers in memory that it accepted).
+- *Banner* (`web/src/components/ConsentBanner.astro`). One step, Malay and English, equal Accept and Reject
+  buttons. On mobile it sits above the fixed WhatsApp bar through `--consent-offset`.
+- *Footer.* "Cookie settings" reopens the banner; "Privacy" links to the notice.
+- *`/privacy/` notice* (`web/src/pages/privacy.astro`), bilingual, with the owner facts in
+  `web/src/lib/privacy.ts`. The prose is typed data in `web/src/lib/content/privacyNotice.ts` and is
+  rendered by `web/src/components/NoticeBlocks.astro`.
+- *Guards.* `copyApprovedOn` plus the owner facts are checked by `checkPrivacyFacts`
+  (`web/src/lib/content/assertPrivacyFacts.ts`). A production build fails through an Astro build hook in
+  `web/astro.config.mjs` that keys on `DEPLOY_ENV=production` (not `NODE_ENV`) and does nothing otherwise, except for the one preview-branch exception in ruling R15 (below); CI runs `pnpm test:privacy-facts-guard`
+  (`web/scripts/assert-privacy-facts-guard.mjs`). Local builds are not blocked, and a positively identified non-`main` preview branch is skipped with a warning (R15). The hook runs at
+  `astro:build:done` (ruling R13, below), so it is the last production check to fail.
+
+**Consequences, recorded plainly.**
+
+- The `<noscript>` GTM iframe was **removed** (§12). It cannot be gated, so visitors without JavaScript are
+  no longer measured.
+- GA4 numbers will fall: only visitors who accept are counted.
+- On a first mobile visit the banner covers the blog Contents pill (z-index 15) until the visitor answers
+  (ruling R5, accepted as normal banner behaviour).
+
+**Release gate.** Tasks 1-3 ship as **one PR**. CI is expected to be red until the owner supplies the facts
+and approval: `ownerName`, `contactEmail`, bilingual `whatsappRetention` and `analyticsRetention`,
+`lastUpdated`, `copyApprovedOn`.
+
+> **WORDING GATE (before release).** The banner and notice name "Google's advertising features" because
+> first visits were measured calling `stats.g.doubleclick.net` and `www.google.com.my/ads/ga-audiences`
+> (HANDOFF 2026-09-22; §12a). Before release, someone must open GTM container `GTM-KP5SMKV` and the GA4
+> property and confirm what runs: the tags, Google signals / advertising features, and GA4 data retention.
+> A verified cookie inventory is needed before any cookie table is added. The Malay text needs a
+> native-speaker check. `copyApprovedOn` records that the owner approved the notice and banner wording
+> **after** both.
+>
+> **Wording gate, extended (final whole-branch review, 2026-10-09).** The original text above stands.
+>
+> 1. The GTM / GA4 check must also settle the **purpose statement**, not only whether the features are
+>    on: the banner and notice now say "Google Analytics to count visits and understand how the site is
+>    used. Google may also use this data for its advertising features." The second sentence must be true
+>    of the container and property as configured. (Earlier copy wrongly said the advertising features
+>    are used to count visits; that is what Analytics does.)
+> 2. Three factual promises from the research file must be verified before `copyApprovedOn` is set:
+>    "we will delete a child's data on discovery" is a promise the owner must be able to keep;
+>    Cloudflare and Sanity are the only infrastructure recipients; and the recipient list is complete
+>    after the GTM check. (The earlier fourth promise, "YouTube sets cookies only when a video is
+>    played", is **no longer made**: the notice now states only what the code does, see R12.)
+> 3. Editing the banner or notice copy afterwards means `copyApprovedOn` must be re-set. Set
+>    `lastUpdated` to the publication date together with `copyApprovedOn` (it is currently 2026-10-09,
+>    a draft date).
+> 4. The production-build hook is bypassed by a laptop `astro build` followed by a manual
+>    `npx wrangler deploy` (no `DEPLOY_ENV`). This is the same gap as the other production guards (see
+>    the `assertDeployEnv.ts` header).
+> 5. When the owner facts and `copyApprovedOn` are set, flip the e2e in `consent.spec.ts` that pins the
+>    draft state (`noindex` plus the draft note) to assert `meta[name="robots"]` count 0 and `.draft-note`
+>    count 0, so the release cannot ship a page that still looks like a draft.
+
+**Revision round on PR #126 (Bob's review of `0c9d0ba`; rulings R12-R14 are Charlie's).**
+
+- **R12: narrow the promise, do not gate the video.** The banner and notice used to say "Google loads
+  only if you accept". That was wider than the code: `YoutubeEmbed.astro` loads a
+  `youtube-nocookie.com` iframe on blog posts that contain a video, whatever the choice (Bob captured the
+  request after Reject). The wording now promises only what is gated: "Google Analytics and these
+  advertising features load only if you accept". The notice no longer says YouTube sets cookies only when
+  a video is played (unverified, and YouTube's documentation does not warrant it). It says that blog posts
+  with a YouTube video load it from YouTube's privacy-enhanced domain as the visitor scrolls to it (the iframe is `loading="lazy"`), that this does
+  not depend on the cookie choice, and that YouTube's own terms apply. YouTube stays in the recipients
+  list. The video still loads regardless of the choice; **gating it (click-to-load) is a possible later
+  product decision**, not made here. A test pins this: after Reject, no analytics or ads request is made
+  on the fixture post that carries a video, and the YouTube request is allowed on purpose (it is
+  deliberately not in the `GOOGLE` pattern). The Malay wording in this revision still needs the native check.
+- **R13: the privacy-facts guard runs last.** It moved from `astro:build:start` to `astro:build:done`. A
+  production build with unfinished facts still fails the build command, so Cloudflare does not publish, but
+  it no longer hides an earlier production failure: at `build:start` it masked the "Sanity is not
+  configured" failure that `pnpm test:blog-production-guardrail` asserts on. In `ci.yml` the
+  `pnpm test:privacy-facts-guard` step moved to the end of the web job (after `pnpm test:e2e`), so its
+  intentional red is isolated and every other step still runs. Note: a failing production build has already
+  written `dist/` by then; the non-zero exit is what stops the deploy.
+- **R14: Consent Mode v2 states, binary design kept.** On Accept, before GTM is requested, `analytics.js`
+  pushes `gtag('consent','default', ...)` with `analytics_storage`, `ad_storage`, `ad_user_data` and
+  `ad_personalization` all `denied`, then `gtag('consent','update', ...)` with all four `granted`, then the
+  existing `gtm.start` event and script load. Nothing is defined or pushed before an accepted choice (no
+  choice or Reject: no `dataLayer`, no `gtag`). `gtag` is a local function that pushes `arguments`.
+  - **OPEN, needs Charlie's decision.** The guideline (02-INFORMATIVE-BLOG.md section 16) asks for accept-all,
+    reject-all **and granular** options. The approved design is a strict binary Accept/Reject gate and
+    granular options are **not implemented**. This is a **variance from the guideline** that needs
+    Charlie's explicit decision as the client, not an implementer's call.
+  - **Unverified.** The GTM container `GTM-KP5SMKV` has still not been inspected, so whether its tags
+    consume the consent states (consent checks on tags, tag firing order) is unknown.
+- **R15 (2026-10-10; Charlie "A", with Bob's reading of the Cloudflare log): preview-branch exception.**
+  Cloudflare preview builds run with `DEPLOY_ENV=production`, so builds `7d705be` and `66fcd2d` stopped at
+  `privacy-facts-guard` (observed in the Cloudflare build log, reported by Bob). `checkPrivacyFacts` now skips
+  the failure only when `previewBranch()` (`web/src/lib/content/assertPrivacyFacts.ts`) finds one agreed,
+  non-`main` branch from `WORKERS_CI_BRANCH` / `CF_PAGES_BRANCH`. It is blocked (build fails as before) when
+  there is no identity or an empty one, when either variable names `main` (the exact normalisation: lowercase;
+  strip a bare `refs/`, `refs/heads/` or `heads/` prefix; strip whitespace and format or zero-width characters), or when the two variables
+  conflict. A skipped build logs a loud warning. Whenever the facts are not release-ready (not only when
+  `copyApprovedOn` is null), the privacy page is `noindex` and shows a visible draft note. A manual laptop
+  `npx wrangler deploy` still bypasses the guard (unchanged gap, see the wording gate above).
+  - **Version URLs.** The deploy runs `npx wrangler versions upload`, which makes a Version URL, not an
+    isolated preview. A Version URL is public unless Cloudflare Access protects it.
+  - **A version is a version of the production Worker.** `wrangler versions upload` creates a version of
+    the production Worker. A version built from a non-`main` branch must never be promoted, from the
+    dashboard or with `wrangler versions deploy`. Production goes live only through a `main` build, where
+    the guard still fails while facts are unfinished.
+  - **Assumption.** The exception assumes the Cloudflare production branch is `main`.
+  - **Task 0 (preview access) PASSED for the two preview links tested, 2026-10-10.** Before: Bob checked
+    `justmathwebsite` and found Version URLs enabled ("Anyone with this URL can visit"), Zero Trust not set
+    up, and an unauthenticated `curl -I` returning HTTP 200 with `X-Robots-Tag: noindex`. Fix (Charlie
+    approved, Andy applied in the dashboard): Zero Trust team `lingering-math-36c3` (Free plan); Worker
+    `justmathwebsite` > Access, scope **Previews only**, policy **Cloudflare account: Allow**, 24-hour
+    session. After: unauthenticated `curl -I` to `831f36d6-justmathwebsite.charlie-kong.workers.dev` and
+    `7ca3a26d-justmathwebsite.charlie-kong.workers.dev` returns **HTTP 302 to the Cloudflare Access login**;
+    the Worker's main URL `justmathwebsite.charlie-kong.workers.dev` still returns **200**. Andy and Bob
+    each ran the check. Scope of the claim: only those two Version URLs were tested; a future branch's new
+    Version URL is covered by the same Previews-only policy but must be re-checked with `curl -I` after its
+    first build. Only Cloudflare account members can open a preview; add a reviewer in Zero Trust if one
+    needs access.
+  - **Not verified.** Where that `X-Robots-Tag: noindex` comes from, and whether Cloudflare adds it on every
+    Version URL (the site's `_headers` has none). Nothing should rely on it.
+- **Other Bob findings fixed.** `/privacy/` now has exactly one `<h1>` ("Privacy notice / Notis privasi");
+  each language section opens with an `<h2>` and its ten subsections are `<h3>` (FE-06). The consent
+  scripts in `web/public/` are checked by `pnpm check:public` (`web/tsconfig.public.json`, run in CI after
+  `pnpm check`), with the shared `window` shapes declared in `web/types/public-globals.d.ts` (FE-24). The
+  scripts stay static and same-origin; the CSP and `_headers` are unchanged.
+
+**FE self-check (scoped to PR #126; guideline 02-INFORMATIVE-BLOG.md section 9).** Evidence is from runs in
+the 2026-10-09 revision round, on commit `0c9d0ba` plus the revision; the FE-22 row is from 2026-10-10 on
+the new head. "e2e" is `cd web && pnpm test:e2e`
+(all pass). The last column is the evidence; Bob re-verifies independently.
+
+| Gate | Result | Evidence |
+|---|---|---|
+| FE-02 section needs a name | pass | `/privacy/` language sections carry `aria-labelledby` pointing at their `<h2>`; asserted in the "exactly one h1" e2e test |
+| FE-05 links navigate, buttons act (hard gate) | pass | banner Accept/Reject and footer "Cookie settings" are `<button type="button">`; banner and footer privacy links are `<a href="/privacy/">`; e2e "every banner and footer link to /privacy/ resolves" |
+| FE-06 heading hierarchy | pass | was RED before the change (two `<h1>`, e2e failed at `toHaveCount(1)`); now exactly one `<h1>`, no skipped level, `<h2>` per notice section, ten `<h3>` each; e2e "/privacy/ has exactly one h1..." |
+| FE-07 landmarks | pass | no landmark change; `<main>` once on `/privacy/` (existing layout) |
+| FE-14 no horizontal overflow | pass | e2e at 320 and 390 px on `/privacy/`; existing banner tests at 320/390/640 px |
+| FE-22 content separated from presentation | pass | the notice prose lives in `web/src/lib/content/privacyNotice.ts` (typed, in Git, reviewed there); the section type is an exact tuple; the guard script has cases for EN/MS structure drift. Baseline text comparison against the old page: identical once whitespace is ignored. The old page ran words together in places ("WhatsApp019...", "isvoluntary") and the typed module restores the spaces; no word changed. Owner facts stay in `web/src/lib/privacy.ts` behind `copyApprovedOn` (2026-10-10). The final review found a CSS regression: the page's scoped `p, ul` rules no longer reached the `<p>`/`<ul>` emitted by `NoticeBlocks.astro`; fixed with `:global()` under `.notice`, and pinned by an e2e computed-style test at 1440 px (max-width about 68ch and under 900 px, margin-bottom 12px, padding-left above 0, list-style as before). It failed before the fix and passes after |
+| FE-24 business logic project-owned (hard gate) | pass | `consent.js` and `analytics.js` are in-repo, `// @ts-check` plus JSDoc, `pnpm check:public` passes; RED proof: a deliberate type error made it exit 2, reverted and green again; behaviour covered by `consent.spec.ts` (all pass) |
+| FE-31 / FE-32 hydration, no needless JS | pass | no framework island added; the banner is server-rendered `hidden` HTML and one small static script reveals it; without JavaScript nothing shows and nothing tracks (e2e "with JavaScript off...") |
+| FE-40 dependency ladder | pass | no new package; `typescript` was already a devDependency (`pnpm install --frozen-lockfile` clean) |
+| FE-50 typed, lint-clean, buildable | pass | `pnpm check` 0 errors, `pnpm check:public` clean, `pnpm build` ok, `pnpm format:check` clean |
+| FE-53 compiling is not completing | OPEN | the independent Bob code review of this revision has not happened yet |
+| FE-61 respect the codebase | pass | no unrelated refactor; changes limited to the six findings; `web/public/_headers` unchanged (`git diff` empty) |
+| Section 15 accessibility (one h1, headings, keyboard) | pass for h1 and headings (above) and the existing banner keyboard tests; **OPEN** for a full WCAG 2.2 AA audit, not run this round |
+| Section 16 consent, Consent Mode v2 | **OPEN** | states implemented for the binary design and tested (default then update, before `gtm.js`; none before a choice or after Reject). Granular options not implemented (variance, needs Charlie's decision). GTM / GA4 container audit not done |
+| Section 18 CSP, no inline script | pass | `pnpm test:headers-guard` ok; no executable inline `<script>` in built `index.html`, `privacy/index.html` or the fixture post (grep); `_headers` unchanged |
+| Section 19 testing | pass | `pnpm test:e2e` all pass against the built output; every `pnpm test:*` passes except `test:privacy-facts-guard`, which is red by design (null owner facts) |
+| Malay wording | OPEN | native-speaker check not done |
+| Legal copy, release gate | OPEN | owner facts, `copyApprovedOn`, qualified advice (see the release gate above) |
+
+**Still unadvised (not closed by this).** The seven questions in the research file remain open: whether a
+GA4 identifier is personal data; opt-in versus notice; whether the advertising-feature calls need stricter
+gating; whether the tutoring business must register with the Commissioner; minors who read the blog;
+WhatsApp retention; who is the legal data user. **No advice from a qualified Malaysian privacy professional
+is recorded yet.**
+
+**Sources.**
+
+- PDPD, Data Protection by Design Guideline (2026):
+  <https://www.pdp.gov.my/ppdpv1/wp-content/uploads/2026/04/Data-Protection-By-Design-Guideline-DpbD.pdf>
+- Act 709, Malay and English (2022 consolidated text, before the 2024 amendment):
+  <https://www.pdp.gov.my/ppdpv1/wp-content/uploads/2024/07/UNDANG-UNDANG-MALAYSIA_AKTA_PERLINDUNGAN_DATA_PERIBADI_2010_709_MALAY_AND-ENG_V2022.pdf>
+- Linklaters, Data Protected: Malaysia:
+  <https://www.linklaters.com/en/insights/data-protected/data-protected---malaysia>
+- Research notes: local-only `log/2026-10-08_privacy-consent-research.md` (gitignored).

@@ -1,7 +1,7 @@
 ---
 import "../styles/global.css";
 import Analytics from "../components/Analytics.astro";
-import AnalyticsNoscript from "../components/AnalyticsNoscript.astro";
+import ConsentBanner from "../components/ConsentBanner.astro";
 import { GSC_VERIFICATION_TOKEN } from "../lib/analytics";
 import { toSafeJsonLdString } from "../lib/content/jsonLd";
 import type { SiteSettings } from "../lib/sanity/types";
@@ -107,11 +107,12 @@ const organizationJsonLd = {
 			type="application/ld+json"
 			set:html={toSafeJsonLdString(organizationJsonLd)}
 		/>
+		<script is:inline defer src="/consent.js"></script>
 		<Analytics />
 	</head>
 	<body>
-		<AnalyticsNoscript />
 		<a class="skip-link" href="#main">Skip to content</a>
+		<ConsentBanner />
 		<slot />
 	</body>
 </html>

@@ -1,6 +1,7 @@
 ---
 /**
  * Google Tag Manager tag, per `docs/DECISIONS.md` §12 ("prefer GTM as the single container").
+ * Loads only after consent (`public/consent.js`).
  *
  * The loader itself lives at `public/analytics.js` — a static, same-origin file, so the existing
  * `script-src 'self'` CSP covers it without `'unsafe-inline'`. This tag carries no inline JS; it
