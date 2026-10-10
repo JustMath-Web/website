@@ -69,16 +69,24 @@ function isRealDate(value: string): boolean {
 export function previewBranch(
 	env: Record<string, string | undefined>,
 ): string | null {
+	// Display form: trimmed, `refs/heads/` stripped. Used for the warning text and the conflict check.
 	const norm = (v: string | undefined) =>
 		v
 			?.trim()
 			.replace(/^refs\/heads\//, "")
 			.trim();
+	// Aggressive form, used ONLY to decide "is this main": lowercase, no format/zero-width chars or
+	// whitespace, no leading `refs/` and/or `heads/`.
+	const forMain = (v: string) =>
+		v
+			.toLowerCase()
+			.replace(/[\p{Cf}\s]/gu, "")
+			.replace(/^(refs\/)?(heads\/)?/, "");
 	const w = norm(env.WORKERS_CI_BRANCH);
 	const p = norm(env.CF_PAGES_BRANCH);
 	const set = [w, p].filter((v): v is string => v !== undefined);
-	if (set.length === 0 || set.some((v) => v === "")) return null; // no or empty identity
-	if (set.some((v) => v.toLowerCase() === PRODUCTION_BRANCH)) return null; // either names main
+	if (set.length === 0 || set.some((v) => forMain(v) === "")) return null; // no or empty identity
+	if (set.some((v) => forMain(v) === PRODUCTION_BRANCH)) return null; // either names main
 	if (set.length === 2 && set[0] !== set[1]) return null; // conflict
 	return set[0];
 }

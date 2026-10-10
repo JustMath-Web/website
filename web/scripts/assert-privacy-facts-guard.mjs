@@ -174,6 +174,11 @@ for (const [label, env] of Object.entries({
 	mainSpace: P({ WORKERS_CI_BRANCH: "main " }),
 	refsMain: P({ WORKERS_CI_BRANCH: "refs/heads/main" }),
 	pagesMain: P({ CF_PAGES_BRANCH: "main" }),
+	headsMain: P({ WORKERS_CI_BRANCH: "heads/main" }),
+	RefsHeadsMain: P({ WORKERS_CI_BRANCH: "Refs/Heads/Main" }),
+	zeroWidthMain: P({ WORKERS_CI_BRANCH: "main\u200b" }),
+	emptyThenMain: P({ WORKERS_CI_BRANCH: "", CF_PAGES_BRANCH: "main" }),
+	mainThenEmpty: P({ WORKERS_CI_BRANCH: "main", CF_PAGES_BRANCH: "" }),
 })) {
 	assert.ok(
 		checkPrivacyFacts(nullFacts, env).error,
