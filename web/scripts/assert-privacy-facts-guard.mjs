@@ -101,8 +101,7 @@ const page = readFileSync(
 );
 for (const lang of ["en", "ms"]) {
 	assert.ok(
-		page.includes(`id="notice-${lang}" lang="${lang}"`) ||
-			page.includes("id={`notice-${lang}`} lang={lang}"),
+		page.includes(`id="notice-${lang}" lang="${lang}"`),
 		`missing ${lang} section`,
 	);
 }

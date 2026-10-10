@@ -10,6 +10,8 @@ import { PRIVACY_FACTS } from "../lib/privacy";
 import { buildWhatsAppUrl } from "../lib/content/whatsappUrl";
 
 const { siteSettings, navigation } = await getLandingPageData();
+const { en, ms } = PRIVACY_NOTICE;
+const phone = siteSettings.phoneDisplay;
 ---
 
 <BaseLayout
@@ -30,35 +32,31 @@ const { siteSettings, navigation } = await getLandingPageData();
 		}
 		<div class="notice container">
 			<h1>Privacy notice / Notis privasi</h1>
-			{
-				(["en", "ms"] as const).map((lang) => {
-					const n = PRIVACY_NOTICE[lang];
-					return (
-						<section
-							id={`notice-${lang}`}
-							lang={lang}
-							aria-labelledby={`title-${lang}`}
-						>
-							<h2 id={`title-${lang}`}>{n.title}</h2>
-							<NoticeBlocks
-								blocks={n.preamble}
-								lang={lang}
-								phone={siteSettings.phoneDisplay}
-							/>
-							{n.sections.map((s) => (
-								<>
-									<h3 id={`${s.id}-${lang}`}>{s.heading}</h3>
-									<NoticeBlocks
-										blocks={s.blocks}
-										lang={lang}
-										phone={siteSettings.phoneDisplay}
-									/>
-								</>
-							))}
-						</section>
-					);
-				})
-			}
+			<section id="notice-en" lang="en" aria-labelledby="title-en">
+				<h2 id="title-en">{en.title}</h2>
+				<NoticeBlocks blocks={en.preamble} lang="en" phone={phone} />
+				{
+					en.sections.map((s) => (
+						<>
+							<h3 id={`${s.id}-en`}>{s.heading}</h3>
+							<NoticeBlocks blocks={s.blocks} lang="en" phone={phone} />
+						</>
+					))
+				}
+			</section>
+
+			<section id="notice-ms" lang="ms" aria-labelledby="title-ms">
+				<h2 id="title-ms">{ms.title}</h2>
+				<NoticeBlocks blocks={ms.preamble} lang="ms" phone={phone} />
+				{
+					ms.sections.map((s) => (
+						<>
+							<h3 id={`${s.id}-ms`}>{s.heading}</h3>
+							<NoticeBlocks blocks={s.blocks} lang="ms" phone={phone} />
+						</>
+					))
+				}
+			</section>
 		</div>
 	</main>
 	<SiteFooter navigation={navigation} siteSettings={siteSettings} />
