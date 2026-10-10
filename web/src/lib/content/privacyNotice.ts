@@ -32,7 +32,10 @@ export type FactKey =
 	| "lastUpdated";
 
 export type Run =
-	string | { em: string } | { strong: string } | { fact: FactKey };
+	| string
+	| { em: string; strong?: never; fact?: never }
+	| { strong: string; em?: never; fact?: never }
+	| { fact: FactKey; em?: never; strong?: never };
 
 export type Block = { p: Run[] } | { ul: Run[][] };
 
@@ -47,8 +50,8 @@ type SectionsFor<T extends readonly SectionId[]> = {
 	[K in keyof T]: NoticeSection<T[K]>;
 };
 
-export interface NoticeLanguage {
-	lang: "en" | "ms";
+export interface NoticeLanguage<L extends "en" | "ms" = "en" | "ms"> {
+	lang: L;
 	/** The language section's h2. */
 	title: string;
 	/** The "last updated" line and, in English, the pointer to the other language. */
@@ -57,7 +60,7 @@ export interface NoticeLanguage {
 	sections: SectionsFor<SectionIds>;
 }
 
-const en: NoticeLanguage = {
+const en: NoticeLanguage<"en"> = {
 	lang: "en",
 	title: "Privacy Notice — Just Math Malaysia",
 	preamble: [
@@ -217,7 +220,7 @@ const en: NoticeLanguage = {
 	],
 };
 
-const ms: NoticeLanguage = {
+const ms: NoticeLanguage<"ms"> = {
 	lang: "ms",
 	title: "Notis Privasi — Just Math Malaysia",
 	preamble: [{ p: ["Dikemas kini: ", { fact: "lastUpdated" }] }],
@@ -372,7 +375,7 @@ const ms: NoticeLanguage = {
 	],
 };
 
-export const PRIVACY_NOTICE: { en: NoticeLanguage; ms: NoticeLanguage } = {
-	en,
-	ms,
+export const PRIVACY_NOTICE = { en, ms } satisfies {
+	en: NoticeLanguage<"en">;
+	ms: NoticeLanguage<"ms">;
 };
