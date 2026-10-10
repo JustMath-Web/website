@@ -106,8 +106,17 @@ for (const lang of ["en", "ms"]) {
 	);
 }
 
+// Non-string runs in order: "em", "strong" or "fact:<key>".
+function kinds(runs) {
+	return runs
+		.filter((r) => typeof r !== "string")
+		.map((r) => ("fact" in r ? `fact:${r.fact}` : "em" in r ? "em" : "strong"))
+		.join(",");
+}
 function shape(block) {
-	return "p" in block ? "p" : `ul:${block.ul.length}`;
+	return "p" in block
+		? `p[${kinds(block.p)}]`
+		: `ul:${block.ul.length}[${block.ul.map(kinds).join("|")}]`;
 }
 for (const lang of ["en", "ms"]) {
 	const n = PRIVACY_NOTICE[lang];
@@ -138,6 +147,7 @@ for (const lang of ["en", "ms"]) {
 		assert.ok(!/[<>]/.test(t), `${lang}: markup in copy: ${t}`);
 	}
 }
+// The preamble is not shape-compared: EN has an extra pointer line to the Malay version.
 // translation drift: same structure in both languages, section by section
 PRIVACY_NOTICE.en.sections.forEach((s, i) => {
 	const m = PRIVACY_NOTICE.ms.sections[i];
