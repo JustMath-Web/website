@@ -194,6 +194,10 @@ for (const [label, env] of Object.entries({
 	const r = checkPrivacyFacts(nullFacts, env);
 	assert.equal(r.error, undefined, `preview must not be blocked: ${label}`);
 	assert.ok(r.skippedForPreview, `preview skip must be reported: ${label}`);
+	assert.ok(
+		r.previewBranch,
+		`preview branch must be reported as data: ${label}`,
+	);
 }
 for (const env of [
 	P({ WORKERS_CI_BRANCH: "feat/x", CF_PAGES_BRANCH: "main" }),

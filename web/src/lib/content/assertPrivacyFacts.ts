@@ -101,7 +101,7 @@ export function isPrivacyReleaseReady(facts: PrivacyFacts): boolean {
 export function checkPrivacyFacts(
 	facts: PrivacyFacts,
 	env: Record<string, string | undefined>,
-): { error?: string; skippedForPreview?: string } {
+): { error?: string; skippedForPreview?: string; previewBranch?: string } {
 	if (env.DEPLOY_ENV !== "production") return {};
 	const problems: string[] = [];
 	checkText("ownerName", facts.ownerName, problems);
@@ -126,6 +126,7 @@ export function checkPrivacyFacts(
 	const branch = previewBranch(env);
 	if (branch) {
 		return {
+			previewBranch: branch,
 			skippedForPreview:
 				`preview branch "${branch}" has unfinished owner facts:\n  - ` +
 				problems.join("\n  - "),
