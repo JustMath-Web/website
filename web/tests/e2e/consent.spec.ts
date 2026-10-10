@@ -529,3 +529,32 @@ test("/privacy/ is noindex and shows the draft note while owner facts are unfini
 	);
 	await expect(page.locator(".draft-note")).toContainText("Draft");
 });
+
+test("/privacy/ notice paragraphs and lists keep their measure, spacing and indent", async ({
+	page,
+}) => {
+	await page.setViewportSize({ width: 1440, height: 900 });
+	await page.goto("/privacy/");
+	const p = await page
+		.locator("#notice-en h3 + p")
+		.first()
+		.evaluate((el) => {
+			const s = getComputedStyle(el);
+			return { maxWidth: s.maxWidth, marginBottom: s.marginBottom };
+		});
+	expect(p.maxWidth).not.toBe("none");
+	expect(parseFloat(p.maxWidth)).toBeGreaterThan(0);
+	expect(parseFloat(p.maxWidth)).toBeLessThan(900); // about 68ch, not the full column
+	expect(p.marginBottom).toBe("12px");
+	const ul = await page
+		.locator("#notice-en ul")
+		.first()
+		.evaluate((el) => {
+			const s = getComputedStyle(el);
+			return { type: s.listStyleType, padLeft: s.paddingLeft };
+		});
+	// The old page showed no bullets either (Tailwind preflight resets list-style); this test pins
+	// the old computed look, it does not change it.
+	expect(ul.type).toBe("none");
+	expect(parseFloat(ul.padLeft)).toBeGreaterThan(0);
+});
