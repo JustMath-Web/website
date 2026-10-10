@@ -2937,7 +2937,8 @@ What the sources say:
   buttons. On mobile it sits above the fixed WhatsApp bar through `--consent-offset`.
 - *Footer.* "Cookie settings" reopens the banner; "Privacy" links to the notice.
 - *`/privacy/` notice* (`web/src/pages/privacy.astro`), bilingual, with the owner facts in
-  `web/src/lib/privacy.ts`.
+  `web/src/lib/privacy.ts`. The prose is typed data in `web/src/lib/content/privacyNotice.ts` and is
+  rendered by `web/src/components/NoticeBlocks.astro`.
 - *Guards.* `copyApprovedOn` plus the owner facts are checked by `checkPrivacyFacts`
   (`web/src/lib/content/assertPrivacyFacts.ts`). A production build fails through an Astro build hook in
   `web/astro.config.mjs` that keys on `DEPLOY_ENV=production` (not `NODE_ENV`) and does nothing otherwise, except for the one preview-branch exception in ruling R15 (below); CI runs `pnpm test:privacy-facts-guard`
@@ -2982,6 +2983,9 @@ and approval: `ownerName`, `contactEmail`, bilingual `whatsappRetention` and `an
 > 4. The production-build hook is bypassed by a laptop `astro build` followed by a manual
 >    `npx wrangler deploy` (no `DEPLOY_ENV`). This is the same gap as the other production guards (see
 >    the `assertDeployEnv.ts` header).
+> 5. When the owner facts and `copyApprovedOn` are set, flip the e2e in `consent.spec.ts` that pins the
+>    draft state (`noindex` plus the draft note) to assert `meta[name="robots"]` count 0 and `.draft-note`
+>    count 0, so the release cannot ship a page that still looks like a draft.
 
 **Revision round on PR #126 (Bob's review of `0c9d0ba`; rulings R12-R14 are Charlie's).**
 
@@ -3020,13 +3024,18 @@ and approval: `ownerName`, `contactEmail`, bilingual `whatsappRetention` and `an
   `privacy-facts-guard` (observed in the Cloudflare build log, reported by Bob). `checkPrivacyFacts` now skips
   the failure only when `previewBranch()` (`web/src/lib/content/assertPrivacyFacts.ts`) finds one agreed,
   non-`main` branch from `WORKERS_CI_BRANCH` / `CF_PAGES_BRANCH`. It is blocked (build fails as before) when
-  there is no identity or an empty one, when either variable names `main` (compared case-insensitively after
-  trim, with a `refs/heads/` or `heads/` prefix and zero-width characters stripped), or when the two variables
+  there is no identity or an empty one, when either variable names `main` (the exact normalisation: lowercase;
+  strip a bare `refs/`, `refs/heads/` or `heads/` prefix; strip whitespace and format or zero-width characters), or when the two variables
   conflict. A skipped build logs a loud warning. Whenever the facts are not release-ready (not only when
   `copyApprovedOn` is null), the privacy page is `noindex` and shows a visible draft note. A manual laptop
   `npx wrangler deploy` still bypasses the guard (unchanged gap, see the wording gate above).
   - **Version URLs.** The deploy runs `npx wrangler versions upload`, which makes a Version URL, not an
     isolated preview. A Version URL is public unless Cloudflare Access protects it.
+  - **A version is a version of the production Worker.** `wrangler versions upload` creates a version of
+    the production Worker. A version built from a non-`main` branch must never be promoted, from the
+    dashboard or with `wrangler versions deploy`. Production goes live only through a `main` build, where
+    the guard still fails while facts are unfinished.
+  - **Assumption.** The exception assumes the Cloudflare production branch is `main`.
   - **Task 0 (preview access) is NOT PASSED as of 2026-10-10.** Bob checked `justmathwebsite`: Version URLs
     are enabled ("Anyone with this URL can visit"), Zero Trust is not set up, and an unauthenticated
     `curl -I` returned HTTP 200 with `X-Robots-Tag: noindex`. Decision (Bob and Andy): protect Version URLs
@@ -3041,7 +3050,8 @@ and approval: `ownerName`, `contactEmail`, bilingual `whatsappRetention` and `an
   scripts stay static and same-origin; the CSP and `_headers` are unchanged.
 
 **FE self-check (scoped to PR #126; guideline 02-INFORMATIVE-BLOG.md section 9).** Evidence is from runs in
-the 2026-10-09 revision round, on commit `0c9d0ba` plus the revision. "e2e" is `cd web && pnpm test:e2e`
+the 2026-10-09 revision round, on commit `0c9d0ba` plus the revision; the FE-22 row is from 2026-10-10 on
+the new head. "e2e" is `cd web && pnpm test:e2e`
 (all pass). The last column is the evidence; Bob re-verifies independently.
 
 | Gate | Result | Evidence |
@@ -3051,7 +3061,7 @@ the 2026-10-09 revision round, on commit `0c9d0ba` plus the revision. "e2e" is `
 | FE-06 heading hierarchy | pass | was RED before the change (two `<h1>`, e2e failed at `toHaveCount(1)`); now exactly one `<h1>`, no skipped level, `<h2>` per notice section, ten `<h3>` each; e2e "/privacy/ has exactly one h1..." |
 | FE-07 landmarks | pass | no landmark change; `<main>` once on `/privacy/` (existing layout) |
 | FE-14 no horizontal overflow | pass | e2e at 320 and 390 px on `/privacy/`; existing banner tests at 320/390/640 px |
-| FE-22 content separated from presentation | pass | the notice prose lives in `web/src/lib/content/privacyNotice.ts` (typed, in Git, reviewed there); the section type is an exact tuple; the guard script has cases for EN/MS structure drift. Baseline text comparison against the old page: identical once whitespace is ignored. The old page ran words together in places ("WhatsApp019...", "isvoluntary") and the typed module restores the spaces; no word changed. Owner facts stay in `web/src/lib/privacy.ts` behind `copyApprovedOn` (2026-10-10) |
+| FE-22 content separated from presentation | pass | the notice prose lives in `web/src/lib/content/privacyNotice.ts` (typed, in Git, reviewed there); the section type is an exact tuple; the guard script has cases for EN/MS structure drift. Baseline text comparison against the old page: identical once whitespace is ignored. The old page ran words together in places ("WhatsApp019...", "isvoluntary") and the typed module restores the spaces; no word changed. Owner facts stay in `web/src/lib/privacy.ts` behind `copyApprovedOn` (2026-10-10). The final review found a CSS regression: the page's scoped `p, ul` rules no longer reached the `<p>`/`<ul>` emitted by `NoticeBlocks.astro`; fixed with `:global()` under `.notice`, and pinned by an e2e computed-style test at 1440 px (max-width about 68ch and under 900 px, margin-bottom 12px, padding-left above 0, list-style as before). It failed before the fix and passes after |
 | FE-24 business logic project-owned (hard gate) | pass | `consent.js` and `analytics.js` are in-repo, `// @ts-check` plus JSDoc, `pnpm check:public` passes; RED proof: a deliberate type error made it exit 2, reverted and green again; behaviour covered by `consent.spec.ts` (all pass) |
 | FE-31 / FE-32 hydration, no needless JS | pass | no framework island added; the banner is server-rendered `hidden` HTML and one small static script reveals it; without JavaScript nothing shows and nothing tracks (e2e "with JavaScript off...") |
 | FE-40 dependency ladder | pass | no new package; `typescript` was already a devDependency (`pnpm install --frozen-lockfile` clean) |
