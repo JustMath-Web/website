@@ -2940,8 +2940,8 @@ What the sources say:
   `web/src/lib/privacy.ts`.
 - *Guards.* `copyApprovedOn` plus the owner facts are checked by `checkPrivacyFacts`
   (`web/src/lib/content/assertPrivacyFacts.ts`). A production build fails through an Astro build hook in
-  `web/astro.config.mjs` that keys on `DEPLOY_ENV=production` (not `NODE_ENV`) and does nothing otherwise; CI runs `pnpm test:privacy-facts-guard`
-  (`web/scripts/assert-privacy-facts-guard.mjs`). Previews and local builds are not blocked. The hook runs at
+  `web/astro.config.mjs` that keys on `DEPLOY_ENV=production` (not `NODE_ENV`) and does nothing otherwise, except for the one preview-branch exception in ruling R15 (below); CI runs `pnpm test:privacy-facts-guard`
+  (`web/scripts/assert-privacy-facts-guard.mjs`). Local builds are not blocked, and a positively identified non-`main` preview branch is skipped with a warning (R15). The hook runs at
   `astro:build:done` (ruling R13, below), so it is the last production check to fail.
 
 **Consequences, recorded plainly.**
@@ -3015,6 +3015,25 @@ and approval: `ownerName`, `contactEmail`, bilingual `whatsappRetention` and `an
     Charlie's explicit decision as the client, not an implementer's call.
   - **Unverified.** The GTM container `GTM-KP5SMKV` has still not been inspected, so whether its tags
     consume the consent states (consent checks on tags, tag firing order) is unknown.
+- **R15 (2026-10-10; Charlie "A", with Bob's reading of the Cloudflare log): preview-branch exception.**
+  Cloudflare preview builds run with `DEPLOY_ENV=production`, so builds `7d705be` and `66fcd2d` stopped at
+  `privacy-facts-guard` (observed in the Cloudflare build log, reported by Bob). `checkPrivacyFacts` now skips
+  the failure only when `previewBranch()` (`web/src/lib/content/assertPrivacyFacts.ts`) finds one agreed,
+  non-`main` branch from `WORKERS_CI_BRANCH` / `CF_PAGES_BRANCH`. It is blocked (build fails as before) when
+  there is no identity or an empty one, when either variable names `main` (compared case-insensitively after
+  trim, with a `refs/heads/` or `heads/` prefix and zero-width characters stripped), or when the two variables
+  conflict. A skipped build logs a loud warning. Whenever the facts are not release-ready (not only when
+  `copyApprovedOn` is null), the privacy page is `noindex` and shows a visible draft note. A manual laptop
+  `npx wrangler deploy` still bypasses the guard (unchanged gap, see the wording gate above).
+  - **Version URLs.** The deploy runs `npx wrangler versions upload`, which makes a Version URL, not an
+    isolated preview. A Version URL is public unless Cloudflare Access protects it.
+  - **Task 0 (preview access) is NOT PASSED as of 2026-10-10.** Bob checked `justmathwebsite`: Version URLs
+    are enabled ("Anyone with this URL can visit"), Zero Trust is not set up, and an unauthenticated
+    `curl -I` returned HTTP 200 with `X-Robots-Tag: noindex`. Decision (Bob and Andy): protect Version URLs
+    with Cloudflare Access, and **do not push the guard change until an unauthenticated request is
+    blocked.** This is a release/push gate, owner Charlie, **not done**.
+  - **Not verified.** Where that `X-Robots-Tag: noindex` comes from, and whether Cloudflare adds it on every
+    Version URL (the site's `_headers` has none). Nothing should rely on it.
 - **Other Bob findings fixed.** `/privacy/` now has exactly one `<h1>` ("Privacy notice / Notis privasi");
   each language section opens with an `<h2>` and its ten subsections are `<h3>` (FE-06). The consent
   scripts in `web/public/` are checked by `pnpm check:public` (`web/tsconfig.public.json`, run in CI after
@@ -3032,7 +3051,7 @@ the 2026-10-09 revision round, on commit `0c9d0ba` plus the revision. "e2e" is `
 | FE-06 heading hierarchy | pass | was RED before the change (two `<h1>`, e2e failed at `toHaveCount(1)`); now exactly one `<h1>`, no skipped level, `<h2>` per notice section, ten `<h3>` each; e2e "/privacy/ has exactly one h1..." |
 | FE-07 landmarks | pass | no landmark change; `<main>` once on `/privacy/` (existing layout) |
 | FE-14 no horizontal overflow | pass | e2e at 320 and 390 px on `/privacy/`; existing banner tests at 320/390/640 px |
-| FE-22 content separated from presentation | OPEN | the notice and banner copy sit in `.astro` source, not the CMS, because legal copy must stay behind the owner-approval gate (`copyApprovedOn`); owner facts are typed in `web/src/lib/privacy.ts`. Charlie to confirm this is accepted |
+| FE-22 content separated from presentation | pass | the notice prose lives in `web/src/lib/content/privacyNotice.ts` (typed, in Git, reviewed there); the section type is an exact tuple; the guard script has cases for EN/MS structure drift. Baseline text comparison against the old page: identical once whitespace is ignored. The old page ran words together in places ("WhatsApp019...", "isvoluntary") and the typed module restores the spaces; no word changed. Owner facts stay in `web/src/lib/privacy.ts` behind `copyApprovedOn` (2026-10-10) |
 | FE-24 business logic project-owned (hard gate) | pass | `consent.js` and `analytics.js` are in-repo, `// @ts-check` plus JSDoc, `pnpm check:public` passes; RED proof: a deliberate type error made it exit 2, reverted and green again; behaviour covered by `consent.spec.ts` (all pass) |
 | FE-31 / FE-32 hydration, no needless JS | pass | no framework island added; the banner is server-rendered `hidden` HTML and one small static script reveals it; without JavaScript nothing shows and nothing tracks (e2e "with JavaScript off...") |
 | FE-40 dependency ladder | pass | no new package; `typescript` was already a devDependency (`pnpm install --frozen-lockfile` clean) |
