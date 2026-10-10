@@ -504,3 +504,14 @@ for (const width of [390, 1440]) {
 		}
 	});
 }
+
+test("/privacy/ renders notice text as text, never as markup", async ({
+	page,
+}) => {
+	await page.goto("/privacy/");
+	const html = await page.locator("main").innerHTML();
+	expect(html).not.toMatch(/&lt;(script|img|iframe)/i); // nothing double-escaped from copy
+	expect(await page.locator("main script, main iframe, main img").count()).toBe(
+		0,
+	);
+});

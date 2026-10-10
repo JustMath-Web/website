@@ -6,6 +6,10 @@ import { strict as assert } from "node:assert";
 import { readFileSync } from "node:fs";
 import { checkPrivacyFacts } from "../src/lib/content/assertPrivacyFacts.ts";
 import { PRIVACY_FACTS } from "../src/lib/privacy.ts";
+import {
+	PRIVACY_NOTICE,
+	SECTION_IDS,
+} from "../src/lib/content/privacyNotice.ts";
 
 const good = {
 	ownerName: "Example Sdn Bhd",
@@ -90,36 +94,62 @@ for (const [name, [bad, field]] of Object.entries(cases)) {
 	);
 }
 
-// The real facts, judged as production would.
-const real = checkPrivacyFacts(PRIVACY_FACTS, prod);
-assert.equal(real.error, undefined, real.error);
-
-// The real page has both languages and every s.7(1) heading.
+// The page keeps its layout ids; the headings come from the content module.
 const page = readFileSync(
 	new URL("../src/pages/privacy.astro", import.meta.url),
 	"utf8",
 );
 for (const lang of ["en", "ms"]) {
 	assert.ok(
-		page.includes(`id="notice-${lang}" lang="${lang}"`),
+		page.includes(`id="notice-${lang}" lang="${lang}"`) ||
+			page.includes("id={`notice-${lang}`} lang={lang}"),
 		`missing ${lang} section`,
 	);
-	for (const id of [
-		"who",
-		"collect",
-		"source",
-		"rights",
-		"recipients",
-		"choices",
-		"voluntary",
-		"children",
-		"retention",
-		"changes",
-	]) {
+}
+
+function shape(block) {
+	return "p" in block ? "p" : `ul:${block.ul.length}`;
+}
+for (const lang of ["en", "ms"]) {
+	const n = PRIVACY_NOTICE[lang];
+	assert.equal(n.lang, lang, `${lang}: lang field`);
+	assert.deepEqual(
+		n.sections.map((s) => s.id),
+		[...SECTION_IDS],
+		`${lang}: all ten ids, in order`,
+	);
+	// check the text runs only (never JSON.stringify: its own [] syntax would match)
+	const runs = [...n.preamble, ...n.sections.flatMap((s) => s.blocks)].flatMap(
+		(b) => ("p" in b ? b.p : b.ul.flat()),
+	);
+	for (const r of runs) {
+		const t =
+			typeof r === "string"
+				? r
+				: "em" in r
+					? r.em
+					: "strong" in r
+						? r.strong
+						: "";
 		assert.ok(
-			page.includes(`id="${id}-${lang}"`),
-			`missing heading ${id}-${lang}`,
+			!/\[[^\]]*\]/.test(t),
+			`${lang}: bracketed placeholder text: ${t}`,
 		);
+		assert.ok(!/(TODO|TBD|FIXME)/i.test(t), `${lang}: placeholder word: ${t}`);
+		assert.ok(!/[<>]/.test(t), `${lang}: markup in copy: ${t}`);
 	}
 }
+// translation drift: same structure in both languages, section by section
+PRIVACY_NOTICE.en.sections.forEach((s, i) => {
+	const m = PRIVACY_NOTICE.ms.sections[i];
+	assert.deepEqual(
+		s.blocks.map(shape),
+		m.blocks.map(shape),
+		`section ${s.id}: EN and MS block structure differ`,
+	);
+});
+// The real facts (last, so the content cases above report first), judged as production would.
+const real = checkPrivacyFacts(PRIVACY_FACTS, prod);
+assert.equal(real.error, undefined, real.error);
+
 console.log("privacy facts guard: ok");

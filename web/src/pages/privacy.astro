@@ -4,20 +4,12 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import { getLandingPageData } from "../lib/content/landingData";
+import NoticeBlocks from "../components/NoticeBlocks.astro";
+import { PRIVACY_NOTICE } from "../lib/content/privacyNotice";
 import { PRIVACY_FACTS } from "../lib/privacy";
 import { buildWhatsAppUrl } from "../lib/content/whatsappUrl";
 
 const { siteSettings, navigation } = await getLandingPageData();
-
-// A null fact only reaches a page in a non-production build (the build hook refuses production).
-const UNSET = "(not yet supplied)";
-const owner = PRIVACY_FACTS.ownerName ?? UNSET;
-const email = PRIVACY_FACTS.contactEmail ?? UNSET;
-const waEn = PRIVACY_FACTS.whatsappRetention.en ?? UNSET;
-const waMs = PRIVACY_FACTS.whatsappRetention.ms ?? UNSET;
-const anEn = PRIVACY_FACTS.analyticsRetention.en ?? UNSET;
-const anMs = PRIVACY_FACTS.analyticsRetention.ms ?? UNSET;
-const updated = PRIVACY_FACTS.lastUpdated;
 ---
 
 <BaseLayout
@@ -38,219 +30,35 @@ const updated = PRIVACY_FACTS.lastUpdated;
 		}
 		<div class="notice container">
 			<h1>Privacy notice / Notis privasi</h1>
-			<section id="notice-en" lang="en" aria-labelledby="title-en">
-				<h2 id="title-en">Privacy Notice — Just Math Malaysia</h2>
-				<p>Last updated: {updated}</p>
-				<p>
-					<em
-						>Versi Bahasa Melayu di bawah. / A Bahasa Melayu version is below.</em
-					>
-				</p>
-
-				<h3 id="who-en">Who we are</h3>
-				<p>
-					This website, mathematicsmalaysia.com, is run by {owner}, trading as
-					Just Math Malaysia ("we"). You can contact us at {email} or on WhatsApp
-					{siteSettings.phoneDisplay}.
-				</p>
-
-				<h3 id="collect-en">What we collect and why</h3>
-				<ul>
-					<li>
-						<em>When you message us on WhatsApp:</em> your WhatsApp number and name,
-						and what you write (for example your child's school year). We use this
-						to reply, to book a free assessment, and to arrange lessons. WhatsApp
-						is run by Meta under its own privacy terms.
-					</li>
-					<li>
-						<em>When you visit this website:</em>
-						<strong>only if you accept</strong>
-						(see the cookie choice), we use Google Tag Manager and Google Analytics
-						to count visits and understand how the site is used. Google may also use
-						this data for its advertising features. Google Analytics and these advertising
-						features load <strong>only if you accept</strong>. If you accept,
-						Google sets cookies or similar identifiers in your browser, and
-						receives your IP address and details of your device and visit. This
-						helps us improve the lessons and the site.
-					</li>
-					<li>
-						<em
-							>Our hosting provider (Cloudflare) and our content provider
-							(Sanity)</em
+			{
+				(["en", "ms"] as const).map((lang) => {
+					const n = PRIVACY_NOTICE[lang];
+					return (
+						<section
+							id={`notice-${lang}`}
+							lang={lang}
+							aria-labelledby={`title-${lang}`}
 						>
-						process technical data such as your IP address so that pages and images
-						load safely.
-					</li>
-					<li>
-						Blog posts that contain a YouTube video load that video from
-						YouTube's privacy-enhanced domain as you scroll to it. This does not
-						depend on your cookie choice. YouTube's own terms apply.
-					</li>
-				</ul>
-
-				<h3 id="voluntary-en">Giving us information is voluntary</h3>
-				<p>
-					<strong>This website itself has no forms or accounts.</strong> Through WhatsApp
-					we may ask for your child's school year and level, and what help you want.
-					Please do not send more than you need to. Giving us this information is
-					<strong>voluntary</strong>. If you choose not to, we may not be able
-					to reply properly or book a lesson.
-				</p>
-
-				<h3 id="source-en">Where the data comes from</h3>
-				<p>
-					WhatsApp details and what you write come from you. Visit data comes
-					from your browser and device. It is collected by Google's tags on this
-					website
-					<strong>only after you accept</strong> the cookie choice.
-				</p>
-
-				<h3 id="recipients-en">Who may receive your data</h3>
-				<p>
-					Google, Cloudflare, Sanity, Meta (WhatsApp) and YouTube, as described
-					above. Some of them are outside Malaysia. We do not sell your data.
-				</p>
-
-				<h3 id="children-en">Children</h3>
-				<p>
-					Our lessons are booked by parents or guardians, and the information
-					about a child (such as school year) is given by the parent or
-					guardian. If you are under 18, please ask a parent or guardian before
-					you contact us. If we learn that we hold a child's personal data
-					without a parent's or guardian's consent, we will delete it.
-				</p>
-
-				<h3 id="rights-en">Your rights</h3>
-				<p>
-					You can ask to see, correct, or delete the data we hold about you, or
-					withdraw your consent, by contacting us at {email}.
-				</p>
-
-				<h3 id="choices-en">Your choices</h3>
-				<p>
-					You can block or delete cookies in your browser settings. You can
-					change your choice at any time using "Cookie settings" in the footer.
-					Your choice not to give data may mean we cannot reply to you.
-				</p>
-
-				<h3 id="retention-en">How long we keep it</h3>
-				<p>
-					WhatsApp enquiries: {waEn}. Analytics: set in Google Analytics,
-					{anEn}.
-				</p>
-
-				<h3 id="changes-en">Changes</h3>
-				<p>We will update this page and its date if this changes.</p>
-			</section>
-
-			<section id="notice-ms" lang="ms" aria-labelledby="title-ms">
-				<h2 id="title-ms">Notis Privasi — Just Math Malaysia</h2>
-				<p>Dikemas kini: {updated}</p>
-
-				<h3 id="who-ms">Siapa kami</h3>
-				<p>
-					Laman web ini, mathematicsmalaysia.com, dikendalikan oleh {owner},
-					berniaga sebagai Just Math Malaysia ("kami"). Hubungi kami di {email} atau
-					WhatsApp {siteSettings.phoneDisplay}.
-				</p>
-
-				<h3 id="collect-ms">Data yang kami kumpul dan sebabnya</h3>
-				<ul>
-					<li>
-						<em>Apabila anda menghantar mesej WhatsApp:</em> nombor dan nama WhatsApp
-						anda, serta apa yang anda tulis (contohnya tahun persekolahan anak anda).
-						Kami gunakan untuk membalas, menempah penilaian percuma dan mengatur kelas.
-						WhatsApp dikendalikan oleh Meta di bawah terma privasinya sendiri.
-					</li>
-					<li>
-						<em>Apabila anda melawat laman web ini:</em>
-						<strong>hanya jika anda bersetuju</strong>
-						(lihat pilihan kuki), kami menggunakan Google Tag Manager dan Google Analytics
-						untuk mengira lawatan dan memahami cara laman web digunakan. Google juga
-						boleh menggunakan data ini untuk ciri pengiklanannya. Google Analytics
-						dan ciri pengiklanan ini <strong
-							>hanya dimuatkan jika anda bersetuju</strong
-						>. Jika anda bersetuju, Google menetapkan kuki atau pengecam serupa
-						dalam pelayar anda, dan menerima alamat IP serta maklumat peranti
-						dan lawatan anda. Ini membantu kami menambah baik kelas dan laman
-						web.
-					</li>
-					<li>
-						<em
-							>Penyedia hosting (Cloudflare) dan penyedia kandungan (Sanity)</em
-						> memproses data teknikal seperti alamat IP anda supaya halaman dan imej
-						dimuatkan dengan selamat.
-					</li>
-					<li>
-						Catatan blog yang mengandungi video YouTube memuatkan video itu
-						daripada domain mod privasi dipertingkat YouTube apabila anda
-						menatal ke arahnya. Ini tidak bergantung pada pilihan kuki anda.
-						Terma YouTube sendiri terpakai.
-					</li>
-				</ul>
-
-				<h3 id="voluntary-ms">Memberi maklumat adalah sukarela</h3>
-				<p>
-					<strong>Laman web ini sendiri tiada borang atau akaun.</strong> Melalui
-					WhatsApp, kami mungkin bertanya tahun dan tahap persekolahan anak anda serta
-					bantuan yang anda perlukan. Sila jangan hantar lebih daripada yang perlu.
-					Memberi maklumat ini adalah <strong>sukarela</strong>. Jika anda
-					memilih untuk tidak memberi, kami mungkin tidak dapat membalas dengan
-					sewajarnya atau menempah kelas.
-				</p>
-
-				<h3 id="source-ms">Dari mana data datang</h3>
-				<p>
-					Butiran WhatsApp dan apa yang anda tulis datang daripada anda. Data
-					lawatan datang daripada pelayar dan peranti anda. Ia dikumpul oleh tag
-					Google di laman web ini
-					<strong>hanya selepas anda bersetuju</strong> dengan pilihan kuki.
-				</p>
-
-				<h3 id="recipients-ms">Siapa yang boleh menerima data anda</h3>
-				<p>
-					Google, Cloudflare, Sanity, Meta (WhatsApp) dan YouTube, seperti
-					dihuraikan di atas. Sebahagian berada di luar Malaysia. Kami tidak
-					menjual data anda.
-				</p>
-
-				<h3 id="children-ms">Kanak-kanak</h3>
-				<p>
-					Kelas ditempah oleh ibu bapa atau penjaga, dan maklumat tentang
-					kanak-kanak (seperti tahun persekolahan) diberi oleh ibu bapa atau
-					penjaga. Jika anda berumur di bawah 18 tahun, sila minta kebenaran ibu
-					bapa atau penjaga sebelum menghubungi kami. Jika kami mendapati kami
-					menyimpan data peribadi kanak-kanak tanpa kebenaran ibu bapa atau
-					penjaga, kami akan memadamkannya.
-				</p>
-
-				<h3 id="rights-ms">Hak anda</h3>
-				<p>
-					Anda boleh meminta untuk melihat, membetulkan atau memadam data yang
-					kami simpan, atau menarik balik persetujuan, dengan menghubungi {
-						email
-					}.
-				</p>
-
-				<h3 id="choices-ms">Pilihan anda</h3>
-				<p>
-					Anda boleh menyekat atau memadam kuki dalam tetapan pelayar. Anda
-					boleh menukar pilihan pada bila-bila masa melalui "Tetapan kuki" di
-					bahagian bawah. Jika anda tidak memberi data, kami mungkin tidak dapat
-					membalas anda.
-				</p>
-
-				<h3 id="retention-ms">Tempoh simpanan</h3>
-				<p>
-					Pertanyaan WhatsApp: {waMs}. Analitik: ditetapkan dalam Google
-					Analytics, {anMs}.
-				</p>
-
-				<h3 id="changes-ms">Perubahan</h3>
-				<p>
-					Kami akan mengemas kini halaman ini dan tarikhnya jika ada perubahan.
-				</p>
-			</section>
+							<h2 id={`title-${lang}`}>{n.title}</h2>
+							<NoticeBlocks
+								blocks={n.preamble}
+								lang={lang}
+								phone={siteSettings.phoneDisplay}
+							/>
+							{n.sections.map((s) => (
+								<>
+									<h3 id={`${s.id}-${lang}`}>{s.heading}</h3>
+									<NoticeBlocks
+										blocks={s.blocks}
+										lang={lang}
+										phone={siteSettings.phoneDisplay}
+									/>
+								</>
+							))}
+						</section>
+					);
+				})
+			}
 		</div>
 	</main>
 	<SiteFooter navigation={navigation} siteSettings={siteSettings} />
