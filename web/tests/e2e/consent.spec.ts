@@ -515,3 +515,17 @@ test("/privacy/ renders notice text as text, never as markup", async ({
 		0,
 	);
 });
+
+// While owner facts are unfinished (the committed state). Once the owner supplies every fact and
+// `copyApprovedOn`, this test must be inverted by whoever finalises the notice; that edit is part
+// of the release checklist in DECISIONS §49.
+test("/privacy/ is noindex and shows the draft note while owner facts are unfinished", async ({
+	page,
+}) => {
+	await page.goto("/privacy/");
+	await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+		"content",
+		"noindex,nofollow",
+	);
+	await expect(page.locator(".draft-note")).toContainText("Draft");
+});

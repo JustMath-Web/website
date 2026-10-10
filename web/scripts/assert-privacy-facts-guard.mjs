@@ -4,7 +4,11 @@
 //   2. the real facts and the real page, checked as production would see them.
 import { strict as assert } from "node:assert";
 import { readFileSync } from "node:fs";
-import { checkPrivacyFacts } from "../src/lib/content/assertPrivacyFacts.ts";
+import {
+	checkPrivacyFacts,
+	isPrivacyReleaseReady,
+	previewBranch,
+} from "../src/lib/content/assertPrivacyFacts.ts";
 import { PRIVACY_FACTS } from "../src/lib/privacy.ts";
 import {
 	PRIVACY_NOTICE,
@@ -157,6 +161,59 @@ PRIVACY_NOTICE.en.sections.forEach((s, i) => {
 		`section ${s.id}: EN and MS block structure differ`,
 	);
 });
+
+// Preview-branch exception: only a positively identified non-main branch skips the guard.
+const nullFacts = { ...good, ownerName: null };
+const P = (extra) => ({ DEPLOY_ENV: "production", ...extra });
+for (const [label, env] of Object.entries({
+	noBranch: P({}),
+	emptyBranch: P({ WORKERS_CI_BRANCH: "" }),
+	spaces: P({ WORKERS_CI_BRANCH: "   " }),
+	main: P({ WORKERS_CI_BRANCH: "main" }),
+	Main: P({ WORKERS_CI_BRANCH: "Main" }),
+	mainSpace: P({ WORKERS_CI_BRANCH: "main " }),
+	refsMain: P({ WORKERS_CI_BRANCH: "refs/heads/main" }),
+	pagesMain: P({ CF_PAGES_BRANCH: "main" }),
+})) {
+	assert.ok(
+		checkPrivacyFacts(nullFacts, env).error,
+		`must stay blocked: ${label}`,
+	);
+	assert.equal(previewBranch(env), null, `not a preview: ${label}`);
+}
+for (const [label, env] of Object.entries({
+	feature: P({ WORKERS_CI_BRANCH: "feat/consent-banner-privacy-notice" }),
+	pages: P({ CF_PAGES_BRANCH: "feat/x" }),
+	sameBoth: P({ WORKERS_CI_BRANCH: "feat/x", CF_PAGES_BRANCH: "feat/x" }),
+})) {
+	const r = checkPrivacyFacts(nullFacts, env);
+	assert.equal(r.error, undefined, `preview must not be blocked: ${label}`);
+	assert.ok(r.skippedForPreview, `preview skip must be reported: ${label}`);
+}
+for (const env of [
+	P({ WORKERS_CI_BRANCH: "feat/x", CF_PAGES_BRANCH: "main" }),
+	P({ WORKERS_CI_BRANCH: "main", CF_PAGES_BRANCH: "feat/x" }),
+	P({ WORKERS_CI_BRANCH: "feat/x", CF_PAGES_BRANCH: "feat/y" }),
+]) {
+	assert.ok(
+		checkPrivacyFacts(nullFacts, env).error,
+		"conflicting branch signals must stay blocked",
+	);
+	assert.equal(previewBranch(env), null);
+}
+assert.equal(
+	checkPrivacyFacts(good, P({ WORKERS_CI_BRANCH: "feat/x" })).skippedForPreview,
+	undefined,
+);
+// The page's draft note / noindex follow isPrivacyReleaseReady, not copyApprovedOn alone.
+assert.equal(isPrivacyReleaseReady(good), true);
+assert.equal(
+	isPrivacyReleaseReady({ ...good, contactEmail: null }),
+	false,
+	"copyApprovedOn set but contactEmail null is still not release-ready",
+);
+assert.equal(isPrivacyReleaseReady({ ...good, copyApprovedOn: null }), false);
+
 // The real facts (last, so the content cases above report first), judged as production would.
 const real = checkPrivacyFacts(PRIVACY_FACTS, prod);
 assert.equal(real.error, undefined, real.error);

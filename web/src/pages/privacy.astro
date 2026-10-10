@@ -7,17 +7,20 @@ import { getLandingPageData } from "../lib/content/landingData";
 import NoticeBlocks from "../components/NoticeBlocks.astro";
 import { PRIVACY_NOTICE } from "../lib/content/privacyNotice";
 import { PRIVACY_FACTS } from "../lib/privacy";
+import { isPrivacyReleaseReady } from "../lib/content/assertPrivacyFacts";
 import { buildWhatsAppUrl } from "../lib/content/whatsappUrl";
 
 const { siteSettings, navigation } = await getLandingPageData();
 const { en, ms } = PRIVACY_NOTICE;
 const phone = siteSettings.phoneDisplay;
+const draft = !isPrivacyReleaseReady(PRIVACY_FACTS);
 ---
 
 <BaseLayout
 	title="Privacy notice / Notis privasi — Just Math Malaysia"
 	description="How Just Math Malaysia handles personal data. Bahasa Melayu version included."
 	siteSettings={siteSettings}
+	noindex={draft}
 >
 	<SiteHeader
 		navigation={navigation}
@@ -25,11 +28,7 @@ const phone = siteSettings.phoneDisplay;
 		ctaHref={buildWhatsAppUrl(siteSettings)}
 	/>
 	<main id="main">
-		{
-			PRIVACY_FACTS.copyApprovedOn === null && (
-				<p class="draft-note">Draft — not approved</p>
-			)
-		}
+		{draft && <p class="draft-note">Draft — not approved</p>}
 		<div class="notice container">
 			<h1>Privacy notice / Notis privasi</h1>
 			<section id="notice-en" lang="en" aria-labelledby="title-en">

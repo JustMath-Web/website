@@ -6,9 +6,18 @@
  * check wired anywhere else could be bypassed. Non-production builds (previews, local) are never
  * blocked, so the notice can be reviewed on a preview before the facts are final.
  *
+ * Cloudflare preview deployments of a branch also build with DEPLOY_ENV=production (the variable is
+ * shared), so a build of a positively identified NON-main branch skips this guard with a loud
+ * warning: otherwise the notice could never be reviewed on a preview. What stays blocked: no branch
+ * identity, an empty one, either variable naming `main` (any case, `refs/heads/` prefix), and two
+ * variables that disagree. Skipped builds render the page noindex with a draft note, and must not
+ * be promoted to production.
+ *
  * The hook runs at `astro:build:done`, after the other production checks, so it never hides their
  * failures. The build still fails, so nothing is published (docs/DECISIONS.md §49, ruling R13).
  */
+import { PRODUCTION_BRANCH } from "./assertDeployEnv.ts";
+
 export interface BilingualFact {
 	en: string | null;
 	ms: string | null;
@@ -52,10 +61,39 @@ function isRealDate(value: string): boolean {
 	);
 }
 
+/**
+ * The branch Cloudflare is building, but only if it is positively a branch other than the
+ * production one. Fails closed: no variable, an empty value, either variable naming the production
+ * branch, or two variables that disagree all return null — those builds stay blocked.
+ */
+export function previewBranch(
+	env: Record<string, string | undefined>,
+): string | null {
+	const norm = (v: string | undefined) =>
+		v
+			?.trim()
+			.replace(/^refs\/heads\//, "")
+			.trim();
+	const w = norm(env.WORKERS_CI_BRANCH);
+	const p = norm(env.CF_PAGES_BRANCH);
+	const set = [w, p].filter((v): v is string => v !== undefined);
+	if (set.length === 0 || set.some((v) => v === "")) return null; // no or empty identity
+	if (set.some((v) => v.toLowerCase() === PRODUCTION_BRANCH)) return null; // either names main
+	if (set.length === 2 && set[0] !== set[1]) return null; // conflict
+	return set[0];
+}
+
+/** True only when every field rule of `checkPrivacyFacts` passes (judged as production would). */
+export function isPrivacyReleaseReady(facts: PrivacyFacts): boolean {
+	return (
+		checkPrivacyFacts(facts, { DEPLOY_ENV: "production" }).error === undefined
+	);
+}
+
 export function checkPrivacyFacts(
 	facts: PrivacyFacts,
-	env: NodeJS.ProcessEnv,
-): { error?: string } {
+	env: Record<string, string | undefined>,
+): { error?: string; skippedForPreview?: string } {
 	if (env.DEPLOY_ENV !== "production") return {};
 	const problems: string[] = [];
 	checkText("ownerName", facts.ownerName, problems);
@@ -77,6 +115,14 @@ export function checkPrivacyFacts(
 		);
 	}
 	if (problems.length === 0) return {};
+	const branch = previewBranch(env);
+	if (branch) {
+		return {
+			skippedForPreview:
+				`preview branch "${branch}" has unfinished owner facts:\n  - ` +
+				problems.join("\n  - "),
+		};
+	}
 	return {
 		error:
 			"The privacy notice cannot ship with unfinished owner facts:\n  - " +

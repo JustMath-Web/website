@@ -42,7 +42,17 @@ const privacyFactsGuard = {
 	name: "just-math:privacy-facts-guard",
 	hooks: {
 		"astro:build:done": () => {
-			const { error } = checkPrivacyFacts(PRIVACY_FACTS, process.env);
+			const { error, skippedForPreview } = checkPrivacyFacts(
+				PRIVACY_FACTS,
+				process.env,
+			);
+			if (skippedForPreview) {
+				const branch = /"([^"]+)"/.exec(skippedForPreview)?.[1] ?? "?";
+				console.warn(
+					`\n[privacy-facts-guard] SKIPPED for preview branch "${branch}": ${skippedForPreview}\n` +
+						"  This build must NOT be promoted to production.\n",
+				);
+			}
 			if (error) throw new Error(`[privacy-facts-guard] ${error}`);
 		},
 	},
