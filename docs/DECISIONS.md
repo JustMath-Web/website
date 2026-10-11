@@ -2976,6 +2976,15 @@ retention guidance; Bob's review of `6003a4a`), Google deletes expired data once
 combined data are unaffected, and only that we "cannot normally find one visitor's
 data", not that deletion is impossible (Google supports deletion by client ID). Still open in the GTM/GA4
 audit: tags, Google signals and advertising features, and the verified cookie list.
+**GTM and GA4 audit, 2026-10-11** (evidence: `docs/evidence/2026-10-11-gtm-ga4-consent-audit.md`;
+read-only). Live container version 4 has two tags, both sending to `G-6EWT7G0LZS`. A fresh browser sends
+no Google request and sets no cookie before a choice or after Reject. After Accept it sets `_ga` and
+`_ga_6EWT7G0LZS` and also contacts `stats.g.doubleclick.net` and `google.com.my/ads/ga-audiences`,
+because **Google signals and ads personalization are ON in 307 of 307 regions** in the GA4 property. The
+notice and banner describe analytics only, so either they must also describe advertising-related features
+or Charlie turns those GA4 settings off (his decision, not made); the cookie table may list `_ga` and
+`_ga_6EWT7G0LZS` once that is settled. The test ran on a locally served build without the production CSP;
+re-run on the live site after release.
 Open for the adviser: whether to promise deletion for an analytics ID a visitor sends us, and whether
 keeping WhatsApp messages until someone asks for deletion satisfies the PDPA retention principle (Act
 709 s.10); Bob flagged both as risks, not legal conclusions.
