@@ -25,7 +25,6 @@ export interface BilingualFact {
 
 export interface PrivacyFacts {
 	ownerName: string | null;
-	contactEmail: string | null;
 	whatsappRetention: BilingualFact;
 	analyticsRetention: BilingualFact;
 	lastUpdated: string;
@@ -105,15 +104,10 @@ export function checkPrivacyFacts(
 	if (env.DEPLOY_ENV !== "production") return {};
 	const problems: string[] = [];
 	checkText("ownerName", facts.ownerName, problems);
-	checkText("contactEmail", facts.contactEmail, problems);
 	checkText("whatsappRetention.en", facts.whatsappRetention?.en, problems);
 	checkText("whatsappRetention.ms", facts.whatsappRetention?.ms, problems);
 	checkText("analyticsRetention.en", facts.analyticsRetention?.en, problems);
 	checkText("analyticsRetention.ms", facts.analyticsRetention?.ms, problems);
-	const email = facts.contactEmail?.trim();
-	if (email && !/^[^@\s]+@[^@\s.]+(\.[^@\s.]+)*\.[A-Za-z]{2,}$/.test(email)) {
-		problems.push("contactEmail is not an e-mail address");
-	}
 	if (!isRealDate(facts.lastUpdated ?? "")) {
 		problems.push("lastUpdated must be a real date, YYYY-MM-DD");
 	}

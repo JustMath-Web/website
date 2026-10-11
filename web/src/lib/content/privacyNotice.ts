@@ -25,7 +25,6 @@ export type SectionId = SectionIds[number];
 
 export type FactKey =
 	| "ownerName"
-	| "contactEmail"
 	| "phone"
 	| "whatsappRetention"
 	| "analyticsRetention"
@@ -82,9 +81,7 @@ const en: NoticeLanguage<"en"> = {
 					p: [
 						"This website, mathematicsmalaysia.com, is run by ",
 						{ fact: "ownerName" },
-						', trading as Just Math Malaysia ("we"). You can contact us at ',
-						{ fact: "contactEmail" },
-						" or on WhatsApp ",
+						', trading as Just Math Malaysia ("we"). You can contact us on WhatsApp ',
 						{ fact: "phone" },
 						".",
 					],
@@ -177,8 +174,8 @@ const en: NoticeLanguage<"en"> = {
 			blocks: [
 				{
 					p: [
-						"You can ask to see, correct, or delete the data we hold about you, or withdraw your consent, by contacting us at ",
-						{ fact: "contactEmail" },
+						"You can ask to see, correct, or delete the data we hold about you, or withdraw your consent, by contacting us on WhatsApp ",
+						{ fact: "phone" },
 						".",
 					],
 				},
@@ -233,9 +230,7 @@ const ms: NoticeLanguage<"ms"> = {
 					p: [
 						"Laman web ini, mathematicsmalaysia.com, dikendalikan oleh ",
 						{ fact: "ownerName" },
-						', berniaga sebagai Just Math Malaysia ("kami"). Hubungi kami di ',
-						{ fact: "contactEmail" },
-						" atau WhatsApp ",
+						', berniaga sebagai Just Math Malaysia ("kami"). Hubungi kami di WhatsApp ',
 						{ fact: "phone" },
 						".",
 					],
@@ -328,8 +323,8 @@ const ms: NoticeLanguage<"ms"> = {
 			blocks: [
 				{
 					p: [
-						"Anda boleh meminta untuk melihat, membetulkan atau memadam data yang kami simpan, atau menarik balik persetujuan, dengan menghubungi ",
-						{ fact: "contactEmail" },
+						"Anda boleh meminta untuk melihat, membetulkan atau memadam data yang kami simpan, atau menarik balik persetujuan, dengan menghubungi kami di WhatsApp ",
+						{ fact: "phone" },
 						".",
 					],
 				},

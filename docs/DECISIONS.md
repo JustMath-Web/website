@@ -2954,8 +2954,17 @@ What the sources say:
   (ruling R5, accepted as normal banner behaviour).
 
 **Release gate.** Tasks 1-3 ship as **one PR**. CI is expected to be red until the owner supplies the facts
-and approval: `ownerName`, `contactEmail`, bilingual `whatsappRetention` and `analyticsRetention`,
+and approval: `ownerName`, bilingual `whatsappRetention` and `analyticsRetention`,
 `lastUpdated`, `copyApprovedOn`.
+
+**Owner decisions, 2026-10-11 (Charlie).** (1) Owner name is "Mr Kong"; the contact point is the WhatsApp
+number only, so the `contactEmail` fact and its checks were removed and the notice now says "contact us on
+WhatsApp". (2) WhatsApp retention: messages are kept until the person asks for deletion; there is no
+automatic deletion (`whatsappRetention`, both languages, drafted by Andy, awaiting wording approval).
+(3) Analytics: Charlie wants the notice to say a single visitor's analytics data cannot be deleted on
+request. `analyticsRetention` stays unset until the GA4 data-retention value is read from the GA4 setting.
+Open for the adviser: GA4 does offer deletion requests keyed to a client or user ID, so "cannot" must be
+worded as "we cannot identify or locate one visitor's data" unless confirmed otherwise.
 
 > **WORDING GATE (before release).** The banner and notice name "Google's advertising features" because
 > first visits were measured calling `stats.g.doubleclick.net` and `www.google.com.my/ads/ga-audiences`

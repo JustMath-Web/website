@@ -17,7 +17,6 @@ import {
 
 const good = {
 	ownerName: "Example Sdn Bhd",
-	contactEmail: "hello@mathematicsmalaysia.com",
 	whatsappRetention: {
 		en: "12 months after the last message",
 		ms: "12 bulan selepas mesej terakhir",
@@ -39,7 +38,6 @@ assert.equal(
 // Each case breaks ONE thing and the error must name that field.
 const cases = {
 	"ownerName null": [{ ownerName: null }, "ownerName"],
-	"contactEmail null": [{ contactEmail: null }, "contactEmail"],
 	"whatsappRetention.en null": [
 		{ whatsappRetention: { ...good.whatsappRetention, en: null } },
 		"whatsappRetention.en",
@@ -75,8 +73,6 @@ const cases = {
 	"bad date": [{ lastUpdated: "yesterday" }, "lastUpdated"],
 	"impossible date": [{ lastUpdated: "2026-02-30" }, "lastUpdated"],
 	"9999-99-99": [{ lastUpdated: "9999-99-99" }, "lastUpdated"],
-	"bad email": [{ contactEmail: "not-an-email" }, "contactEmail is not"],
-	"a@b.x email": [{ contactEmail: "a.b@c.x" }, "contactEmail is not"],
 	"copyApprovedOn null": [{ copyApprovedOn: null }, "copyApprovedOn"],
 	"copyApprovedOn impossible": [
 		{ copyApprovedOn: "2026-13-01" },
@@ -217,9 +213,9 @@ assert.equal(
 // The page's draft note / noindex follow isPrivacyReleaseReady, not copyApprovedOn alone.
 assert.equal(isPrivacyReleaseReady(good), true);
 assert.equal(
-	isPrivacyReleaseReady({ ...good, contactEmail: null }),
+	isPrivacyReleaseReady({ ...good, ownerName: null }),
 	false,
-	"copyApprovedOn set but contactEmail null is still not release-ready",
+	"copyApprovedOn set but ownerName null is still not release-ready",
 );
 assert.equal(isPrivacyReleaseReady({ ...good, copyApprovedOn: null }), false);
 
