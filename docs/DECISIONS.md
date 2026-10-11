@@ -2971,8 +2971,9 @@ property "Just Math Website" (294653675), stream "Just Math Malaysia" for `https
 (stream 3068959153), Measurement ID **`G-6EWT7G0LZS`** (matches the container), "Receiving traffic in past
 48 hours", Admin > Data retention: **event data 14 months, user data 14 months, "Reset on new user
 activity" ON.** Charlie's "both 14 months" was therefore right for this property. The notice states the 14
-months with the reset, says Google deletes event and user data after that, that reports built from combined
-data are unaffected (Google's retention guidance), and only that we "cannot normally find one visitor's
+months for event data and for user data separately; only user data restarts on new activity (Google's
+retention guidance; Bob's review of `6003a4a`), Google deletes expired data once a month, reports built from
+combined data are unaffected, and only that we "cannot normally find one visitor's
 data", not that deletion is impossible (Google supports deletion by client ID). Still open in the GTM/GA4
 audit: tags, Google signals and advertising features, and the verified cookie list.
 Open for the adviser: whether to promise deletion for an analytics ID a visitor sends us, and whether
