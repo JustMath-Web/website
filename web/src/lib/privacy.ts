@@ -12,8 +12,8 @@ export const PRIVACY_FACTS: PrivacyFacts = {
 		ms: "kami menyimpannya sehingga anda meminta kami memadamnya, dan kami tidak memadamnya secara automatik",
 	},
 	analyticsRetention: {
-		en: "both event data and user data are kept for 14 months, then Google deletes them automatically. We cannot identify or find one visitor's data, because it is not linked to your name, so we cannot delete it on request",
-		ms: "data peristiwa dan data pengguna disimpan selama 14 bulan, kemudian Google memadamkannya secara automatik. Kami tidak dapat mengenal pasti atau mencari data seorang pelawat, kerana ia tidak dikaitkan dengan nama anda, jadi kami tidak dapat memadamkannya atas permintaan",
+		en: "event data is kept for 2 months and user data for 14 months. The 14 months restart when the same visitor returns. Google then deletes the data automatically. We cannot normally find one visitor's data, because it is not linked to your name",
+		ms: "data peristiwa disimpan selama 2 bulan dan data pengguna selama 14 bulan. Tempoh 14 bulan bermula semula apabila pelawat yang sama kembali. Google kemudian memadamkan data secara automatik. Kami biasanya tidak dapat mencari data seorang pelawat, kerana ia tidak dikaitkan dengan nama anda",
 	},
 	lastUpdated: "2026-10-09",
 	copyApprovedOn: null,
