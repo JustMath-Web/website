@@ -2989,11 +2989,12 @@ the data for its advertising features (both languages); an earlier note here wro
 whether that wording is complete for what was observed, and whether turning the two GA4 settings off would
 stop those requests (not proven, so GA4 stays unchanged). Follow-up (3b in the evidence file): the extra
 `collect` seen in Accept then Reject is a `page_view` sent when the footer "Cookie settings" link is
-clicked, not by Reject; but **`_ga_6EWT7G0LZS` survived Reject in 8 of 8 runs where Reject came about 9 s
-after Accept** (cleared in 8 of 8 quick runs), so "Reject clears Google cookies" is not reliably true yet.
-Fixed in this PR: `consent.js` clears Google cookies again on a page that loads with a saved Reject
-(e2e test "delayed accept then reject", which fails without the fix). Re-run with the published container on head `04e3f34`: Reject about 9 s after Accept, 8 of 8
-runs left no Google cookie 3 s after, 9 s after and on the next page, and sent no Google request after Reject. The cookie table may list `_ga` and
+clicked, not by Reject. **Before the fix** (head `e6b31cf`), `_ga_6EWT7G0LZS` survived Reject in 8 of 8 runs
+where Reject came about 9 s after Accept (cleared in 8 of 8 quick runs). Fixed in this PR: `consent.js`
+clears Google cookies again on a page that loads with a saved Reject (e2e test "delayed accept then
+reject", which fails without the fix). **After the fix** (head `04e3f34`, published container, local
+build): Reject about 9 s after Accept, 8 of 8 runs, no Google cookie observed 3 s after, 9 s after and on
+the next page, and no Google request observed after the Reject click. The cookie table may list `_ga` and
 `_ga_6EWT7G0LZS`; re-check on the live site after release. The test ran on a locally
 served build without the production CSP; re-run on the live site after release.
 Open for the adviser: whether to promise deletion for an analytics ID a visitor sends us, and whether
