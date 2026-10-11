@@ -107,14 +107,21 @@ today. Fixed afterwards in `consent.js` (clear again on a page with a saved Reje
 models a late write during unload and fails without the fix. The fix is verified in that test, not yet
 against the real tag on the live site: re-run section 3 there after release.
 
+**Re-test on head `04e3f34` (consent.js fix), published container, locally served build:** Reject about 9 s
+after Accept, 8 runs. In all 8: cookies before Reject `_ga` and `_ga_6EWT7G0LZS`; **none** 3 s after Reject,
+9 s after, and 3 s after loading `/privacy/`; **0** Google requests after the Reject click. The live-site
+CSP re-check is still needed after release. These runs also sent 8 more test page views to the live GA4
+property.
+
 ## 4. What this means for the notice (findings, not legal conclusions)
 
 1. **The banner does what it says before a choice**: no Google request and no cookie. **After Reject**
    (no previous Accept) the same holds. **After Accept then Reject, a Google cookie can remain** (3b).
 2. **After Accept, the site contacts advertising endpoints, not only analytics**: `stats.g.doubleclick.net`
-   and `google.com.my/ads/ga-audiences`. GA4 has Google signals and ads personalization ON in all 307
-   regions, and `analytics.js` grants `ad_storage`, `ad_user_data` and `ad_personalization` on Accept
-   (`gcs=G111`, `npa=0`). **The banner and notice already say Google may use the data for its advertising
+   and `google.com.my/ads/ga-audiences`. Observed separately, cause **not isolated**: GA4 has Google signals
+   ON and ads personalization allowed in all 307 regions; and `analytics.js` grants `ad_storage`,
+   `ad_user_data` and `ad_personalization` on Accept (`gcs=G111`, `npa=0`). Which of the two produces those
+   requests was not tested. **The banner and notice already say Google may use the data for its advertising
    features, in English and Malay** (`ConsentBanner.astro`, `privacyNotice.ts`); an earlier draft of this
    audit wrongly said they describe analytics only. What is open: whether that wording is complete for what
    was observed, and **whether turning off the two GA4 settings would stop these requests is not proven**,

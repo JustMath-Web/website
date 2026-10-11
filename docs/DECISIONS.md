@@ -2980,8 +2980,11 @@ audit: tags, Google signals and advertising features, and the verified cookie li
 read-only). Live container version 4 has two tags, both sending to `G-6EWT7G0LZS`. A fresh browser sends
 no Google request and sets no cookie before a choice or after Reject. After Accept it sets `_ga` and
 `_ga_6EWT7G0LZS` and also contacts `stats.g.doubleclick.net` and `google.com.my/ads/ga-audiences`,
-because **Google signals and ads personalization are ON in 307 of 307 regions** in the GA4 property and
-`analytics.js` grants the Ads consent signals on Accept. The banner and notice already say Google may use
+Observed separately (cause not isolated): (a) requests after Accept to `stats.g.doubleclick.net` and
+`google.com.my/ads/ga-audiences`; (b) GA4 settings: **Google signals ON and ads personalization allowed,
+each in 307 of 307 regions**, no Google Ads link; (c) consent signals the site sends on Accept, all four
+granted (`analytics_storage`, `ad_storage`, `ad_user_data`, `ad_personalization`; the requests carry
+`gcs=G111`, `npa=0`). Which of (b) and (c) produces (a) was **not tested**. The banner and notice already say Google may use
 the data for its advertising features (both languages); an earlier note here wrongly said otherwise. Open:
 whether that wording is complete for what was observed, and whether turning the two GA4 settings off would
 stop those requests (not proven, so GA4 stays unchanged). Follow-up (3b in the evidence file): the extra
@@ -2989,7 +2992,8 @@ stop those requests (not proven, so GA4 stays unchanged). Follow-up (3b in the e
 clicked, not by Reject; but **`_ga_6EWT7G0LZS` survived Reject in 8 of 8 runs where Reject came about 9 s
 after Accept** (cleared in 8 of 8 quick runs), so "Reject clears Google cookies" is not reliably true yet.
 Fixed in this PR: `consent.js` clears Google cookies again on a page that loads with a saved Reject
-(e2e test "delayed accept then reject", which fails without the fix). The cookie table may list `_ga` and
+(e2e test "delayed accept then reject", which fails without the fix). Re-run with the published container on head `04e3f34`: Reject about 9 s after Accept, 8 of 8
+runs left no Google cookie 3 s after, 9 s after and on the next page, and sent no Google request after Reject. The cookie table may list `_ga` and
 `_ga_6EWT7G0LZS`; re-check on the live site after release. The test ran on a locally
 served build without the production CSP; re-run on the live site after release.
 Open for the adviser: whether to promise deletion for an analytics ID a visitor sends us, and whether
