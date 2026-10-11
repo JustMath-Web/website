@@ -150,5 +150,12 @@
 		set(el.getAttribute("data-consent") === "accept" ? "accepted" : "rejected");
 	});
 
+	// A saved Reject must leave no Google cookie. Withdrawing consent clears them and reloads, but the
+	// Google tag can write its session cookie again while the old page unloads, so clear once more on
+	// the page that follows. (Audit 2026-10-11: `_ga_<id>` survived Reject in 8 of 8 delayed runs.)
+	if (read() === "rejected" && googleCookieNames().length > 0) {
+		clearGoogleCookies();
+	}
+
 	if (read() === null) show();
 })();

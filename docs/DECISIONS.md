@@ -2988,7 +2988,9 @@ stop those requests (not proven, so GA4 stays unchanged). Follow-up (3b in the e
 `collect` seen in Accept then Reject is a `page_view` sent when the footer "Cookie settings" link is
 clicked, not by Reject; but **`_ga_6EWT7G0LZS` survived Reject in 8 of 8 runs where Reject came about 9 s
 after Accept** (cleared in 8 of 8 quick runs), so "Reject clears Google cookies" is not reliably true yet.
-The cookie table may list `_ga` and `_ga_6EWT7G0LZS` once that is fixed. The test ran on a locally
+Fixed in this PR: `consent.js` clears Google cookies again on a page that loads with a saved Reject
+(e2e test "delayed accept then reject", which fails without the fix). The cookie table may list `_ga` and
+`_ga_6EWT7G0LZS`; re-check on the live site after release. The test ran on a locally
 served build without the production CSP; re-run on the live site after release.
 Open for the adviser: whether to promise deletion for an analytics ID a visitor sends us, and whether
 keeping WhatsApp messages until someone asks for deletion satisfies the PDPA retention principle (Act

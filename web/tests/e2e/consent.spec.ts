@@ -116,6 +116,46 @@ test("accept then reject clears Google cookies and stops GTM after the reload", 
 	expect(hits).toEqual([]);
 });
 
+test("delayed accept then reject: a Google cookie written while the old page unloads is gone after the reload and a further wait", async ({
+	page,
+	context,
+}) => {
+	const hits: string[] = [];
+	await asProduction(page, hits);
+	// Model what the audit observed: the tag writes its session cookie again while the page that was
+	// accepted unloads (the reload that Reject triggers). Registered after asProduction so it wins.
+	await page.route(/googletagmanager\.com\/gtm\.js/, (route) => {
+		hits.push(route.request().url());
+		return route.fulfill({
+			status: 200,
+			contentType: "application/javascript",
+			body: 'window.addEventListener("pagehide", function () { document.cookie = "_ga_6EWT7G0LZS=late; path=/; max-age=34000000"; });',
+		});
+	});
+	await page.goto("/");
+	await page.evaluate(() => (window as any).jmConsent.set("accepted"));
+	await expect
+		.poll(() => hits.filter((u) => u.includes("gtm.js")).length)
+		.toBe(1);
+	await page.waitForTimeout(1500);
+	hits.length = 0;
+	await Promise.all([
+		page.waitForEvent("load"),
+		page.evaluate(() => (window as any).jmConsent.set("rejected")),
+	]);
+	await page.waitForTimeout(1500);
+	const googleCookies = async () =>
+		(await context.cookies())
+			.map((c) => c.name)
+			.filter((n) => /^_(ga|gid|gat|gcl)/.test(n));
+	expect(await googleCookies()).toEqual([]);
+	// And it stays gone on the next page, with no Google request.
+	await page.goto("/privacy/");
+	await page.waitForTimeout(1000);
+	expect(await googleCookies()).toEqual([]);
+	expect(hits).toEqual([]);
+});
+
 test("blocked storage: accept then reject still stops GTM by reloading", async ({
 	page,
 }) => {

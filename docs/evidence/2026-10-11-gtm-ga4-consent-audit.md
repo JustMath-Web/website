@@ -103,7 +103,9 @@ after Reject" is observed, not proven.
 `consent.js` clears every cookie matching `_ga*`, `_gid*`, `_gat*`, `_gcl*` and then reloads, so the cookie
 is being written again after the clear (a likely cause: the Google tag writes its session cookie while the
 page unloads). That cause is not verified. It means "Reject clears Google cookies" is not reliably true
-today. Not fixed in this audit.
+today. Fixed afterwards in `consent.js` (clear again on a page with a saved Reject) with an e2e test that
+models a late write during unload and fails without the fix. The fix is verified in that test, not yet
+against the real tag on the live site: re-run section 3 there after release.
 
 ## 4. What this means for the notice (findings, not legal conclusions)
 
