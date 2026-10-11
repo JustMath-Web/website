@@ -2963,12 +2963,18 @@ WhatsApp". (2) WhatsApp retention: messages are kept until the person asks for d
 automatic deletion (`whatsappRetention`, both languages, drafted by Andy, awaiting wording approval).
 (3) Analytics: Charlie wanted the notice to say a single visitor's analytics data cannot be deleted
 on request and gave "both 14 months". Bob's review of `15a8940` rejected that wording. Andy then read
-the GA4 setting (property "Charlie Kong - GA4", Measurement ID G-HMMVPEH6L8, Admin > Data retention,
-2026-10-11): **event data 2 months, user data 14 months, "Reset on new user activity" ON.** So the
-"both 14 months" claim was wrong. The notice now states 2 months and 14 months with the reset, and says
-only that we "cannot normally find one visitor's data", not that deletion is impossible (Google supports
-deletion by client ID). Not verified: that the live site's GTM container `GTM-KP5SMKV` actually sends to
-this GA4 property (the property shows "No data received yet"); this stays inside the GTM/GA4 audit gate.
+the GA4 settings twice on 2026-10-11. First read: property "Charlie Kong - GA4" (Measurement ID
+G-HMMVPEH6L8, event data 2 months, user data 14 months); Bob then showed the published GTM container uses
+`G-6EWT7G0LZS`, and the Google Analytics account picker shows that this first property has a single stream
+for `charliekong.me`, so those figures do not apply to this site. Second read: account "Just Math",
+property "Just Math Website" (294653675), stream "Just Math Malaysia" for `https://mathematicsmalaysia.com/`
+(stream 3068959153), Measurement ID **`G-6EWT7G0LZS`** (matches the container), "Receiving traffic in past
+48 hours", Admin > Data retention: **event data 14 months, user data 14 months, "Reset on new user
+activity" ON.** Charlie's "both 14 months" was therefore right for this property. The notice states the 14
+months with the reset, says Google deletes event and user data after that, that reports built from combined
+data are unaffected (Google's retention guidance), and only that we "cannot normally find one visitor's
+data", not that deletion is impossible (Google supports deletion by client ID). Still open in the GTM/GA4
+audit: tags, Google signals and advertising features, and the verified cookie list.
 Open for the adviser: whether to promise deletion for an analytics ID a visitor sends us, and whether
 keeping WhatsApp messages until someone asks for deletion satisfies the PDPA retention principle (Act
 709 s.10); Bob flagged both as risks, not legal conclusions.
