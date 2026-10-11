@@ -67,7 +67,7 @@ after the banner ships. Headless Chromium from Malaysia.
 | 1. Fresh visit, no choice | visible | **none** | **none** |
 | 2. Reject, then reload | hidden; `jm-consent-v1` = rejected | **none** | **none** |
 | 3. Accept | hidden; `jm-consent-v1` = accepted | 5 (below) | `_ga` and `_ga_6EWT7G0LZS`, domain `.mathematicsmalaysia.com`, expiry 2027-11-15 |
-| 4. Accept, then Reject via footer "Cookie settings" | hidden; rejected | the Accept-state requests, plus one further `collect` after Reject (page leaving) | **none** (cookies cleared) |
+| 4. Accept, then Reject via footer "Cookie settings" | hidden; rejected | the Accept-state requests, plus one further `page_view` (see 3b) | **Depends on timing, see 3b: `_ga_6EWT7G0LZS` survived Reject in 8 of 8 slower runs** |
 
 State 3 requests:
 
@@ -77,21 +77,54 @@ State 3 requests:
 4. `POST https://stats.g.doubleclick.net/g/collect` (`tid=G-6EWT7G0LZS`)
 5. `GET https://www.google.com.my/ads/ga-audiences` (`tid=G-6EWT7G0LZS`)
 
+### 3b. Follow-up on the Accept then Reject state (added after Bob's review of `e6b31cf`)
+
+Request timing (context-level capture; Reject about 9 s after Accept):
+
+| Time | Event |
+|---|---|
+| 1.2 s | After Accept: `page_view` to `analytics.google.com/g/collect`, `gcs=G111`; also the two advertising requests |
+| 5.6 s | **The footer "Cookie settings" link was clicked (this only opens the banner): a second `page_view` is sent** (`_s=2`, same `sid`, `seg=1`, `gcs=G111`, consent still granted) |
+| 9.6 s | Reject clicked; no Google request is recorded after it in this run or the other two runs |
+
+So the extra `collect` Bob asked about is **not sent by Reject**. It is sent when the footer link is
+clicked, while consent is still granted. Its cause is not verified (Enhanced measurement page-change
+detection is a candidate). Limit: Playwright may not see beacons sent during page unload, so "no request
+after Reject" is observed, not proven.
+
+**A real withdrawal defect was found.** After Reject, `_ga` is cleared but `_ga_6EWT7G0LZS` (expiry
+2027-11-15) **remains, and stays on the next page load** (still rejected). Results of 8 runs each:
+
+| Reject timing | Cookies left after Reject |
+|---|---|
+| about 9 s after Accept, with the footer-click `page_view` sent first | `_ga_6EWT7G0LZS` in **8 of 8** runs |
+| about 1 s after Accept, no extra `page_view` | none in 8 of 8 runs |
+
+`consent.js` clears every cookie matching `_ga*`, `_gid*`, `_gat*`, `_gcl*` and then reloads, so the cookie
+is being written again after the clear (a likely cause: the Google tag writes its session cookie while the
+page unloads). That cause is not verified. It means "Reject clears Google cookies" is not reliably true
+today. Not fixed in this audit.
+
 ## 4. What this means for the notice (findings, not legal conclusions)
 
-1. **The banner does what it says before a choice and after Reject**: no Google request and no cookie.
-2. **After Accept, the site contacts advertising endpoints, not only analytics**: `stats.g.doubleclick.net` and
-   `google.com.my/ads/ga-audiences` come from Google signals and ads personalization being ON in GA4. The
-   current notice describes analytics only. Either the notice and banner must describe advertising-related
-   features, or Charlie turns Google signals and ads personalization off in GA4 (then re-run section 3). Charlie's decision; not changed here.
-3. **Verified cookie list for the Accept state**: `_ga` and `_ga_6EWT7G0LZS` only, about 13 months (Chromium's
-   cap on the observed expiry). The notice's cookie table can use these two names. `_gid`, `_gat*`, `_gcl*`
-   were not observed.
-4. The WhatsApp link tag `wa_click` fires after Accept only (not tested here by clicking `wa.me`).
-5. **Test traffic**: the two Accept runs sent two real test page views to the live GA4 property from a headless browser in Malaysia.
-   They may appear as 2 users in GA4 for 2026-10-11; they do not matter for the notice.
+1. **The banner does what it says before a choice**: no Google request and no cookie. **After Reject**
+   (no previous Accept) the same holds. **After Accept then Reject, a Google cookie can remain** (3b).
+2. **After Accept, the site contacts advertising endpoints, not only analytics**: `stats.g.doubleclick.net`
+   and `google.com.my/ads/ga-audiences`. GA4 has Google signals and ads personalization ON in all 307
+   regions, and `analytics.js` grants `ad_storage`, `ad_user_data` and `ad_personalization` on Accept
+   (`gcs=G111`, `npa=0`). **The banner and notice already say Google may use the data for its advertising
+   features, in English and Malay** (`ConsentBanner.astro`, `privacyNotice.ts`); an earlier draft of this
+   audit wrongly said they describe analytics only. What is open: whether that wording is complete for what
+   was observed, and **whether turning off the two GA4 settings would stop these requests is not proven**,
+   because the site itself sends the Ads consent signals (Google's 2026 guidance separates those from the
+   Google signals setting). GA4 settings are unchanged.
+3. **Verified cookie list for the Accept state**: `_ga` and `_ga_6EWT7G0LZS` only, about 13 months
+   (Chromium's cap on the observed expiry). `_gid`, `_gat*`, `_gcl*` were not observed.
+4. The WhatsApp link tag `wa_click` was not tested by clicking `wa.me`.
+5. **Test traffic**: the Accept runs sent a few real test page views to the live GA4 property from a headless
+   browser in Malaysia. They do not matter for the notice.
 
-## Appendix: test script
+## Appendix: test script (first test; the follow-up scripts differ only in timing and logging)
 
 ```js
 import { chromium } from "/Users/charlie/Documents/Projects/Personal/Math-wt-privacy/web/node_modules/.pnpm/playwright-core@1.63.0/node_modules/playwright-core/index.mjs";
