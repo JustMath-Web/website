@@ -165,3 +165,28 @@ await run("2. Reject", async (p) => { await p.locator('#consent-banner [data-con
 await run("3. Accept", async (p) => { await p.locator('#consent-banner [data-consent="accept"]').click(); await p.waitForLoadState("networkidle"); });
 await run("4. Accept then Reject (via footer Cookie settings)", async (p) => { await p.locator('#consent-banner [data-consent="accept"]').click(); await p.waitForTimeout(3000); await p.locator("[data-consent-open]").click(); await p.locator('#consent-banner [data-consent="reject"]').click(); await p.waitForLoadState("networkidle"); });
 ```
+
+## 5. Real-container test of the opt-out widget (2026-10-13)
+
+Sections 3 and 3b above describe the superseded opt-in banner. This section tests the current opt-out widget
+("Cookies / Kuki") with the published container `GTM-KP5SMKV`, on a locally served build (hostname
+`mathematicsmalaysia.com` mapped to localhost; no production security headers; headless Chromium; context-level
+request capture, which may miss requests sent while a page unloads). Runs sent test page views to the live
+GA4 property. Heads tested: `5bc6394` (3 runs) and `388a8e8` (3 runs, then 3 runs with both stores blocked).
+
+| Step | Observed (identical in all runs) |
+|---|---|
+| Fresh visit, 9 s, panel closed | `_ga` and `_ga_6EWT7G0LZS` set; 6 Google requests (`gtm.js`, `gtag/js`, `analytics.google.com/g/collect`, `stats.g.doubleclick.net/g/collect`, `google.com.my/ads/ga-audiences`, plus one more). **Google runs before any notice is opened** |
+| Opt out (about 9 s after load) | Google cookies gone at +3 s and +9 s; only the site's own `jm-consent-v1` cookie remains; **no Google request observed after Opt out** |
+| Next page `/privacy/`, +4 s | no Google cookie; no Google request observed; status "Google tracking is off in this browser." |
+| Keep on (opt back in), no reload | GTM loads again at once: 5 requests (`gtm.js`, `gtag/js`, `collect`, `doubleclick collect`, `ga-audiences`); `_ga` and `_ga_6EWT7G0LZS` return |
+| Reload after opting back in | tracking continues |
+| **Both stores blocked** (head `388a8e8`; `localStorage` throws and `jm-consent-v1` cookie writes are ignored) | Opt out: Google cookies cleared, **no Google request observed after Opt out**, panel shows "Your browser does not let this site save your choice, so the opt-out applies to this tab only."; next page in the same tab: no Google cookie, no request observed |
+
+Before head `388a8e8`, Bob found that with both stores blocked the reload lost the choice and GTM restarted
+(fail open); fixed in `da68b97` (no reload; `ga-disable-G-6EWT7G0LZS`, Consent Mode denied, cookie clear and a
+`window.name` tab marker) with an e2e test that fails without the fix. A browser may drop `window.name` on a
+cross-site navigation; same-site navigation is what this fallback needs.
+
+Still to do: the live-site re-test under the production CSP after release; whether the opt-out design is lawful
+is for the adviser (Act 709 s.6 and s.7), not shown by this test.
