@@ -331,6 +331,88 @@ test("both stores blocked: the opt-out fails closed, with no reload, for this ta
 	expect(await page.evaluate(() => window.name)).not.toContain("jm-optout");
 });
 
+const bothBlocked = (page: Page) =>
+	page.addInitScript(() => {
+		Object.defineProperty(window, "localStorage", {
+			get() {
+				throw new DOMException("blocked", "SecurityError");
+			},
+		});
+		Object.defineProperty(document, "cookie", {
+			get: () => "",
+			set: () => {},
+		});
+	});
+
+const signals = (v: string) => ({
+	analytics_storage: v,
+	ad_storage: v,
+	ad_user_data: v,
+	ad_personalization: v,
+});
+
+const layerNow = (page: Page) =>
+	page.evaluate(() =>
+		((window as any).dataLayer ?? []).map((e: unknown) =>
+			Object.prototype.toString.call(e) === "[object Arguments]"
+				? Array.from(e as ArrayLike<unknown>)
+				: e,
+		),
+	);
+
+test("both stores blocked, same page: opt out then Keep on reloads and tracks again with signals granted", async ({
+	page,
+}) => {
+	const hits: string[] = [];
+	await asProduction(page, hits);
+	await bothBlocked(page);
+	await page.goto("/");
+	await expect.poll(() => gtmCount(hits)).toBe(1);
+	hits.length = 0;
+	await choose(page, "reject");
+	await expect(
+		page.locator('#consent-panel [data-consent-status="tab"]'),
+	).toBeVisible();
+	await page.waitForTimeout(800);
+	expect(hits).toEqual([]);
+	await Promise.all([page.waitForEvent("load"), choose(page, "accept")]);
+	await expect.poll(() => gtmCount(hits)).toBe(1);
+	expect(
+		await page.evaluate(() => (window as any)["ga-disable-G-6EWT7G0LZS"]),
+	).not.toBe(true);
+	const seen = await layerNow(page);
+	expect(seen.slice(0, 2)).toEqual([
+		["consent", "default", signals("denied")],
+		["consent", "update", signals("granted")],
+	]);
+	expect(seen[2]).toMatchObject({ event: "gtm.js" });
+	expect(await page.evaluate(() => window.name)).not.toContain("jm-optout");
+	await page.locator("#consent-toggle").click();
+	await expect(page.locator("#consent-panel .consent__status")).toContainText(
+		"Google tracking is on",
+	);
+});
+
+test("normal storage, same page: opt out then Keep on loads GTM with signals granted and no ga-disable", async ({
+	page,
+}) => {
+	const hits: string[] = [];
+	await asProduction(page, hits);
+	await page.goto("/");
+	await optOut(page);
+	hits.length = 0;
+	await choose(page, "accept");
+	await expect.poll(() => gtmCount(hits)).toBe(1);
+	expect(
+		await page.evaluate(() => (window as any)["ga-disable-G-6EWT7G0LZS"]),
+	).not.toBe(true);
+	const seen = await layerNow(page);
+	expect(seen.slice(0, 2)).toEqual([
+		["consent", "default", signals("denied")],
+		["consent", "update", signals("granted")],
+	]);
+});
+
 test("garbage or old-version stored choice counts as no choice, so tracking is on", async ({
 	page,
 }) => {

@@ -190,6 +190,34 @@
 		}
 	}
 
+	// True once this page disabled a running GTM in place (the tab-only fallback) instead of reloading.
+	var disabledThisPage = false;
+
+	/** @param {"denied" | "granted"} value */
+	function pushSignals(value) {
+		var layer = window.dataLayer;
+		if (!layer) return;
+		var state = {
+			analytics_storage: value,
+			ad_storage: value,
+			ad_user_data: value,
+			ad_personalization: value,
+		};
+		// GTM reads gtag() commands as `arguments` objects, so push `arguments`.
+		(function () {
+			layer.push(arguments);
+		})("consent", "update", state);
+	}
+
+	/** @param {boolean} on */
+	function setGaDisable(on) {
+		var el = document.querySelector("script[data-ga4-id]");
+		var id = el && el.getAttribute("data-ga4-id");
+		if (!id) return;
+		if (on) /** @type {any} */ (window)["ga-disable-" + id] = true;
+		else delete (/** @type {any} */ (window)["ga-disable-" + id]);
+	}
+
 	/**
 	 * The opt-out could not be saved anywhere (localStorage and cookies both refuse writes). A reload
 	 * would lose it and start Google again, so do not reload: stop Google in this page, remember the
@@ -197,22 +225,9 @@
 	 */
 	function failClosed() {
 		setTabOptOut(true);
-		var layer = window.dataLayer;
-		if (layer) {
-			var denied = {
-				analytics_storage: "denied",
-				ad_storage: "denied",
-				ad_user_data: "denied",
-				ad_personalization: "denied",
-			};
-			// GTM reads gtag() commands as `arguments` objects, so push `arguments`.
-			(function () {
-				layer.push(arguments);
-			})("consent", "update", denied);
-		}
-		var el = document.querySelector("script[data-ga4-id]");
-		var id = el && el.getAttribute("data-ga4-id");
-		if (id) /** @type {any} */ (window)["ga-disable-" + id] = true;
+		disabledThisPage = true;
+		pushSignals("denied");
+		setGaDisable(true);
 		clearGoogleCookies();
 		sync();
 		window.dispatchEvent(new CustomEvent("jm-consent", { detail: "rejected" }));
@@ -228,6 +243,14 @@
 		}
 		sync();
 		if (choice === "accepted") {
+			// The tab marker is already cleared by write(). Undo whatever the tab-only fallback did.
+			setGaDisable(false);
+			pushSignals("granted");
+			if (disabledThisPage) {
+				// GTM was disabled in place, not reloaded away. A clean reload starts it with tracking on.
+				window.location.reload();
+				return;
+			}
 			gtmMayRun = hostGateOpen();
 		} else if (gtmMayRun || googleCookieNames().length > 0) {
 			// GTM may already be running in this page. Clearing cookies and reloading is the only

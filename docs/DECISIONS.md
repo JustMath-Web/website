@@ -3141,6 +3141,7 @@ keeping WhatsApp messages until someone asks for deletion satisfies the PDPA ret
     features in that browser, that this website deletes the Google cookies it can reach, that the choice
     is saved in local storage and a first-party cookie named `jm-consent-v1`, and that if saving is
     blocked the opt-out lasts for that tab only. Wording is still DRAFT.
+  - **2026-10-13, second follow-up (Bob P1 on `c9420df`).** Opting back in on the same page after a tab-only opt-out left `ga-disable-<id>` true and signals denied. Opt back in now clears the tab marker and `ga-disable`, pushes the granted update, and reloads if the page had disabled GTM in place; normal storage still needs no reload.
 
 **FE self-check (scoped to PR #126; guideline 02-INFORMATIVE-BLOG.md section 9).** Evidence is from runs in
 the 2026-10-09 revision round, on commit `0c9d0ba` plus the revision; the FE-22 row is from 2026-10-10 on
