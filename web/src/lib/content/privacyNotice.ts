@@ -2,7 +2,7 @@
  * The bilingual privacy notice as typed data (docs/DECISIONS.md §49). Plain text only: runs are
  * strings, emphasis or named facts, never markup. `NoticeBlocks.astro` renders them; Astro escapes
  * every string. DRAFT COPY, not approved for publication: it needs owner approval, a native Malay
- * check, a GTM container check (advertising-features wording) and qualified advice.
+ * check (the Malay is a plain translation), a GTM container check (advertising-features wording) and qualified advice.
  */
 
 /** The ten headings, in the order the page shows them. */
@@ -100,11 +100,9 @@ const en: NoticeLanguage<"en"> = {
 						],
 						[
 							{ em: "When you visit this website:" },
-							" ",
-							{ strong: "only if you accept" },
-							" (see the cookie choice), we use Google Tag Manager and Google Analytics to count visits and understand how the site is used. Google may also use this data for its advertising features. Google Analytics and these advertising features load ",
-							{ strong: "only if you accept" },
-							". If you accept, Google sets cookies or similar identifiers in your browser, and receives your IP address and details of your device and visit. This helps us improve the lessons and the site.",
+							" we use Google Tag Manager and Google Analytics to count visits and understand how the site is used. Google may also use this data for its advertising features. Google sets cookies or similar identifiers in your browser, and receives your IP address and details of your device and visit. ",
+							{ strong: "By using this website you agree to this." },
+							' You can opt out at any time with the "Cookies / Kuki" button on every page, or under "Your choices" below. This helps us improve the lessons and the site.',
 						],
 						[
 							{
@@ -113,7 +111,7 @@ const en: NoticeLanguage<"en"> = {
 							" process technical data such as your IP address so that pages and images load safely.",
 						],
 						[
-							"Blog posts that contain a YouTube video load that video from YouTube's privacy-enhanced domain as you scroll to it. This does not depend on your cookie choice. YouTube's own terms apply.",
+							"Blog posts that contain a YouTube video load that video from YouTube's privacy-enhanced domain as you scroll to it. This does not depend on your opt-out. YouTube's own terms apply.",
 						],
 					],
 				},
@@ -139,9 +137,9 @@ const en: NoticeLanguage<"en"> = {
 			blocks: [
 				{
 					p: [
-						"WhatsApp details and what you write come from you. Visit data comes from your browser and device. It is collected by Google's tags on this website ",
-						{ strong: "only after you accept" },
-						" the cookie choice.",
+						"WhatsApp details and what you write come from you. Visit data comes from your browser and device. Google's tags on this website collect it unless you have ",
+						{ strong: "opted out" },
+						".",
 					],
 				},
 			],
@@ -187,7 +185,7 @@ const en: NoticeLanguage<"en"> = {
 			blocks: [
 				{
 					p: [
-						'You can block or delete cookies in your browser settings. You can change your choice at any time using "Cookie settings" in the footer. Your choice not to give data may mean we cannot reply to you.',
+						'You can opt out of Google Analytics and its advertising features at any time with the "Cookies / Kuki" button on every page (or "Cookie settings" in the footer), and opt back in the same way. Opting out stops them in that browser and removes their cookies. Your choice is stored in that browser only, so you need to make it again in each browser or device you use. You can also block or delete cookies in your browser settings. Your choice not to give data may mean we cannot reply to you.',
 					],
 				},
 			],
@@ -249,11 +247,9 @@ const ms: NoticeLanguage<"ms"> = {
 						],
 						[
 							{ em: "Apabila anda melawat laman web ini:" },
-							" ",
-							{ strong: "hanya jika anda bersetuju" },
-							" (lihat pilihan kuki), kami menggunakan Google Tag Manager dan Google Analytics untuk mengira lawatan dan memahami cara laman web digunakan. Google juga boleh menggunakan data ini untuk ciri pengiklanannya. Google Analytics dan ciri pengiklanan ini ",
-							{ strong: "hanya dimuatkan jika anda bersetuju" },
-							". Jika anda bersetuju, Google menetapkan kuki atau pengecam serupa dalam pelayar anda, dan menerima alamat IP serta maklumat peranti dan lawatan anda. Ini membantu kami menambah baik kelas dan laman web.",
+							" kami menggunakan Google Tag Manager dan Google Analytics untuk mengira lawatan dan memahami cara laman web digunakan. Google juga boleh menggunakan data ini untuk ciri pengiklanannya. Google menetapkan kuki atau pengecam serupa dalam pelayar anda, dan menerima alamat IP serta maklumat peranti dan lawatan anda. ",
+							{ strong: "Dengan menggunakan laman web ini, anda bersetuju." },
+							' Anda boleh menarik diri pada bila-bila masa dengan butang "Cookies / Kuki" pada setiap halaman, atau di bawah "Pilihan anda" di bawah. Ini membantu kami menambah baik kelas dan laman web.',
 						],
 						[
 							{
@@ -262,7 +258,7 @@ const ms: NoticeLanguage<"ms"> = {
 							" memproses data teknikal seperti alamat IP anda supaya halaman dan imej dimuatkan dengan selamat.",
 						],
 						[
-							"Catatan blog yang mengandungi video YouTube memuatkan video itu daripada domain mod privasi dipertingkat YouTube apabila anda menatal ke arahnya. Ini tidak bergantung pada pilihan kuki anda. Terma YouTube sendiri terpakai.",
+							"Catatan blog yang mengandungi video YouTube memuatkan video itu daripada domain mod privasi dipertingkat YouTube apabila anda menatal ke arahnya. Ini tidak bergantung pada tindakan anda menarik diri. Terma YouTube sendiri terpakai.",
 						],
 					],
 				},
@@ -288,9 +284,9 @@ const ms: NoticeLanguage<"ms"> = {
 			blocks: [
 				{
 					p: [
-						"Butiran WhatsApp dan apa yang anda tulis datang daripada anda. Data lawatan datang daripada pelayar dan peranti anda. Ia dikumpul oleh tag Google di laman web ini ",
-						{ strong: "hanya selepas anda bersetuju" },
-						" dengan pilihan kuki.",
+						"Butiran WhatsApp dan apa yang anda tulis datang daripada anda. Data lawatan datang daripada pelayar dan peranti anda. Tag Google di laman web ini mengumpulnya melainkan anda telah ",
+						{ strong: "menarik diri" },
+						".",
 					],
 				},
 			],
@@ -336,7 +332,7 @@ const ms: NoticeLanguage<"ms"> = {
 			blocks: [
 				{
 					p: [
-						'Anda boleh menyekat atau memadam kuki dalam tetapan pelayar. Anda boleh menukar pilihan pada bila-bila masa melalui "Tetapan kuki" di bahagian bawah. Jika anda tidak memberi data, kami mungkin tidak dapat membalas anda.',
+						'Anda boleh menarik diri daripada Google Analytics dan ciri pengiklanannya pada bila-bila masa dengan butang "Cookies / Kuki" pada setiap halaman (atau "Tetapan kuki" di bahagian bawah), dan memilih semula dengan cara yang sama. Menarik diri menghentikannya dalam pelayar itu dan memadam kukinya. Pilihan anda disimpan dalam pelayar itu sahaja, jadi anda perlu membuatnya semula dalam setiap pelayar atau peranti yang anda gunakan. Anda juga boleh menyekat atau memadam kuki dalam tetapan pelayar. Jika anda tidak memberi data, kami mungkin tidak dapat membalas anda.',
 					],
 				},
 			],
