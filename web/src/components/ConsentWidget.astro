@@ -1,0 +1,202 @@
+---
+/**
+ * Floating "Cookies / Kuki" widget with an opt-out panel, Malay and English together (docs/DECISIONS.md
+ * §49, R16). Google measurement is ON by default; the visitor can opt out and back in here. Hidden in
+ * the HTML and shown by `public/consent.js`, so a visitor without JavaScript sees nothing and is not
+ * tracked. Equal buttons, no pre-ticked box. Never opens by itself, never blocks content.
+ *
+ * Wording gate (DRAFT): the widget label, the panel text and the status lines are owner-approval
+ * drafts. The advertising-features sentence and the Malay text (a plain translation, native review
+ * pending) must be confirmed against GTM container GTM-KP5SMKV / GA4 and a native Malay review before
+ * release (see docs/DECISIONS.md §49).
+ */
+---
+
+<div id="consent-widget" class="consent" hidden>
+	<div
+		id="consent-panel"
+		class="consent__panel"
+		role="region"
+		aria-label="Cookie choice / Pilihan kuki"
+		hidden
+	>
+		<p class="consent__text" lang="en">
+			We use Google Analytics to count visits and understand how the site is
+			used. Google may also use this data for its advertising features. By using
+			this website you agree to this. You can opt out here at any time.
+			{" "}<a href="/privacy/">Privacy notice</a>
+		</p>
+		<p class="consent__text" lang="ms">
+			Kami menggunakan Google Analytics untuk mengira lawatan dan memahami cara
+			laman web digunakan. Google juga boleh menggunakan data ini untuk ciri
+			pengiklanannya. Dengan menggunakan laman web ini, anda bersetuju. Anda
+			boleh menarik diri di sini pada bila-bila masa.
+			{" "}<a href="/privacy/">Notis privasi</a>
+		</p>
+		<p class="consent__status" aria-live="polite">
+			<span data-consent-status="on">
+				<span lang="en">Google tracking is on in this browser.</span>
+				/
+				<span lang="ms">Penjejakan Google dihidupkan dalam pelayar ini.</span>
+			</span>
+			<span data-consent-status="off" hidden>
+				<span lang="en">Google tracking is off in this browser.</span>
+				/
+				<span lang="ms">Penjejakan Google dimatikan dalam pelayar ini.</span>
+			</span>
+		</p>
+		<div class="consent__actions">
+			<button
+				type="button"
+				class="consent__btn"
+				data-consent="accept"
+				aria-pressed="true"
+			>
+				Keep on / Kekal hidup
+			</button>
+			<button
+				type="button"
+				class="consent__btn"
+				data-consent="reject"
+				aria-pressed="false"
+			>
+				Opt out / Tarik diri
+			</button>
+		</div>
+		<button type="button" class="consent__close" data-consent-close>
+			Close / Tutup
+		</button>
+	</div>
+	<button
+		type="button"
+		id="consent-toggle"
+		class="consent__toggle"
+		data-consent-toggle
+		aria-expanded="false"
+		aria-controls="consent-panel"
+	>
+		<svg
+			class="consent__icon"
+			viewBox="0 0 24 24"
+			width="18"
+			height="18"
+			aria-hidden="true"
+			focusable="false"
+		>
+			<circle
+				cx="12"
+				cy="12"
+				r="9"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"></circle>
+			<circle cx="9" cy="10" r="1.3" fill="currentColor"></circle>
+			<circle cx="14.5" cy="9" r="1.1" fill="currentColor"></circle>
+			<circle cx="13" cy="15" r="1.3" fill="currentColor"></circle>
+		</svg>
+		Cookies / Kuki
+	</button>
+</div>
+
+<style>
+	.consent {
+		position: fixed;
+		inset-inline-start: var(--space-3);
+		/* Sits above the fixed mobile WhatsApp bar; consent.js sets --consent-offset to its height. */
+		inset-block-end: calc(var(--consent-offset, 0px) + var(--space-3));
+		z-index: 50;
+		display: grid;
+		gap: var(--space-2);
+		justify-items: start;
+		max-width: calc(100vw - 2 * var(--space-3));
+	}
+
+	.consent[hidden],
+	.consent__panel[hidden],
+	.consent__status [hidden] {
+		display: none;
+	}
+
+	.consent__toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2);
+		min-width: 44px;
+		min-height: 44px;
+		padding: var(--space-2) var(--space-3);
+		border: 1px solid var(--ink-300);
+		border-radius: 10px;
+		background: var(--ink-900);
+		color: var(--paper);
+		font: var(--type-small);
+		cursor: pointer;
+	}
+
+	.consent__panel {
+		display: grid;
+		gap: var(--space-3);
+		box-sizing: border-box;
+		width: min(24rem, calc(100vw - 2 * var(--space-3)));
+		max-height: 60vh;
+		overflow-y: auto;
+		padding: var(--space-4);
+		border: 1px solid var(--ink-300);
+		border-radius: 10px;
+		background: var(--ink-900);
+		color: var(--paper);
+	}
+
+	.consent__text,
+	.consent__status {
+		margin: 0;
+		font: var(--type-small);
+	}
+
+	.consent__text a {
+		/* Holds the gap even if the compiler collapses the space before the link. */
+		margin-inline-start: 0.25em;
+		color: inherit;
+		text-decoration: underline;
+	}
+
+	.consent__actions {
+		display: flex;
+		gap: var(--space-3);
+	}
+
+	.consent__btn {
+		flex: 1 1 0;
+		min-height: 44px;
+		padding: var(--space-2) var(--space-3);
+		border: 1px solid currentColor;
+		background: transparent;
+		color: inherit;
+		font: var(--type-small);
+		cursor: pointer;
+	}
+
+	.consent__btn[aria-pressed="true"] {
+		background: var(--paper);
+		color: var(--ink-900);
+	}
+
+	.consent__close {
+		justify-self: start;
+		min-height: 44px;
+		padding: var(--space-2) var(--space-3);
+		border: 0;
+		background: transparent;
+		color: inherit;
+		font: var(--type-small);
+		text-decoration: underline;
+		cursor: pointer;
+	}
+
+	.consent__toggle:focus-visible,
+	.consent__btn:focus-visible,
+	.consent__close:focus-visible,
+	.consent__text a:focus-visible {
+		outline: 2px solid var(--ochre-500);
+		outline-offset: 2px;
+	}
+</style>

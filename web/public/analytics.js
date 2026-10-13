@@ -12,11 +12,11 @@
  * attributes set by `src/components/Analytics.astro`, which reads them from `src/lib/analytics.ts` —
  * the single source of truth (`docs/DECISIONS.md` §12).
  *
- * GTM now loads only after an `accepted` choice; see `consent.js`. On that choice, and before GTM
- * is requested, Google Consent Mode v2 is declared on the dataLayer: all four signals `denied` by
- * default, then `granted` as the visitor accepted. Nothing is defined or pushed before then. The
- * design is a binary accept/reject gate, so the update grants all four together (docs/DECISIONS.md
- * §49, ruling R14).
+ * Opt-out model (docs/DECISIONS.md §49, R16): GTM loads on every page of the production host unless
+ * the visitor opted out; see `consent.js`. Before GTM is requested, Google Consent Mode v2 is declared
+ * on the dataLayer: all four signals `denied` by default, then `granted` (tracking is on). An opted-out
+ * page defines and pushes nothing. The design is a binary on/off, so the update grants all four
+ * together.
  */
 (function () {
 	// `document.currentScript` is null for a deferred script, so find the tag by its marker.
@@ -63,9 +63,11 @@
 		document.head.appendChild(tag);
 	}
 
-	// Consent first. `consent.js` is deferred ahead of this file, so `jmConsent` exists here.
+	// `consent.js` is deferred ahead of this file, so `jmConsent` exists here. If it is missing,
+	// do nothing rather than track without being able to honour an opt-out.
+	if (!window.jmConsent) return;
 	window.addEventListener("jm-consent", function (event) {
 		if (event.detail === "accepted") start();
 	});
-	if (window.jmConsent && window.jmConsent.get() === "accepted") start();
+	if (window.jmConsent.get() !== "rejected") start();
 })();

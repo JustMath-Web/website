@@ -582,7 +582,7 @@ test.describe("blog post table of contents", () => {
 		page,
 	}) => {
 		await page.setViewportSize({ width: 390, height: 844 });
-		// A returning visitor: the consent banner shares this bottom strip with the pill.
+		// A returning visitor: the cookie widget shares this bottom strip with the pill.
 		await page.addInitScript(() =>
 			window.localStorage.setItem(
 				"jm-consent-v1",

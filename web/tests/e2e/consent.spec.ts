@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 import { assertNoHorizontalOverflow } from "./helpers";
 
 const GOOGLE =
@@ -48,82 +48,161 @@ test("built HTML has no Google Tag Manager noscript iframe", async ({
 	expect(html).not.toContain("googletagmanager.com");
 });
 
-test("no Google request before a choice, even on the production host", async ({
+const gtmCount = (hits: string[]) =>
+	hits.filter((u) => u.includes("gtm.js")).length;
+
+const googleCookies = async (context: BrowserContext) =>
+	(await context.cookies())
+		.map((c) => c.name)
+		.filter((n) => /^_(ga|gid|gat|gcl)/.test(n));
+
+/** Open the panel with the floating button, then press one of its two buttons. */
+async function choose(page: Page, which: "accept" | "reject") {
+	const panel = page.locator("#consent-panel");
+	if (await panel.isHidden()) await page.locator("#consent-toggle").click();
+	await panel.locator(`[data-consent="${which}"]`).click();
+}
+
+/** Opt out through the real UI and wait for the reload it triggers. */
+async function optOut(page: Page) {
+	await Promise.all([page.waitForEvent("load"), choose(page, "reject")]);
+}
+
+test("default visit on the production host: GTM is requested once and the panel is closed", async ({
 	page,
 }) => {
 	const hits: string[] = [];
 	await asProduction(page, hits);
+	await page.goto("/");
+	await expect.poll(() => gtmCount(hits)).toBe(1);
+	await page.waitForLoadState("networkidle");
+	expect(gtmCount(hits)).toBe(1);
+	expect(await page.evaluate(() => (window as any).jmConsent.get())).toBeNull();
+	await expect(page.locator("#consent-toggle")).toBeVisible();
+	await expect(page.locator("#consent-panel")).toBeHidden();
+	await expect(page.locator("#consent-toggle")).toHaveAttribute(
+		"aria-expanded",
+		"false",
+	);
+});
+
+test("default visit on a non-production host loads nothing from Google", async ({
+	page,
+}) => {
+	const hits: string[] = [];
+	await page.route(GOOGLE, (route) => {
+		hits.push(route.request().url());
+		return route.abort();
+	});
 	await page.goto("/");
 	await page.waitForLoadState("networkidle");
 	expect(hits).toEqual([]);
 	expect(await page.evaluate(() => (window as any).dataLayer)).toBeUndefined();
-	expect(await page.evaluate(() => (window as any).jmConsent.get())).toBeNull();
 });
 
-test("accept loads GTM once and the choice survives a reload", async ({
-	page,
-}) => {
-	const hits: string[] = [];
-	await asProduction(page, hits);
-	await page.goto("/");
-	await page.evaluate(() => (window as any).jmConsent.set("accepted"));
-	await expect
-		.poll(() => hits.filter((u) => u.includes("gtm.js")).length)
-		.toBe(1);
-	await page.reload();
-	await expect
-		.poll(() => hits.filter((u) => u.includes("gtm.js")).length)
-		.toBe(2); // one per page load
-	expect(await page.evaluate(() => (window as any).jmConsent.get())).toBe(
-		"accepted",
-	);
-});
-
-test("reject loads nothing and survives a reload", async ({ page }) => {
-	const hits: string[] = [];
-	await asProduction(page, hits);
-	await page.goto("/");
-	await page.evaluate(() => (window as any).jmConsent.set("rejected"));
-	await page.reload();
-	await page.waitForLoadState("networkidle");
-	expect(hits).toEqual([]);
-	expect(await page.evaluate(() => (window as any).jmConsent.get())).toBe(
-		"rejected",
-	);
-});
-
-test("accept then reject clears Google cookies and stops GTM after the reload", async ({
+test("opt out: nothing from Google after the reload and on the next page, cookies cleared, choice stored twice", async ({
 	page,
 	context,
 }) => {
 	const hits: string[] = [];
 	await asProduction(page, hits);
 	await page.goto("/");
-	await page.evaluate(() => (window as any).jmConsent.set("accepted"));
+	await expect.poll(() => gtmCount(hits)).toBe(1);
 	await context.addCookies([
 		{ name: "_ga", value: "x", url: "http://127.0.0.1:4321" },
 		{ name: "_ga_ABC123", value: "x", url: "http://127.0.0.1:4321" },
 		{ name: "keep", value: "x", url: "http://127.0.0.1:4321" },
 	]);
 	hits.length = 0;
-	await Promise.all([
-		page.waitForEvent("load"),
-		page.evaluate(() => (window as any).jmConsent.set("rejected")),
-	]);
-	const names = (await context.cookies()).map((c) => c.name);
-	expect(names).toContain("keep");
-	expect(names.filter((n) => /^_(ga|gid|gat|gcl)/.test(n))).toEqual([]);
+	await optOut(page);
+	await page.waitForLoadState("networkidle");
+	const cookies = await context.cookies();
+	expect(cookies.map((c) => c.name)).toContain("keep");
+	expect(await googleCookies(context)).toEqual([]);
+	expect(cookies.find((c) => c.name === "jm-consent-v1")?.value).toBe(
+		"rejected",
+	);
+	expect(
+		await page.evaluate(() => localStorage.getItem("jm-consent-v1")),
+	).toContain('"rejected"');
 	expect(hits).toEqual([]);
+	expect(await page.evaluate(() => (window as any).dataLayer)).toBeUndefined();
+	expect(await page.evaluate(() => "gtag" in window)).toBe(false);
+	expect(await page.evaluate(() => (window as any).jmConsent.get())).toBe(
+		"rejected",
+	);
+	// and on the next page
+	await page.goto("/blog/");
+	await page.waitForLoadState("networkidle");
+	expect(hits).toEqual([]);
+	expect(await page.evaluate(() => (window as any).dataLayer)).toBeUndefined();
 });
 
-test("delayed accept then reject: a Google cookie written while the old page unloads is gone after the reload and a further wait", async ({
+test("after an opt-out the panel shows the off state with Opt out pressed", async ({
+	page,
+}) => {
+	const hits: string[] = [];
+	await asProduction(page, hits);
+	await page.goto("/");
+	await optOut(page);
+	await page.locator("#consent-toggle").click();
+	await expect(page.locator('[data-consent="reject"]')).toHaveAttribute(
+		"aria-pressed",
+		"true",
+	);
+	await expect(page.locator('[data-consent="accept"]')).toHaveAttribute(
+		"aria-pressed",
+		"false",
+	);
+	await expect(page.locator("#consent-panel .consent__status")).toContainText(
+		"Google tracking is off",
+	);
+	await expect(page.locator("#consent-panel .consent__status")).toContainText(
+		"dimatikan",
+	);
+});
+
+test("opt out then opt back in: GTM loads again with no reload and the status line follows", async ({
+	page,
+	context,
+}) => {
+	const hits: string[] = [];
+	await asProduction(page, hits);
+	await page.goto("/");
+	await optOut(page);
+	hits.length = 0;
+	let reloaded = false;
+	page.on("load", () => (reloaded = true));
+	await page.locator("#consent-toggle").click();
+	await choose(page, "accept");
+	await expect.poll(() => gtmCount(hits)).toBe(1);
+	expect(reloaded).toBe(false);
+	await expect(page.locator("#consent-panel .consent__status")).toContainText(
+		"Google tracking is on",
+	);
+	await expect(page.locator('[data-consent="accept"]')).toHaveAttribute(
+		"aria-pressed",
+		"true",
+	);
+	expect(
+		(await context.cookies()).some((c) => c.name === "jm-consent-v1"),
+	).toBe(false);
+	expect(await page.evaluate(() => (window as any).jmConsent.get())).toBe(
+		"accepted",
+	);
+	// and the next page tracks again
+	await page.goto("/blog/");
+	await expect.poll(() => gtmCount(hits)).toBe(2);
+});
+
+test("delayed opt-out: a Google cookie written while the old page unloads is gone after the reload and a further wait", async ({
 	page,
 	context,
 }) => {
 	const hits: string[] = [];
 	await asProduction(page, hits);
 	// Model what the audit observed: the tag writes its session cookie again while the page that was
-	// accepted unloads (the reload that Reject triggers). Registered after asProduction so it wins.
+	// tracking unloads (the reload that the opt-out triggers). Registered after asProduction so it wins.
 	await page.route(/googletagmanager\.com\/gtm\.js/, (route) => {
 		hits.push(route.request().url());
 		return route.fulfill({
@@ -133,75 +212,22 @@ test("delayed accept then reject: a Google cookie written while the old page unl
 		});
 	});
 	await page.goto("/");
-	await page.evaluate(() => (window as any).jmConsent.set("accepted"));
-	await expect
-		.poll(() => hits.filter((u) => u.includes("gtm.js")).length)
-		.toBe(1);
+	await expect.poll(() => gtmCount(hits)).toBe(1);
 	await page.waitForTimeout(1500);
 	hits.length = 0;
-	await Promise.all([
-		page.waitForEvent("load"),
-		page.evaluate(() => (window as any).jmConsent.set("rejected")),
-	]);
+	await optOut(page);
 	await page.waitForTimeout(1500);
-	const googleCookies = async () =>
-		(await context.cookies())
-			.map((c) => c.name)
-			.filter((n) => /^_(ga|gid|gat|gcl)/.test(n));
-	expect(await googleCookies()).toEqual([]);
+	expect(await googleCookies(context)).toEqual([]);
 	// And it stays gone on the next page, with no Google request.
 	await page.goto("/privacy/");
 	await page.waitForTimeout(1000);
-	expect(await googleCookies()).toEqual([]);
+	expect(await googleCookies(context)).toEqual([]);
 	expect(hits).toEqual([]);
 });
 
-test("blocked storage: accept then reject still stops GTM by reloading", async ({
+test("blocked storage: the opt-out still persists through its cookie and stops GTM on the next page", async ({
 	page,
-}) => {
-	const hits: string[] = [];
-	await asProduction(page, hits);
-	await page.addInitScript(() => {
-		Object.defineProperty(window, "localStorage", {
-			get() {
-				throw new DOMException("blocked", "SecurityError");
-			},
-		});
-	});
-	await page.goto("/");
-	await page.evaluate(() => (window as any).jmConsent.set("accepted"));
-	await expect
-		.poll(() => hits.filter((u) => u.includes("gtm.js")).length)
-		.toBe(1);
-	hits.length = 0;
-	await Promise.all([
-		page.waitForEvent("load"),
-		page.evaluate(() => (window as any).jmConsent.set("rejected")),
-	]);
-	await page.waitForLoadState("networkidle");
-	expect(hits).toEqual([]); // the reloaded page has no stored choice and loads no Google
-	expect(await page.evaluate(() => (window as any).dataLayer)).toBeUndefined();
-});
-
-test("garbage or old-version stored choice counts as no choice", async ({
-	page,
-}) => {
-	await page.addInitScript(() =>
-		localStorage.setItem("jm-consent-v1", "{not json"),
-	);
-	await page.goto("/");
-	expect(await page.evaluate(() => (window as any).jmConsent.get())).toBeNull();
-	await page.evaluate(() =>
-		localStorage.setItem(
-			"jm-consent-v1",
-			JSON.stringify({ choice: "accepted", version: 0 }),
-		),
-	);
-	expect(await page.evaluate(() => (window as any).jmConsent.get())).toBeNull();
-});
-
-test("unavailable localStorage does not crash and does not track", async ({
-	page,
+	context,
 }) => {
 	const hits: string[] = [];
 	await asProduction(page, hits);
@@ -215,61 +241,150 @@ test("unavailable localStorage does not crash and does not track", async ({
 	const errors: string[] = [];
 	page.on("pageerror", (e) => errors.push(e.message));
 	await page.goto("/");
+	await expect.poll(() => gtmCount(hits)).toBe(1); // no stored choice: tracking is on
+	hits.length = 0;
+	await optOut(page); // GTM may be running, so it reloads even though nothing could be stored
 	await page.waitForLoadState("networkidle");
-	expect(errors).toEqual([]);
 	expect(hits).toEqual([]);
-	expect(await page.evaluate(() => (window as any).jmConsent.get())).toBeNull();
+	expect(await page.evaluate(() => (window as any).dataLayer)).toBeUndefined();
+	expect(await page.evaluate(() => (window as any).jmConsent.get())).toBe(
+		"rejected",
+	);
+	expect(
+		(await context.cookies()).find((c) => c.name === "jm-consent-v1")?.value,
+	).toBe("rejected");
+	await page.goto("/blog/");
+	await page.waitForLoadState("networkidle");
+	expect(hits).toEqual([]);
+	expect(errors).toEqual([]);
 });
 
-test("banner appears with no choice, in Malay and English, with equal buttons", async ({
+test("garbage or old-version stored choice counts as no choice, so tracking is on", async ({
+	page,
+}) => {
+	const hits: string[] = [];
+	await asProduction(page, hits);
+	await page.addInitScript(() =>
+		localStorage.setItem("jm-consent-v1", "{not json"),
+	);
+	await page.goto("/");
+	expect(await page.evaluate(() => (window as any).jmConsent.get())).toBeNull();
+	await expect.poll(() => gtmCount(hits)).toBe(1);
+	await page.evaluate(() =>
+		localStorage.setItem(
+			"jm-consent-v1",
+			JSON.stringify({ choice: "rejected", version: 0 }),
+		),
+	);
+	expect(await page.evaluate(() => (window as any).jmConsent.get())).toBeNull();
+	await page.reload();
+	await expect.poll(() => gtmCount(hits)).toBe(2);
+});
+
+test("widget is visible with no choice, with bilingual text and equal buttons", async ({
 	page,
 }) => {
 	await page.goto("/");
-	const banner = page.locator("#consent-banner");
-	await expect(banner).toBeVisible();
-	await expect(banner).toContainText("Accept");
-	await expect(banner).toContainText("Terima");
-	await expect(banner).toContainText("Reject");
-	await expect(banner).toContainText("Tolak");
-	await expect(banner.locator('a[href="/privacy/"]').first()).toBeVisible();
-	const a = await banner.locator('[data-consent="accept"]').boundingBox();
-	const r = await banner.locator('[data-consent="reject"]').boundingBox();
+	const toggle = page.locator("#consent-toggle");
+	await expect(toggle).toBeVisible();
+	await expect(toggle).toContainText("Cookies / Kuki");
+	await toggle.click();
+	const panel = page.locator("#consent-panel");
+	await expect(panel).toBeVisible();
+	await expect(panel.locator('p[lang="en"]').first()).toContainText(
+		"opt out here at any time",
+	);
+	await expect(panel.locator('p[lang="ms"]').first()).toContainText(
+		"menarik diri",
+	);
+	await expect(panel).toContainText("Keep on");
+	await expect(panel).toContainText("Kekal hidup");
+	await expect(panel).toContainText("Opt out");
+	await expect(panel).toContainText("Tarik diri");
+	await expect(panel.locator('a[href="/privacy/"]').first()).toBeVisible();
+	const a = await panel.locator('[data-consent="accept"]').boundingBox();
+	const r = await panel.locator('[data-consent="reject"]').boundingBox();
 	expect(Math.abs(a!.width - r!.width)).toBeLessThanOrEqual(2);
 	expect(Math.abs(a!.height - r!.height)).toBeLessThanOrEqual(2);
-	await expect(banner.locator('input[type="checkbox"]')).toHaveCount(0);
+	await expect(panel.locator('[data-consent="accept"]')).toHaveAttribute(
+		"aria-pressed",
+		"true",
+	);
+	await expect(panel.locator('[data-consent="reject"]')).toHaveAttribute(
+		"aria-pressed",
+		"false",
+	);
+	await expect(panel.locator('input[type="checkbox"]')).toHaveCount(0);
 });
 
-test("clicking Reject hides the banner and it stays hidden on the next page", async ({
+test("the panel opens and closes with the button, Close, Escape and the footer link, and focus returns", async ({
 	page,
 }) => {
 	await page.goto("/");
-	await page.locator('#consent-banner [data-consent="reject"]').click();
-	await expect(page.locator("#consent-banner")).toBeHidden();
-	await page.goto("/blog/");
-	await expect(page.locator("#consent-banner")).toBeHidden();
-});
-
-test("footer Cookie settings reopens the banner and moves focus into it", async ({
-	page,
-}) => {
-	await page.goto("/");
-	await page.locator('#consent-banner [data-consent="reject"]').click();
+	const toggle = page.locator("#consent-toggle");
+	const panel = page.locator("#consent-panel");
+	await toggle.click();
+	await expect(panel).toBeVisible();
+	await expect(toggle).toHaveAttribute("aria-expanded", "true");
+	await toggle.click();
+	await expect(panel).toBeHidden();
+	await expect(toggle).toHaveAttribute("aria-expanded", "false");
+	// Close button returns focus to the floating button
+	await toggle.click();
+	await panel.locator("[data-consent-close]").click();
+	await expect(panel).toBeHidden();
+	await expect(toggle).toBeFocused();
+	// Escape does too
+	await toggle.click();
+	await page.keyboard.press("Escape");
+	await expect(panel).toBeHidden();
+	await expect(toggle).toBeFocused();
+	// the footer link opens the panel and moves focus into it
 	await page.locator("[data-consent-open]").click();
-	await expect(page.locator("#consent-banner")).toBeVisible();
-	await expect(
-		page.locator('#consent-banner [data-consent="accept"]'),
-	).toBeFocused();
+	await expect(panel).toBeVisible();
+	await expect(toggle).toHaveAttribute("aria-expanded", "true");
+	await expect(panel.locator('[data-consent="accept"]')).toBeFocused();
+});
+
+test("opening the widget never happens by itself", async ({ page }) => {
+	await page.goto("/");
+	await page.waitForTimeout(800);
+	await expect(page.locator("#consent-panel")).toBeHidden();
+});
+
+test("the floating button meets the 44px target and the widget is not a focus trap", async ({
+	page,
+}) => {
+	await page.setViewportSize({ width: 1440, height: 900 });
+	await page.goto("/");
+	const box = (await page.locator("#consent-toggle").boundingBox())!;
+	expect(box.width).toBeGreaterThanOrEqual(43.99);
+	expect(box.height).toBeGreaterThanOrEqual(43.99);
+	await page.locator("#consent-toggle").click(); // panel open
+	let left = false;
+	for (let i = 0; i < 8; i++) {
+		await page.keyboard.press("Tab");
+		if (
+			await page.evaluate(
+				() => !document.activeElement?.closest("#consent-widget"),
+			)
+		) {
+			left = true;
+			break;
+		}
+	}
+	expect(left).toBe(true);
 });
 
 for (const width of [320, 390, 640]) {
-	test(`at ${width}px the banner clears the mobile WhatsApp bar and keeps it clickable`, async ({
+	test(`at ${width}px the widget clears the mobile WhatsApp bar, keeps it clickable and does not overflow`, async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width, height: 844 });
 		await page.goto("/");
-		const banner = page.locator("#consent-banner");
+		const toggle = page.locator("#consent-toggle");
 		const bar = page.locator(".mobile-cta-bar");
-		await expect(banner).toBeVisible();
+		await expect(toggle).toBeVisible();
 		await expect(bar).toBeVisible();
 		const offset = await page.evaluate(() =>
 			parseFloat(
@@ -277,44 +392,62 @@ for (const width of [320, 390, 640]) {
 			),
 		);
 		expect(offset).toBeGreaterThan(0); // a fixed bar must be measured, not read as zero
-		const b = (await banner.boundingBox())!;
 		const r = (await bar.boundingBox())!;
-		expect(b.height).toBeLessThanOrEqual(844 * 0.5);
-		// no overlap: the banner's bottom edge is at or above the bar's top edge
-		expect(b.y + b.height).toBeLessThanOrEqual(r.y + 1);
-		// and the bar's own button is what sits under its centre point
-		const cta = bar.locator("a").first();
-		const c = (await cta.boundingBox())!;
-		const topmostIsCta = await page.evaluate(
-			([x, y]) => !!document.elementFromPoint(x, y)?.closest(".mobile-cta-bar"),
-			[c.x + c.width / 2, c.y + c.height / 2],
-		);
-		expect(topmostIsCta).toBe(true);
-		// both banner buttons are reachable
-		for (const which of ["accept", "reject"]) {
-			const btn = banner.locator(`[data-consent="${which}"]`);
-			const box = (await btn.boundingBox())!;
-			const hit = await page.evaluate(
-				([x, y]) =>
-					!!document.elementFromPoint(x, y)?.closest("#consent-banner"),
-				[box.x + box.width / 2, box.y + box.height / 2],
+		const c = (await bar.locator("a").first().boundingBox())!;
+		const topmost = (x: number, y: number, sel: string) =>
+			page.evaluate(
+				([px, py, s]) =>
+					!!document
+						.elementFromPoint(px as number, py as number)
+						?.closest(s as string),
+				[x, y, sel],
 			);
-			expect(hit, which).toBe(true);
+		for (const open of [false, true]) {
+			if (open) await toggle.click();
+			const t = (await toggle.boundingBox())!;
+			// no overlap: the button's bottom edge is at or above the bar's top edge
+			expect(t.y + t.height).toBeLessThanOrEqual(r.y + 1);
+			expect(
+				await topmost(t.x + t.width / 2, t.y + t.height / 2, "#consent-widget"),
+			).toBe(true);
+			// and the bar's own button is what sits under its centre point
+			expect(
+				await topmost(c.x + c.width / 2, c.y + c.height / 2, ".mobile-cta-bar"),
+			).toBe(true);
+			if (open) {
+				const p = (await page.locator("#consent-panel").boundingBox())!;
+				expect(p.y + p.height).toBeLessThanOrEqual(r.y + 1);
+				expect(p.y).toBeGreaterThanOrEqual(0);
+				for (const which of ["accept", "reject"]) {
+					const b = (await page
+						.locator(`#consent-panel [data-consent="${which}"]`)
+						.boundingBox())!;
+					expect(
+						await topmost(
+							b.x + b.width / 2,
+							b.y + b.height / 2,
+							"#consent-widget",
+						),
+						which,
+					).toBe(true);
+				}
+			}
+			if (width <= 390) await assertNoHorizontalOverflow(page);
 		}
 	});
 }
 
-test("on desktop the banner is not a focus trap", async ({ page }) => {
+test("on desktop the widget sits at the bottom-left with no bar offset", async ({
+	page,
+}) => {
 	await page.setViewportSize({ width: 1440, height: 900 });
 	await page.goto("/");
-	for (let i = 0; i < 12; i++) await page.keyboard.press("Tab");
-	const inside = await page.evaluate(
-		() => !!document.activeElement?.closest("#consent-banner"),
-	);
-	expect(inside).toBe(false);
+	const t = (await page.locator("#consent-toggle").boundingBox())!;
+	expect(t.x).toBeLessThan(40);
+	expect(900 - (t.y + t.height)).toBeLessThan(40);
 });
 
-test("with JavaScript off the banner never shows and nothing tracks", async ({
+test("with JavaScript off the widget never shows and nothing tracks", async ({
 	browser,
 }) => {
 	const ctx = await browser.newContext({ javaScriptEnabled: false });
@@ -324,8 +457,8 @@ test("with JavaScript off the banner never shows and nothing tracks", async ({
 		if (GOOGLE.test(r.url())) hits.push(r.url());
 	});
 	await page.goto("/");
-	await expect(page.locator("#consent-banner")).toBeAttached();
-	await expect(page.locator("#consent-banner")).toBeHidden();
+	await expect(page.locator("#consent-widget")).toBeAttached();
+	await expect(page.locator("#consent-widget")).toBeHidden();
 	expect(hits).toEqual([]);
 	await ctx.close();
 });
@@ -364,7 +497,7 @@ test("/privacy/ has both languages and every s.7(1) heading", async ({
 	expect(sitemap).toContain("/privacy/");
 });
 
-test("every banner and footer link to /privacy/ resolves", async ({
+test("every widget and footer link to /privacy/ resolves", async ({
 	page,
 	request,
 }) => {
@@ -375,7 +508,7 @@ test("every banner and footer link to /privacy/ resolves", async ({
 			.evaluateAll((as) =>
 				as.map((a) => (a as HTMLAnchorElement).getAttribute("href")),
 			);
-		expect(hrefs.length).toBeGreaterThanOrEqual(2); // banner + footer
+		expect(hrefs.length).toBeGreaterThanOrEqual(2); // widget + footer
 		for (const href of new Set(hrefs)) {
 			expect((await request.get(href!)).status(), href!).toBe(200);
 		}
@@ -414,7 +547,7 @@ test("/privacy/ has exactly one h1 and an outline that never skips a level", asy
 	}
 });
 
-test("accept pushes Consent Mode v2 default (all denied) then update (all granted) before gtm.js is requested", async ({
+test("default visit pushes Consent Mode v2 default (all denied) then update (all granted) before gtm.js is requested", async ({
 	page,
 }) => {
 	const hits: string[] = [];
@@ -439,9 +572,6 @@ test("accept pushes Consent Mode v2 default (all denied) then update (all grante
 		});
 	});
 	await page.goto("/");
-	// Nothing is defined or pushed before an accepted choice.
-	expect(await page.evaluate(() => (window as any).dataLayer)).toBeUndefined();
-	await page.evaluate(() => (window as any).jmConsent.set("accepted"));
 	await expect.poll(() => atGtmRequest).not.toBeNull();
 	const signals = (v: string) => ({
 		analytics_storage: v,
@@ -458,21 +588,7 @@ test("accept pushes Consent Mode v2 default (all denied) then update (all grante
 	expect(seen).toHaveLength(3);
 });
 
-test("no dataLayer with no choice and after Reject", async ({ page }) => {
-	const hits: string[] = [];
-	await asProduction(page, hits);
-	await page.goto("/");
-	expect(await page.evaluate(() => (window as any).dataLayer)).toBeUndefined();
-	expect(await page.evaluate(() => "gtag" in window)).toBe(false);
-	await page.evaluate(() => (window as any).jmConsent.set("rejected"));
-	await page.reload();
-	await page.waitForLoadState("networkidle");
-	expect(await page.evaluate(() => (window as any).dataLayer)).toBeUndefined();
-	expect(await page.evaluate(() => "gtag" in window)).toBe(false);
-	expect(hits).toEqual([]);
-});
-
-test("a blog post with a YouTube video still loads no Google analytics or ads request after Reject", async ({
+test("a blog post with a YouTube video still loads no Google analytics or ads request after opt-out", async ({
 	page,
 }) => {
 	const hits: string[] = [];
@@ -490,7 +606,8 @@ test("a blog post with a YouTube video still loads no Google analytics or ads re
 		});
 	});
 	await page.goto("/blog/why-surds-trip-up-students/");
-	await page.evaluate(() => (window as any).jmConsent.set("rejected"));
+	await optOut(page);
+	hits.length = 0;
 	await page.reload();
 	await page.waitForLoadState("networkidle");
 	await expect(page.locator(".pt-youtube iframe")).toHaveCount(1);
@@ -510,19 +627,20 @@ for (const width of [320, 390]) {
 }
 
 for (const width of [390, 1440]) {
-	test(`at ${width}px each banner privacy link is visibly separated from the sentence before it`, async ({
+	test(`at ${width}px each widget privacy link is visibly separated from the sentence before it`, async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width, height: 844 });
 		await page.goto("/");
-		await expect(page.locator("#consent-banner")).toBeVisible();
+		await page.locator("#consent-toggle").click();
+		await expect(page.locator("#consent-panel")).toBeVisible();
 		// Measured on the rendered page: the compiler can collapse the whitespace before the link, so
 		// the HTML alone proves nothing. Compare the right edge of the last character before the link
 		// with the link's first box, when they share a line.
 		const gaps = await page.evaluate(() =>
 			Array.from(
 				document.querySelectorAll<HTMLAnchorElement>(
-					'#consent-banner .consent__text a[href="/privacy/"]',
+					'#consent-panel .consent__text a[href="/privacy/"]',
 				),
 			).map((a) => {
 				let node: Node | null = a.previousSibling;
