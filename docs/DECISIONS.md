@@ -3130,6 +3130,17 @@ keeping WhatsApp messages until someone asks for deletion satisfies the PDPA ret
     opt-in banner and must be re-run on the new behaviour (a dated note there says so).
   - The "GA4 numbers will fall" consequence above no longer holds: GA4 counts every visitor who
     has not opted out, and visitors without JavaScript are still not measured.
+  - **2026-10-13 follow-up (after Bob's review of `5bc6394`).** (1) Fail-open bug fixed: if both
+    `localStorage` and the cookie refuse writes, an opt-out used to reload and lose itself. Now the
+    opt-out is read back after writing; if neither store holds it, the page does not reload but pushes
+    Consent Mode update (all four `denied`), sets `ga-disable-<GA4 id>` (the id is passed down as
+    `data-ga4-id` from `src/lib/analytics.ts`), clears Google cookies, records the opt-out for that tab
+    in `window.name` (`jm-optout=1`, other content kept, cleared on opt back in) and shows a third,
+    draft, bilingual status line saying it applies to this tab only. (2) Copy: the notice no longer says
+    opting out "removes their cookies"; it says opting out stops Google Analytics and its advertising
+    features in that browser, that this website deletes the Google cookies it can reach, that the choice
+    is saved in local storage and a first-party cookie named `jm-consent-v1`, and that if saving is
+    blocked the opt-out lasts for that tab only. Wording is still DRAFT.
 
 **FE self-check (scoped to PR #126; guideline 02-INFORMATIVE-BLOG.md section 9).** Evidence is from runs in
 the 2026-10-09 revision round, on commit `0c9d0ba` plus the revision; the FE-22 row is from 2026-10-10 on
