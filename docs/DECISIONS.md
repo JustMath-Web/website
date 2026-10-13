@@ -3142,6 +3142,17 @@ keeping WhatsApp messages until someone asks for deletion satisfies the PDPA ret
     is saved in local storage and a first-party cookie named `jm-consent-v1`, and that if saving is
     blocked the opt-out lasts for that tab only. Wording is still DRAFT.
   - **2026-10-13, second follow-up (Bob P1 on `c9420df`).** Opting back in on the same page after a tab-only opt-out left `ga-disable-<id>` true and signals denied. Opt back in now clears the tab marker and `ga-disable`, pushes the granted update, and reloads if the page had disabled GTM in place; normal storage still needs no reload.
+- **R17 (2026-10-13; Charlie): owner approval recorded and the privacy facts set, before the review gates
+  closed.** Charlie set `copyApprovedOn` and `lastUpdated` (both 2026-10-13) so the privacy-facts guard passes.
+  Bob's review of `82bd361` advised keeping `copyApprovedOn` unset until three gates closed; Charlie chose to set
+  it now. **At the time of approval these were still OPEN:** the qualified Malaysian adviser's answer on the
+  default-on tracking with opt-out design (Act 709 s.6 and s.7); the native Malay review; the decision on the GA4
+  Google signals and ads personalization settings; and the live-site re-test under the production CSP. The
+  approval therefore covers only that the owner accepted the wording as drafted. It is not evidence that the
+  adviser or the Malay review passed. With the facts set, `/privacy/` is no longer `noindex`, has no draft note,
+  and a production build of `main` no longer fails the guard; the e2e that asserted the draft state was inverted
+  (release checklist item 5). The first release of this notice is Charlie's decision to merge. To go back: set
+  `copyApprovedOn` to `null`, or return to the opt-in banner at tag `consent-optin-1ee0203` (local tag).
 
 **FE self-check (scoped to PR #126; guideline 02-INFORMATIVE-BLOG.md section 9).** Evidence is from runs in
 the 2026-10-09 revision round, on commit `0c9d0ba` plus the revision; the FE-22 row is from 2026-10-10 on
