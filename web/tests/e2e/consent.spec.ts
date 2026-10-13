@@ -259,6 +259,78 @@ test("blocked storage: the opt-out still persists through its cookie and stops G
 	expect(errors).toEqual([]);
 });
 
+test("both stores blocked: the opt-out fails closed, with no reload, for this tab", async ({
+	page,
+}) => {
+	const hits: string[] = [];
+	await asProduction(page, hits);
+	await page.addInitScript(() => {
+		Object.defineProperty(window, "localStorage", {
+			get() {
+				throw new DOMException("blocked", "SecurityError");
+			},
+		});
+		Object.defineProperty(document, "cookie", {
+			get: () => "",
+			set: () => {},
+		});
+	});
+	const errors: string[] = [];
+	page.on("pageerror", (e) => errors.push(e.message));
+	let reloaded = false;
+	await page.goto("/");
+	await expect.poll(() => gtmCount(hits)).toBe(1);
+	page.on("load", () => (reloaded = true));
+	hits.length = 0;
+	await choose(page, "reject");
+	await expect(
+		page.locator('#consent-panel [data-consent-status="tab"]'),
+	).toBeVisible();
+	await expect(page.locator("#consent-panel .consent__status")).toContainText(
+		"opt-out applies to this tab only",
+	);
+	await expect(page.locator("#consent-panel .consent__status")).toContainText(
+		"hanya untuk tab ini",
+	);
+	await page.waitForTimeout(1000);
+	expect(reloaded).toBe(false);
+	expect(hits).toEqual([]);
+	const last = await page.evaluate(() => {
+		const layer = (window as any).dataLayer as unknown[];
+		return Array.from(layer[layer.length - 1] as ArrayLike<unknown>);
+	});
+	expect(last).toEqual([
+		"consent",
+		"update",
+		{
+			analytics_storage: "denied",
+			ad_storage: "denied",
+			ad_user_data: "denied",
+			ad_personalization: "denied",
+		},
+	]);
+	expect(
+		await page.evaluate(() => (window as any)["ga-disable-G-6EWT7G0LZS"]),
+	).toBe(true);
+	// the same tab, another page: nothing loads and nothing is defined
+	await page.goto("/blog/");
+	await page.waitForLoadState("networkidle");
+	expect(hits).toEqual([]);
+	expect(await page.evaluate(() => (window as any).dataLayer)).toBeUndefined();
+	expect(await page.evaluate(() => (window as any).jmConsent.get())).toBe(
+		"rejected",
+	);
+	await page.locator("#consent-toggle").click();
+	await expect(
+		page.locator('#consent-panel [data-consent-status="tab"]'),
+	).toBeVisible();
+	expect(errors).toEqual([]);
+	// opting back in clears the tab marker and tracking returns without a reload
+	await choose(page, "accept");
+	await expect.poll(() => gtmCount(hits)).toBe(1);
+	expect(await page.evaluate(() => window.name)).not.toContain("jm-optout");
+});
+
 test("garbage or old-version stored choice counts as no choice, so tracking is on", async ({
 	page,
 }) => {

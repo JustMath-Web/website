@@ -19,12 +19,37 @@
 		});
 	}
 
+	// Last-resort, per-tab opt-out for browsers that refuse BOTH localStorage and cookies: a marker in
+	// window.name, which survives navigation inside one tab and is gone with the tab. Other window.name
+	// content is preserved. (docs/DECISIONS.md §49, R16.)
+	var TAB_TOKEN = "jm-optout=1";
+
+	/** @returns {boolean} */
+	function tabOptOut() {
+		return (
+			String(window.name || "")
+				.split(";")
+				.indexOf(TAB_TOKEN) !== -1
+		);
+	}
+
+	/** @param {boolean} on */
+	function setTabOptOut(on) {
+		var rest = String(window.name || "")
+			.split(";")
+			.filter(function (t) {
+				return t !== TAB_TOKEN && t !== "";
+			});
+		if (on) rest.push(TAB_TOKEN);
+		window.name = rest.join(";");
+	}
+
 	/**
 	 * The stored choice, or null when there is none (or it is garbage or an old version). An opt-out
 	 * in EITHER the localStorage record or the mirror cookie counts, so blocked storage cannot lose it.
 	 * @returns {ConsentChoice | null}
 	 */
-	function read() {
+	function readStored() {
 		var stored = null;
 		try {
 			var v = JSON.parse(
@@ -42,8 +67,20 @@
 		return stored;
 	}
 
+	/** Is an opt-out saved in localStorage or the cookie (not only in this tab)? */
+	function optOutPersisted() {
+		return readStored() === "rejected";
+	}
+
+	/** @returns {ConsentChoice | null} */
+	function read() {
+		if (tabOptOut()) return "rejected";
+		return readStored();
+	}
+
 	/** @param {ConsentChoice} choice */
 	function write(choice) {
+		if (choice === "accepted") setTabOptOut(false);
 		try {
 			window.localStorage.setItem(
 				KEY,
@@ -119,6 +156,7 @@
 	/** Reflect the current choice in the panel: status line and the pressed button. */
 	function sync() {
 		var off = read() === "rejected";
+		var tabOnly = off && !optOutPersisted();
 		var w = widget();
 		if (!w) return;
 		w.querySelectorAll("[data-consent]").forEach(function (btn) {
@@ -128,7 +166,8 @@
 		w.querySelectorAll("[data-consent-status]").forEach(function (node) {
 			var line = /** @type {HTMLElement} */ (node);
 			line.hidden =
-				line.getAttribute("data-consent-status") !== (off ? "off" : "on");
+				line.getAttribute("data-consent-status") !==
+				(off ? (tabOnly ? "tab" : "off") : "on");
 		});
 	}
 
@@ -151,10 +190,42 @@
 		}
 	}
 
+	/**
+	 * The opt-out could not be saved anywhere (localStorage and cookies both refuse writes). A reload
+	 * would lose it and start Google again, so do not reload: stop Google in this page, remember the
+	 * opt-out for this tab only, and say so.
+	 */
+	function failClosed() {
+		setTabOptOut(true);
+		var layer = window.dataLayer;
+		if (layer) {
+			var denied = {
+				analytics_storage: "denied",
+				ad_storage: "denied",
+				ad_user_data: "denied",
+				ad_personalization: "denied",
+			};
+			// GTM reads gtag() commands as `arguments` objects, so push `arguments`.
+			(function () {
+				layer.push(arguments);
+			})("consent", "update", denied);
+		}
+		var el = document.querySelector("script[data-ga4-id]");
+		var id = el && el.getAttribute("data-ga4-id");
+		if (id) /** @type {any} */ (window)["ga-disable-" + id] = true;
+		clearGoogleCookies();
+		sync();
+		window.dispatchEvent(new CustomEvent("jm-consent", { detail: "rejected" }));
+	}
+
 	/** @param {ConsentChoice} choice */
 	function set(choice) {
 		if (choice !== "accepted" && choice !== "rejected") return;
 		write(choice);
+		if (choice === "rejected" && !optOutPersisted()) {
+			failClosed();
+			return;
+		}
 		sync();
 		if (choice === "accepted") {
 			gtmMayRun = hostGateOpen();
