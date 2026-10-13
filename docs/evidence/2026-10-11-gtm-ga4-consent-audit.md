@@ -188,5 +188,11 @@ Before head `388a8e8`, Bob found that with both stores blocked the reload lost t
 `window.name` tab marker) with an e2e test that fails without the fix. A browser may drop `window.name` on a
 cross-site navigation; same-site navigation is what this fallback needs.
 
+**Same-page Keep on after Opt out (head `9868d1b`, real container; Bob's P1 on `c9420df`).** With both stores
+blocked: Opt out cleared the Google cookies with 0 Google requests observed; pressing Keep on on the same page
+reloaded it and Google loaded again (5 distinct requests, `_ga` and `_ga_6EWT7G0LZS` set), `ga-disable-G-6EWT7G0LZS`
+not set, status "on". Before the fix Analytics stayed disabled while the widget said "on". With normal
+storage: the same sequence gave the same result. 2 runs each.
+
 Still to do: the live-site re-test under the production CSP after release; whether the opt-out design is lawful
 is for the adviser (Act 709 s.6 and s.7), not shown by this test.
