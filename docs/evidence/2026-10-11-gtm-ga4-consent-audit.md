@@ -51,6 +51,11 @@ Limit: the GTM version view shows no per-tag consent configuration. That is not 
 The other GA4 property in Charlie's login ("Charlie Kong - GA4", `G-HMMVPEH6L8`) is for `charliekong.me` and is
 unrelated to this site.
 
+> **Note, 2026-10-13.** Section 3 below describes the superseded opt-in banner (no Google request before
+> a choice, then Accept and Reject). The site now runs Google by default with a floating opt-out widget
+> (docs/DECISIONS.md §49, R16). Section 3 must be re-run on the new behaviour before it is relied on;
+> sections 1 and 2 (container and property) are unaffected.
+
 ## 3. Browser test of the three consent states
 
 Method: PR #126 head `8ea9ec3` built (`dist/`), served on this machine, the hostname

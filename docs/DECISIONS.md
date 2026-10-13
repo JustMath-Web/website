@@ -2925,6 +2925,11 @@ What the sources say:
   additional cookies in a worked example. It is guidance, not a ruling.
 - Act s.7(1)(a)-(h) and s.7(3) set what the notice must say and require it in Malay and English.
 
+> **SUPERSEDED IN PART by R16 (2026-10-13).** The opt-in banner described below (Accept/Reject, nothing
+> loads before a choice) was replaced by a floating "Cookies / Kuki" widget with opt-out. Read every
+> "Accept", "Reject", "banner" and "only if you accept" below as the history of the opt-in design, kept
+> unedited. The opt-in code is tagged `consent-optin-1ee0203`.
+
 **What was built (Tasks 1-3, commits `ace6717`, `3adf63d`, `b405fd6`, `fdcccb1`).**
 
 - *Consent store and gated loader* (`web/public/consent.js`, `web/public/analytics.js`). The choice is kept
@@ -3001,7 +3006,7 @@ Open for the adviser: whether to promise deletion for an analytics ID a visitor 
 keeping WhatsApp messages until someone asks for deletion satisfies the PDPA retention principle (Act
 709 s.10); Bob flagged both as risks, not legal conclusions.
 
-> **WORDING GATE (before release).** The banner and notice name "Google's advertising features" because
+> **WORDING GATE (before release; since R16 read "banner" as "widget panel" and "only if you accept" as the opt-out wording, all still DRAFT).** The banner and notice name "Google's advertising features" because
 > first visits were measured calling `stats.g.doubleclick.net` and `www.google.com.my/ads/ga-audiences`
 > (HANDOFF 2026-09-22; §12a). Before release, someone must open GTM container `GTM-KP5SMKV` and the GA4
 > property and confirm what runs: the tags, Google signals / advertising features, and GA4 data retention.
@@ -3033,7 +3038,7 @@ keeping WhatsApp messages until someone asks for deletion satisfies the PDPA ret
 
 **Revision round on PR #126 (Bob's review of `0c9d0ba`; rulings R12-R14 are Charlie's).**
 
-- **R12: narrow the promise, do not gate the video.** The banner and notice used to say "Google loads
+- **R12 (wording superseded by R16, the video decision stands): narrow the promise, do not gate the video.** The banner and notice used to say "Google loads
   only if you accept". That was wider than the code: `YoutubeEmbed.astro` loads a
   `youtube-nocookie.com` iframe on blog posts that contain a video, whatever the choice (Bob captured the
   request after Reject). The wording now promises only what is gated: "Google Analytics and these
@@ -3045,14 +3050,14 @@ keeping WhatsApp messages until someone asks for deletion satisfies the PDPA ret
   product decision**, not made here. A test pins this: after Reject, no analytics or ads request is made
   on the fixture post that carries a video, and the YouTube request is allowed on purpose (it is
   deliberately not in the `GOOGLE` pattern). The Malay wording in this revision still needs the native check.
-- **R13: the privacy-facts guard runs last.** It moved from `astro:build:start` to `astro:build:done`. A
+- **R13 (unchanged by R16; the Accept/Reject wording it quotes is superseded): the privacy-facts guard runs last.** It moved from `astro:build:start` to `astro:build:done`. A
   production build with unfinished facts still fails the build command, so Cloudflare does not publish, but
   it no longer hides an earlier production failure: at `build:start` it masked the "Sanity is not
   configured" failure that `pnpm test:blog-production-guardrail` asserts on. In `ci.yml` the
   `pnpm test:privacy-facts-guard` step moved to the end of the web job (after `pnpm test:e2e`), so its
   intentional red is isolated and every other step still runs. Note: a failing production build has already
   written `dist/` by then; the non-zero exit is what stops the deploy.
-- **R14: Consent Mode v2 states, binary design kept.** On Accept, before GTM is requested, `analytics.js`
+- **R14 (superseded in part by R16: the default and update pushes now happen on every page that is not opted out, not on Accept): Consent Mode v2 states, binary design kept.** On Accept, before GTM is requested, `analytics.js`
   pushes `gtag('consent','default', ...)` with `analytics_storage`, `ad_storage`, `ad_user_data` and
   `ad_personalization` all `denied`, then `gtag('consent','update', ...)` with all four `granted`, then the
   existing `gtm.start` event and script load. Nothing is defined or pushed before an accepted choice (no
@@ -3100,6 +3105,32 @@ keeping WhatsApp messages until someone asks for deletion satisfies the PDPA ret
   `pnpm check`), with the shared `window` shapes declared in `web/types/public-globals.d.ts` (FE-24). The
   scripts stay static and same-origin; the CSP and `_headers` are unchanged.
 
+- **R16 (2026-10-13; Charlie): the opt-in banner is replaced by a floating widget with opt-out.**
+  Google tracking runs for every visitor from the first page on `mathematicsmalaysia.com`. A small fixed
+  "Cookies / Kuki" button opens a panel where the visitor can opt out and opt back in; the privacy
+  notice states the tracking, that using the site means agreeing to it, and how to opt out. Reasoning
+  (Charlie's product call): keep the measurement the site had before the banner, without a blocking
+  or covering banner. What changed in code: `ConsentBanner.astro` became `ConsentWidget.astro`;
+  `analytics.js` starts GTM unless `jmConsent.get()` is `rejected` (Consent Mode v2 default denied, then
+  update granted, then `gtm.js`, as in R14); an opt-out is stored in `localStorage` (`jm-consent-v1`) and
+  mirrored in a first-party cookie of the same name so it survives blocked storage; opting out clears
+  the Google cookies and reloads when GTM may be running; a page that loads opted out clears leftover
+  Google cookies again; opting back in needs no reload. The `--consent-offset` placement above the fixed
+  WhatsApp bar is kept. `_headers` and the CSP are unchanged.
+  - **OPEN LEGAL RISK.** Tracking starts on the first page view, before the visitor can read the notice.
+    Act 709 s.6(1)(a) asks for consent (s.6 and s.7 are the sections the adviser must read) and this
+    design relies on notice plus opt-out. Whether that is enough is **not** settled. Adviser question 2
+    is now "is a notice with opt-out enough, or is prior consent needed?", replacing the earlier
+    opt-in versus notice question. If the adviser says opt-in is needed, return to the tagged opt-in
+    design: `git checkout consent-optin-1ee0203 -- web/` for the relevant files, or branch from the tag.
+  - **Wording is DRAFT.** The widget label, panel text, status lines and the notice sentences are
+    owner-approval drafts; the Malay is a plain translation and still needs a native review.
+    `copyApprovedOn` must be set only after both, as the wording gate says.
+  - **Evidence to redo.** `docs/evidence/2026-10-11-gtm-ga4-consent-audit.md` section 3 describes the
+    opt-in banner and must be re-run on the new behaviour (a dated note there says so).
+  - The "GA4 numbers will fall" consequence above no longer holds: GA4 counts every visitor who
+    has not opted out, and visitors without JavaScript are still not measured.
+
 **FE self-check (scoped to PR #126; guideline 02-INFORMATIVE-BLOG.md section 9).** Evidence is from runs in
 the 2026-10-09 revision round, on commit `0c9d0ba` plus the revision; the FE-22 row is from 2026-10-10 on
 the new head. "e2e" is `cd web && pnpm test:e2e`
@@ -3108,19 +3139,19 @@ the new head. "e2e" is `cd web && pnpm test:e2e`
 | Gate | Result | Evidence |
 |---|---|---|
 | FE-02 section needs a name | pass | `/privacy/` language sections carry `aria-labelledby` pointing at their `<h2>`; asserted in the "exactly one h1" e2e test |
-| FE-05 links navigate, buttons act (hard gate) | pass | banner Accept/Reject and footer "Cookie settings" are `<button type="button">`; banner and footer privacy links are `<a href="/privacy/">`; e2e "every banner and footer link to /privacy/ resolves" |
+| FE-05 links navigate, buttons act (hard gate) | pass | widget button, panel Keep on / Opt out / Close and footer "Cookie settings" are `<button type="button">`; banner and footer privacy links are `<a href="/privacy/">`; e2e "every banner and footer link to /privacy/ resolves" |
 | FE-06 heading hierarchy | pass | was RED before the change (two `<h1>`, e2e failed at `toHaveCount(1)`); now exactly one `<h1>`, no skipped level, `<h2>` per notice section, ten `<h3>` each; e2e "/privacy/ has exactly one h1..." |
 | FE-07 landmarks | pass | no landmark change; `<main>` once on `/privacy/` (existing layout) |
-| FE-14 no horizontal overflow | pass | e2e at 320 and 390 px on `/privacy/`; existing banner tests at 320/390/640 px |
+| FE-14 no horizontal overflow | pass | e2e at 320 and 390 px on `/privacy/`; widget tests at 320/390/640 px (R16) |
 | FE-22 content separated from presentation | pass | the notice prose lives in `web/src/lib/content/privacyNotice.ts` (typed, in Git, reviewed there); the section type is an exact tuple; the guard script has cases for EN/MS structure drift. Baseline text comparison against the old page: identical once whitespace is ignored. The old page ran words together in places ("WhatsApp019...", "isvoluntary") and the typed module restores the spaces; no word changed. Owner facts stay in `web/src/lib/privacy.ts` behind `copyApprovedOn` (2026-10-10). The final review found a CSS regression: the page's scoped `p, ul` rules no longer reached the `<p>`/`<ul>` emitted by `NoticeBlocks.astro`; fixed with `:global()` under `.notice`, and pinned by an e2e computed-style test at 1440 px (max-width about 68ch and under 900 px, margin-bottom 12px, padding-left above 0, list-style as before). It failed before the fix and passes after |
 | FE-24 business logic project-owned (hard gate) | pass | `consent.js` and `analytics.js` are in-repo, `// @ts-check` plus JSDoc, `pnpm check:public` passes; RED proof: a deliberate type error made it exit 2, reverted and green again; behaviour covered by `consent.spec.ts` (all pass) |
-| FE-31 / FE-32 hydration, no needless JS | pass | no framework island added; the banner is server-rendered `hidden` HTML and one small static script reveals it; without JavaScript nothing shows and nothing tracks (e2e "with JavaScript off...") |
+| FE-31 / FE-32 hydration, no needless JS | pass | no framework island added; the widget is server-rendered `hidden` HTML and one small static script reveals it; without JavaScript nothing shows and nothing tracks (e2e "with JavaScript off...") |
 | FE-40 dependency ladder | pass | no new package; `typescript` was already a devDependency (`pnpm install --frozen-lockfile` clean) |
 | FE-50 typed, lint-clean, buildable | pass | `pnpm check` 0 errors, `pnpm check:public` clean, `pnpm build` ok, `pnpm format:check` clean |
 | FE-53 compiling is not completing | OPEN | the independent Bob code review of this revision has not happened yet |
 | FE-61 respect the codebase | pass | no unrelated refactor; changes limited to the six findings; `web/public/_headers` unchanged (`git diff` empty) |
 | Section 15 accessibility (one h1, headings, keyboard) | pass for h1 and headings (above) and the existing banner keyboard tests; **OPEN** for a full WCAG 2.2 AA audit, not run this round |
-| Section 16 consent, Consent Mode v2 | **OPEN** | states implemented for the binary design and tested (default then update, before `gtm.js`; none before a choice or after Reject). Granular options not implemented (variance, needs Charlie's decision). GTM / GA4 container audit not done |
+| Section 16 consent, Consent Mode v2 | **OPEN** | states implemented for the binary design and tested (default then update, before `gtm.js`, on every page not opted out; none after an opt-out; R16 replaced the opt-in gate). The consent row must be re-checked against the opt-out widget. Granular options not implemented (variance, needs Charlie's decision). GTM / GA4 container audit not done |
 | Section 18 CSP, no inline script | pass | `pnpm test:headers-guard` ok; no executable inline `<script>` in built `index.html`, `privacy/index.html` or the fixture post (grep); `_headers` unchanged |
 | Section 19 testing | pass | `pnpm test:e2e` all pass against the built output; every `pnpm test:*` passes except `test:privacy-facts-guard`, which is red by design (null owner facts) |
 | Malay wording | OPEN | native-speaker check not done |
