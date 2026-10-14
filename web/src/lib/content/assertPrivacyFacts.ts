@@ -30,6 +30,13 @@ export interface PrivacyFacts {
 	lastUpdated: string;
 	/** Date the owner approved the notice AND the banner wording. Null until then. */
 	copyApprovedOn: string | null;
+	/**
+	 * Date a qualified Malaysian privacy adviser's written answer on the default-on tracking design
+	 * was received and its required changes recorded (docs/DECISIONS.md §49, R18). Null until then.
+	 */
+	adviserReviewedOn: string | null;
+	/** Date a native Bahasa Melayu speaker's review of the Malay text was received and applied. Null until then. */
+	nativeMalayReviewedOn: string | null;
 }
 
 const PLACEHOLDER =
@@ -115,6 +122,26 @@ export function checkPrivacyFacts(
 		problems.push(
 			"copyApprovedOn must be a real date, YYYY-MM-DD: it records that the owner approved the notice AND the banner wording after the Google Tag Manager container check and a native Malay review",
 		);
+	}
+	// A review date means the review actually happened and its outcome is recorded: not a placeholder,
+	// not unset, and not in the future.
+	const today = new Date().toISOString().slice(0, 10);
+	for (const [name, what] of [
+		[
+			"adviserReviewedOn",
+			"the qualified Malaysian privacy adviser's written answer",
+		],
+		[
+			"nativeMalayReviewedOn",
+			"the native Bahasa Melayu review of the Malay text",
+		],
+	] as const) {
+		const value = facts[name];
+		if (!value || !isRealDate(value) || value > today) {
+			problems.push(
+				`${name} must be a real, past or present date, YYYY-MM-DD: set it only when ${what} has been received and its outcome recorded (docs/DECISIONS.md §49, R18)`,
+			);
+		}
 	}
 	if (problems.length === 0) return {};
 	const branch = previewBranch(env);

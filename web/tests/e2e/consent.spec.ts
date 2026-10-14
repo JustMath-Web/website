@@ -831,14 +831,18 @@ test("/privacy/ renders notice text as text, never as markup", async ({
 // While owner facts are unfinished (the committed state). Once the owner supplies every fact and
 // `copyApprovedOn`, this test must be inverted by whoever finalises the notice; that edit is part
 // of the release checklist in DECISIONS §49.
-test("/privacy/ is indexable and has no draft note once the owner facts and approval are set", async ({
+test("/privacy/ is noindex and shows the draft note until the adviser and native Malay reviews are recorded", async ({
 	page,
 }) => {
-	// Inverted from the draft-state test on 2026-10-13, when the owner set `copyApprovedOn`
-	// (docs/DECISIONS.md §49, R17). If a fact is unset again this fails, which is the point.
+	// Draft state while `adviserReviewedOn` or `nativeMalayReviewedOn` is null (docs/DECISIONS.md §49,
+	// R18). When both reviews are done and recorded, whoever sets the dates inverts this test: the
+	// robots meta and the draft note must be absent.
 	await page.goto("/privacy/");
-	await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
-	await expect(page.locator(".draft-note")).toHaveCount(0);
+	await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+		"content",
+		"noindex,nofollow",
+	);
+	await expect(page.locator(".draft-note")).toContainText("Draft");
 });
 
 test("/privacy/ notice paragraphs and lists keep their measure, spacing and indent", async ({

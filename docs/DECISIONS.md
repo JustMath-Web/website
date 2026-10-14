@@ -3153,6 +3153,20 @@ keeping WhatsApp messages until someone asks for deletion satisfies the PDPA ret
   and a production-mode build of the PR branch (`main` itself is unchanged until the merge) no longer fails the guard; the e2e that asserted the draft state was inverted
   (release checklist item 5). **`lastUpdated` must be reset to the actual publication date when the release is authorised** (it is 2026-10-13 only because that is the date it was set). **Bob's position (review of `5d99cab`): keep a production release block until the adviser and the native Malay review are resolved;** this repo has no mechanism for that block, only Charlie's decision not to merge. The first release of this notice is Charlie's decision to merge. To go back: set
   `copyApprovedOn` to `null`, or return to the opt-in banner at tag `consent-optin-1ee0203` (local tag).
+- **R18 (2026-10-14; Charlie, on Bob's review of `5d99cab`): a production release block until the adviser and the
+  native Malay review are recorded.** R17 let `copyApprovedOn` pass the guard while those reviews were still
+  open. Charlie chose to add two more facts to `PRIVACY_FACTS`: `adviserReviewedOn` and `nativeMalayReviewedOn`
+  (both `null` now). `checkPrivacyFacts` fails a production-mode build, and `isPrivacyReleaseReady` is false
+  (so `/privacy/` stays `noindex` with the draft note), until each is a real date that is not in the future.
+  `copyApprovedOn` stays as the owner's approval of the current draft. **A date means the review actually
+  happened:** set `adviserReviewedOn` only when the qualified Malaysian adviser's written answer has been
+  received and its required wording or design changes are recorded here and applied; set
+  `nativeMalayReviewedOn` only when the native review has been received and its corrections applied. The
+  adviser's answer may require code or wording changes before the date is set. Non-`main` preview branches
+  still skip the guard with a warning (R15). When both dates are set, invert the e2e test "noindex and draft
+  note until the adviser and native Malay reviews are recorded". `lastUpdated` still has to be reset to the
+  publication date at release (R17). Unit cases for null, impossible, future and placeholder dates are in
+  `assert-privacy-facts-guard.mjs`.
 
 **FE self-check (scoped to PR #126; guideline 02-INFORMATIVE-BLOG.md section 9).** Evidence is from runs in
 the 2026-10-09 revision round, on commit `0c9d0ba` plus the revision; the FE-22 row is from 2026-10-10 on

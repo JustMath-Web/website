@@ -24,6 +24,8 @@ const good = {
 	analyticsRetention: { en: "14 months", ms: "14 bulan" },
 	lastUpdated: "2026-10-09",
 	copyApprovedOn: "2026-10-10",
+	adviserReviewedOn: "2026-10-11",
+	nativeMalayReviewedOn: "2026-10-11",
 };
 const prod = { DEPLOY_ENV: "production" };
 
@@ -74,6 +76,23 @@ const cases = {
 	"impossible date": [{ lastUpdated: "2026-02-30" }, "lastUpdated"],
 	"9999-99-99": [{ lastUpdated: "9999-99-99" }, "lastUpdated"],
 	"copyApprovedOn null": [{ copyApprovedOn: null }, "copyApprovedOn"],
+	"adviserReviewedOn null": [{ adviserReviewedOn: null }, "adviserReviewedOn"],
+	"nativeMalayReviewedOn null": [
+		{ nativeMalayReviewedOn: null },
+		"nativeMalayReviewedOn",
+	],
+	"adviserReviewedOn impossible": [
+		{ adviserReviewedOn: "2026-13-01" },
+		"adviserReviewedOn",
+	],
+	"adviserReviewedOn in the future": [
+		{ adviserReviewedOn: "9999-12-31" },
+		"adviserReviewedOn",
+	],
+	"nativeMalayReviewedOn placeholder": [
+		{ nativeMalayReviewedOn: "TBD" },
+		"nativeMalayReviewedOn",
+	],
 	"copyApprovedOn impossible": [
 		{ copyApprovedOn: "2026-13-01" },
 		"copyApprovedOn",
@@ -218,6 +237,16 @@ assert.equal(
 	"copyApprovedOn set but ownerName null is still not release-ready",
 );
 assert.equal(isPrivacyReleaseReady({ ...good, copyApprovedOn: null }), false);
+assert.equal(
+	isPrivacyReleaseReady({ ...good, adviserReviewedOn: null }),
+	false,
+	"without the adviser review the page stays in draft state",
+);
+assert.equal(
+	isPrivacyReleaseReady({ ...good, nativeMalayReviewedOn: null }),
+	false,
+	"without the native Malay review the page stays in draft state",
+);
 
 // The real facts (last, so the content cases above report first), judged as production would.
 const real = checkPrivacyFacts(PRIVACY_FACTS, prod);

@@ -17,4 +17,6 @@ export const PRIVACY_FACTS: PrivacyFacts = {
 	},
 	lastUpdated: "2026-10-13",
 	copyApprovedOn: "2026-10-13",
+	adviserReviewedOn: null,
+	nativeMalayReviewedOn: null,
 };
