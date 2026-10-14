@@ -3012,7 +3012,9 @@ keeping WhatsApp messages until someone asks for deletion satisfies the PDPA ret
 > property and confirm what runs: the tags, Google signals / advertising features, and GA4 data retention.
 > A verified cookie inventory is needed before any cookie table is added. The Malay text needs a
 > native-speaker check. `copyApprovedOn` records that the owner approved the notice and banner wording
-> **after** both.
+> **after** both. *(Superseded in part by R17-R18, 2026-10-13/14: `copyApprovedOn` now records approval
+> of the current draft only; the adviser and native Malay reviews have their own dates,
+> `adviserReviewedOn` and `nativeMalayReviewedOn`, which gate a production release.)*
 >
 > **Wording gate, extended (final whole-branch review, 2026-10-09).** The original text above stands.
 >

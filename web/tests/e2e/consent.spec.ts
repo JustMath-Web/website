@@ -828,9 +828,10 @@ test("/privacy/ renders notice text as text, never as markup", async ({
 	);
 });
 
-// While owner facts are unfinished (the committed state). Once the owner supplies every fact and
-// `copyApprovedOn`, this test must be inverted by whoever finalises the notice; that edit is part
-// of the release checklist in DECISIONS §49.
+// Draft state (the committed state): `/privacy/` stays noindex with a draft note until every owner
+// fact, `copyApprovedOn` (approval of the draft), `adviserReviewedOn` and `nativeMalayReviewedOn`
+// are set. Whoever sets the last review date inverts this test; that edit is part of the release
+// checklist in DECISIONS §49 (R17, R18).
 test("/privacy/ is noindex and shows the draft note until the adviser and native Malay reviews are recorded", async ({
 	page,
 }) => {

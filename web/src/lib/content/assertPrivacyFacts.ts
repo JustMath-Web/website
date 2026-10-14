@@ -28,7 +28,10 @@ export interface PrivacyFacts {
 	whatsappRetention: BilingualFact;
 	analyticsRetention: BilingualFact;
 	lastUpdated: string;
-	/** Date the owner approved the notice AND the banner wording. Null until then. */
+	/**
+	 * Date the owner approved the CURRENT DRAFT of the notice and widget wording. It does not mean the adviser
+	 * or the native Malay review happened; those are recorded separately below (DECISIONS §49, R17-R18).
+	 */
 	copyApprovedOn: string | null;
 	/**
 	 * Date a qualified Malaysian privacy adviser's written answer on the default-on tracking design
@@ -120,7 +123,7 @@ export function checkPrivacyFacts(
 	}
 	if (!facts.copyApprovedOn || !isRealDate(facts.copyApprovedOn)) {
 		problems.push(
-			"copyApprovedOn must be a real date, YYYY-MM-DD: it records that the owner approved the notice AND the banner wording after the Google Tag Manager container check and a native Malay review",
+			"copyApprovedOn must be a real date, YYYY-MM-DD: it records that the owner approved the current draft notice and widget wording; the adviser and native Malay reviews are recorded separately in adviserReviewedOn and nativeMalayReviewedOn",
 		);
 	}
 	// A review date means the review actually happened and its outcome is recorded: not a placeholder,
