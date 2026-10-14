@@ -3150,8 +3150,8 @@ keeping WhatsApp messages until someone asks for deletion satisfies the PDPA ret
   Google signals and ads personalization settings; and the live-site re-test under the production CSP. The
   approval therefore covers only that the owner accepted the wording as drafted. It is not evidence that the
   adviser or the Malay review passed. With the facts set, `/privacy/` is no longer `noindex`, has no draft note,
-  and a production build of `main` no longer fails the guard; the e2e that asserted the draft state was inverted
-  (release checklist item 5). The first release of this notice is Charlie's decision to merge. To go back: set
+  and a production-mode build of the PR branch (`main` itself is unchanged until the merge) no longer fails the guard; the e2e that asserted the draft state was inverted
+  (release checklist item 5). **`lastUpdated` must be reset to the actual publication date when the release is authorised** (it is 2026-10-13 only because that is the date it was set). **Bob's position (review of `5d99cab`): keep a production release block until the adviser and the native Malay review are resolved;** this repo has no mechanism for that block, only Charlie's decision not to merge. The first release of this notice is Charlie's decision to merge. To go back: set
   `copyApprovedOn` to `null`, or return to the opt-in banner at tag `consent-optin-1ee0203` (local tag).
 
 **FE self-check (scoped to PR #126; guideline 02-INFORMATIVE-BLOG.md section 9).** Evidence is from runs in
