@@ -37,7 +37,7 @@
 		"astro": "7.3.5",
 		"astro-portabletext": "1.0.1",
 		"groq": "6.16.0",
-		"katex": "0.18.9",
+		"katex": "0.19.0",
 		"tailwindcss": "4.3.3"
 	},
 	"devDependencies": {
