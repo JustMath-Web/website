@@ -3200,6 +3200,10 @@ keeping WhatsApp messages until someone asks for deletion satisfies the PDPA ret
   (Malay: "ikon kuki di bahagian bawah kiri setiap halaman"); that Malay phrase is unreviewed (see R20). The
   panel fades and slides in and out (180ms, display discrete transition); no animation under
   `prefers-reduced-motion`. Behaviour and consent logic are unchanged.
+- **R22 (2026-10-15; Charlie): the footer "Cookie settings / Tetapan kuki" button is removed.** The floating cookie
+  icon is now the only way to open the panel. The notice's "Your choices" sentence no longer mentions the footer
+  (English and Malay; the Malay edit only deletes a clause and is unreviewed, see R20). The footer keeps
+  "Privacy / Privasi". `consent.js` still handles a `data-consent-open` element if one is ever added; none exists.
 
 **FE self-check (scoped to PR #126; guideline 02-INFORMATIVE-BLOG.md section 9).** Evidence is from runs in
 the 2026-10-09 revision round, on commit `0c9d0ba` plus the revision; the FE-22 row is from 2026-10-10 on
