@@ -3179,7 +3179,10 @@ keeping WhatsApp messages until someone asks for deletion satisfies the PDPA ret
   reset at release, R17). The Malay for these sections has not had a native review, and the adviser question
   is unchanged. No code or behaviour changed beyond the notice.
 - **R20 (2026-10-15; Charlie): ship without the adviser and native Malay reviews.** Charlie decided to skip both
-  and said so in chat. This overrides R18 for the release block only. Bob advised against it: the question
+  and said so in chat, in his own words, in this order on 2026-10-15: "skip advisor and reviewer. proceed
+  next step"; then "1" (allow the waiver edit); then, after Bob's "Option 3: undo" note, "ship without
+  reviews and how to bypass the system block?" and "can you try again? i have approve the block from
+  claude". The last two come after Bob's note, so they are Charlie's later instruction. This overrides R18 for the release block only. Bob advised against it: the question
   of whether default-on tracking meets s.6 and s.7 of Act 709 is unanswered, and the Malay text is an
   unreviewed plain translation (s.7(3) needs Malay as well as English). Charlie accepted that risk as owner.
   `adviserReviewedOn` and `nativeMalayReviewedOn` now hold `"waived:2026-10-15"`, which `checkPrivacyFacts`
