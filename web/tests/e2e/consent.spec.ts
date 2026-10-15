@@ -487,7 +487,7 @@ test("widget is visible with no choice, with bilingual text and equal buttons", 
 	await expect(panel.locator('input[type="checkbox"]')).toHaveCount(0);
 });
 
-test("the panel opens and closes with the button, Close, Escape and the footer link, and focus returns", async ({
+test("the panel opens and closes with the button, Close and Escape, and focus returns", async ({
 	page,
 }) => {
 	await page.goto("/");
@@ -509,11 +509,8 @@ test("the panel opens and closes with the button, Close, Escape and the footer l
 	await page.keyboard.press("Escape");
 	await expect(panel).toBeHidden();
 	await expect(toggle).toBeFocused();
-	// the footer link opens the panel and moves focus into it
-	await page.locator("[data-consent-open]").click();
-	await expect(panel).toBeVisible();
-	await expect(toggle).toHaveAttribute("aria-expanded", "true");
-	await expect(panel.locator('[data-consent="accept"]')).toBeFocused();
+	// the footer no longer carries a cookie-settings control
+	await expect(page.locator("[data-consent-open]")).toHaveCount(0);
 });
 
 test("opening the widget never happens by itself", async ({ page }) => {
