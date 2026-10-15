@@ -3194,6 +3194,12 @@ keeping WhatsApp messages until someone asks for deletion satisfies the PDPA ret
   cookie-specific wording in the text of Act A1727 (Act 709 itself was not read in full) and, in a web search, no cookie fine. That search is not proof that none exists, and it does not settle whether default-on tracking has a basis under s.6. Vendor claims that Act A1727 banned implied
   consent are not in its text (`log/2026-10-15_pdpa-research-note.md`, local). The opt-in banner remains at tag
   `consent-optin-1ee0203`. `lastUpdated` is still reset to the publication date at release (R17).
+- **R21 (2026-10-15; Charlie): icon-only widget button and an animated panel.** The floating button is now a
+  round cookie icon (accessible name "Cookie settings / Tetapan kuki"); the "Cookies / Kuki" text is gone. The
+  notice's two "Cookies / Kuki button" mentions now say "the cookie icon at the bottom left of every page"
+  (Malay: "ikon kuki di bahagian bawah kiri setiap halaman"); that Malay phrase is unreviewed (see R20). The
+  panel fades and slides in and out (180ms, display discrete transition); no animation under
+  `prefers-reduced-motion`. Behaviour and consent logic are unchanged.
 
 **FE self-check (scoped to PR #126; guideline 02-INFORMATIVE-BLOG.md section 9).** Evidence is from runs in
 the 2026-10-09 revision round, on commit `0c9d0ba` plus the revision; the FE-22 row is from 2026-10-10 on

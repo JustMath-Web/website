@@ -441,7 +441,11 @@ test("widget is visible with no choice, with bilingual text and equal buttons", 
 	await page.goto("/");
 	const toggle = page.locator("#consent-toggle");
 	await expect(toggle).toBeVisible();
-	await expect(toggle).toContainText("Cookies / Kuki");
+	await expect(toggle).toHaveAttribute(
+		"aria-label",
+		"Cookie settings / Tetapan kuki",
+	);
+	await expect(toggle).toHaveText("");
 	await toggle.click();
 	const panel = page.locator("#consent-panel");
 	await expect(panel).toBeVisible();
@@ -863,4 +867,24 @@ test("/privacy/ notice paragraphs and lists keep their measure, spacing and inde
 	// the old computed look, it does not change it.
 	expect(ul.type).toBe("none");
 	expect(parseFloat(ul.padLeft)).toBeGreaterThan(0);
+});
+
+test("the panel fades and slides in and out, and does not animate under reduced motion", async ({
+	page,
+}) => {
+	await page.goto("/");
+	const panel = page.locator("#consent-panel");
+	const duration = () =>
+		panel.evaluate((el) => getComputedStyle(el).transitionDuration);
+	expect(await duration()).not.toMatch(/^0s(, 0s)*$/);
+	await page.locator("#consent-toggle").click();
+	await expect(panel).toBeVisible();
+	await expect
+		.poll(() => panel.evaluate((el) => getComputedStyle(el).opacity))
+		.toBe("1");
+	// Exit: the panel is still rendered right after Close, then it is gone.
+	await page.locator("[data-consent-close]").click();
+	await expect(panel).toBeHidden();
+	await page.emulateMedia({ reducedMotion: "reduce" });
+	expect(await duration()).toMatch(/^0s(, 0s)*$/);
 });
