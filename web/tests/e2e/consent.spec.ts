@@ -696,7 +696,7 @@ test("/privacy/ has exactly one h1 and an outline that never skips a level", asy
 		const labelledBy = await section.getAttribute("aria-labelledby");
 		expect(await first.getAttribute("id")).toBe(labelledBy);
 		// every required subsection is an h3 beneath it
-		await expect(section.locator("h3")).toHaveCount(10);
+		await expect(section.locator("h3")).toHaveCount(13);
 		await expect(section.locator("h1")).toHaveCount(0);
 	}
 });

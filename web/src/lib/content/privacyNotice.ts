@@ -5,17 +5,20 @@
  * check (the Malay is a plain translation), a GTM container check (advertising-features wording) and qualified advice.
  */
 
-/** The ten headings, in the order the page shows them. */
+/** The thirteen headings, in the order the page shows them. */
 export const SECTION_IDS = [
 	"who",
 	"collect",
 	"voluntary",
 	"source",
 	"recipients",
+	"law",
 	"children",
 	"rights",
 	"choices",
 	"retention",
+	"security",
+	"links",
 	"changes",
 ] as const;
 
@@ -156,6 +159,15 @@ const en: NoticeLanguage<"en"> = {
 			],
 		},
 		{
+			id: "law",
+			heading: "When the law requires it",
+			blocks: [
+				{
+					p: ["We may share your data if the law or a court requires it."],
+				},
+			],
+		},
+		{
 			id: "children",
 			heading: "Children",
 			blocks: [
@@ -201,6 +213,28 @@ const en: NoticeLanguage<"en"> = {
 						". Analytics: set in Google Analytics, ",
 						{ fact: "analyticsRetention" },
 						".",
+					],
+				},
+			],
+		},
+		{
+			id: "security",
+			heading: "Security",
+			blocks: [
+				{
+					p: [
+						"This website uses HTTPS. No way of sending or storing data is completely secure, so we cannot promise absolute security.",
+					],
+				},
+			],
+		},
+		{
+			id: "links",
+			heading: "Links to other sites",
+			blocks: [
+				{
+					p: [
+						"This website links to other sites, such as WhatsApp and YouTube. We do not control them. Please read their privacy notices.",
 					],
 				},
 			],
@@ -303,6 +337,17 @@ const ms: NoticeLanguage<"ms"> = {
 			],
 		},
 		{
+			id: "law",
+			heading: "Apabila undang-undang memerlukannya",
+			blocks: [
+				{
+					p: [
+						"Kami boleh berkongsi data anda jika undang-undang atau mahkamah memintanya.",
+					],
+				},
+			],
+		},
+		{
 			id: "children",
 			heading: "Kanak-kanak",
 			blocks: [
@@ -348,6 +393,28 @@ const ms: NoticeLanguage<"ms"> = {
 						". Analitik: ditetapkan dalam Google Analytics, ",
 						{ fact: "analyticsRetention" },
 						".",
+					],
+				},
+			],
+		},
+		{
+			id: "security",
+			heading: "Keselamatan",
+			blocks: [
+				{
+					p: [
+						"Laman web ini menggunakan HTTPS. Tiada cara menghantar atau menyimpan data yang selamat sepenuhnya, jadi kami tidak boleh menjamin keselamatan mutlak.",
+					],
+				},
+			],
+		},
+		{
+			id: "links",
+			heading: "Pautan ke laman lain",
+			blocks: [
+				{
+					p: [
+						"Laman web ini mempunyai pautan ke laman lain, seperti WhatsApp dan YouTube. Kami tidak mengawal laman tersebut. Sila baca notis privasi mereka.",
 					],
 				},
 			],
