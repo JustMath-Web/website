@@ -3169,6 +3169,15 @@ keeping WhatsApp messages until someone asks for deletion satisfies the PDPA ret
   note until the adviser and native Malay reviews are recorded". `lastUpdated` still has to be reset to the
   publication date at release (R17). Unit cases for null, impossible, future and placeholder dates are in
   `assert-privacy-facts-guard.mjs`.
+- **R19 (2026-10-15; Charlie): three sections added to the notice, wording approved.** Prompted by a
+  comparison with two other Malaysian tuition sites' policies (mcplusbooks.my, tigercampus.com.my). Both are
+  generic and weaker than this notice (no PDPA reference, no retention periods), but they cover three topics
+  this notice did not: sharing when the law requires it, security, and links to other sites. Added `law`,
+  `security` and `links` (English and Malay, `b86dad4`); nothing was copied from either site. The security
+  text says only that the site uses HTTPS and that no method is completely secure. Charlie approved the
+  wording on 2026-10-15, so `copyApprovedOn` and `lastUpdated` are now 2026-10-15 (`lastUpdated` is still
+  reset at release, R17). The Malay for these sections has not had a native review, and the adviser question
+  is unchanged. No code or behaviour changed beyond the notice.
 
 **FE self-check (scoped to PR #126; guideline 02-INFORMATIVE-BLOG.md section 9).** Evidence is from runs in
 the 2026-10-09 revision round, on commit `0c9d0ba` plus the revision; the FE-22 row is from 2026-10-10 on
