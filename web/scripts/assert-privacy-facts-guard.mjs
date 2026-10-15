@@ -81,6 +81,10 @@ const cases = {
 		{ nativeMalayReviewedOn: null },
 		"nativeMalayReviewedOn",
 	],
+	"adviserReviewedOn waived with a bad date": [
+		{ adviserReviewedOn: "waived:2026-13-01" },
+		"adviserReviewedOn",
+	],
 	"adviserReviewedOn impossible": [
 		{ adviserReviewedOn: "2026-13-01" },
 		"adviserReviewedOn",

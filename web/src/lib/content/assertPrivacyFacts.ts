@@ -140,9 +140,11 @@ export function checkPrivacyFacts(
 		],
 	] as const) {
 		const value = facts[name];
-		if (!value || !isRealDate(value) || value > today) {
+		// "waived:YYYY-MM-DD" is the owner's recorded decision to ship without the review (DECISIONS §49, R20).
+		const date = value?.startsWith("waived:") ? value.slice(7) : value;
+		if (!date || !isRealDate(date) || date > today) {
 			problems.push(
-				`${name} must be a real, past or present date, YYYY-MM-DD: set it only when ${what} has been received and its outcome recorded (docs/DECISIONS.md §49, R18)`,
+				`${name} must be a real, past or present date, YYYY-MM-DD, or "waived:" plus that date when the owner decides to ship without it: set a plain date only when ${what} has been received and its outcome recorded (docs/DECISIONS.md §49, R18, R20)`,
 			);
 		}
 	}

@@ -3178,6 +3178,17 @@ keeping WhatsApp messages until someone asks for deletion satisfies the PDPA ret
   wording on 2026-10-15, so `copyApprovedOn` and `lastUpdated` are now 2026-10-15 (`lastUpdated` is still
   reset at release, R17). The Malay for these sections has not had a native review, and the adviser question
   is unchanged. No code or behaviour changed beyond the notice.
+- **R20 (2026-10-15; Charlie): ship without the adviser and native Malay reviews.** Charlie decided to skip both
+  and said so in chat. This overrides R18 for the release block only. Bob advised against it: the question
+  of whether default-on tracking meets s.6 and s.7 of Act 709 is unanswered, and the Malay text is an
+  unreviewed plain translation (s.7(3) needs Malay as well as English). Charlie accepted that risk as owner.
+  `adviserReviewedOn` and `nativeMalayReviewedOn` now hold `"waived:2026-10-15"`, which `checkPrivacyFacts`
+  accepts as an owner waiver. It is not a review date and must never be read as one; no review happened.
+  `/privacy/` is therefore indexable with no draft note, and the draft-state e2e is inverted. To return to
+  the blocked state, set both fields back to `null` and revert that test. Research on 2026-10-15 found no
+  cookie-specific rule in Act 709 and no cookie enforcement; vendor claims that Act A1727 banned implied
+  consent are not in its text (`log/2026-10-15_pdpa-research-note.md`, local). The opt-in banner remains at tag
+  `consent-optin-1ee0203`. `lastUpdated` is still reset to the publication date at release (R17).
 
 **FE self-check (scoped to PR #126; guideline 02-INFORMATIVE-BLOG.md section 9).** Evidence is from runs in
 the 2026-10-09 revision round, on commit `0c9d0ba` plus the revision; the FE-22 row is from 2026-10-10 on
