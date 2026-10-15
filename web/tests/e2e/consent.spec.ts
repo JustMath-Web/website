@@ -56,6 +56,17 @@ const googleCookies = async (context: BrowserContext) =>
 		.map((c) => c.name)
 		.filter((n) => /^_(ga|gid|gat|gcl)/.test(n));
 
+/** Wait for the panel's enter animation to finish, so measurements are not taken mid-spring. */
+async function settled(page: Page) {
+	await expect
+		.poll(() =>
+			page
+				.locator("#consent-panel")
+				.evaluate((el) => getComputedStyle(el).transform),
+		)
+		.toMatch(/^(none|matrix\(1, 0, 0, 1, 0, 0\))$/);
+}
+
 /** Open the panel with the floating button, then press one of its two buttons. */
 async function choose(page: Page, which: "accept" | "reject") {
 	const panel = page.locator("#consent-panel");
@@ -441,7 +452,11 @@ test("widget is visible with no choice, with bilingual text and equal buttons", 
 	await page.goto("/");
 	const toggle = page.locator("#consent-toggle");
 	await expect(toggle).toBeVisible();
-	await expect(toggle).toContainText("Cookies / Kuki");
+	await expect(toggle).toHaveAttribute(
+		"aria-label",
+		"Cookie settings / Tetapan kuki",
+	);
+	await expect(toggle).toHaveText("");
 	await toggle.click();
 	const panel = page.locator("#consent-panel");
 	await expect(panel).toBeVisible();
@@ -456,6 +471,7 @@ test("widget is visible with no choice, with bilingual text and equal buttons", 
 	await expect(panel).toContainText("Opt out");
 	await expect(panel).toContainText("Tarik diri");
 	await expect(panel.locator('a[href="/privacy/"]').first()).toBeVisible();
+	await settled(page);
 	const a = await panel.locator('[data-consent="accept"]').boundingBox();
 	const r = await panel.locator('[data-consent="reject"]').boundingBox();
 	expect(Math.abs(a!.width - r!.width)).toBeLessThanOrEqual(2);
@@ -569,6 +585,7 @@ for (const width of [320, 390, 640]) {
 				await topmost(c.x + c.width / 2, c.y + c.height / 2, ".mobile-cta-bar"),
 			).toBe(true);
 			if (open) {
+				await settled(page);
 				const p = (await page.locator("#consent-panel").boundingBox())!;
 				expect(p.y + p.height).toBeLessThanOrEqual(r.y + 1);
 				expect(p.y).toBeGreaterThanOrEqual(0);
@@ -788,6 +805,7 @@ for (const width of [390, 1440]) {
 		await page.goto("/");
 		await page.locator("#consent-toggle").click();
 		await expect(page.locator("#consent-panel")).toBeVisible();
+		await settled(page);
 		// Measured on the rendered page: the compiler can collapse the whitespace before the link, so
 		// the HTML alone proves nothing. Compare the right edge of the last character before the link
 		// with the link's first box, when they share a line.
@@ -863,4 +881,24 @@ test("/privacy/ notice paragraphs and lists keep their measure, spacing and inde
 	// the old computed look, it does not change it.
 	expect(ul.type).toBe("none");
 	expect(parseFloat(ul.padLeft)).toBeGreaterThan(0);
+});
+
+test("the panel fades and slides in and out, and does not animate under reduced motion", async ({
+	page,
+}) => {
+	await page.goto("/");
+	const panel = page.locator("#consent-panel");
+	const duration = () =>
+		panel.evaluate((el) => getComputedStyle(el).transitionDuration);
+	expect(await duration()).not.toMatch(/^0s(, 0s)*$/);
+	await page.locator("#consent-toggle").click();
+	await expect(panel).toBeVisible();
+	await expect
+		.poll(() => panel.evaluate((el) => getComputedStyle(el).opacity))
+		.toBe("1");
+	// Exit: the panel is still rendered right after Close, then it is gone.
+	await page.locator("[data-consent-close]").click();
+	await expect(panel).toBeHidden();
+	await page.emulateMedia({ reducedMotion: "reduce" });
+	expect(await duration()).toMatch(/^0s(, 0s)*$/);
 });

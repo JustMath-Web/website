@@ -105,7 +105,7 @@ const en: NoticeLanguage<"en"> = {
 							{ em: "When you visit this website:" },
 							" we use Google Tag Manager and Google Analytics to count visits and understand how the site is used. Google may also use this data for its advertising features. Google sets cookies or similar identifiers in your browser, and receives your IP address and details of your device and visit. ",
 							{ strong: "By using this website you agree to this." },
-							' You can opt out at any time with the "Cookies / Kuki" button on every page, or under "Your choices" below. This helps us improve the lessons and the site.',
+							' You can opt out at any time with the cookie icon at the bottom left of every page, or under "Your choices" below. This helps us improve the lessons and the site.',
 						],
 						[
 							{
@@ -197,7 +197,7 @@ const en: NoticeLanguage<"en"> = {
 			blocks: [
 				{
 					p: [
-						'You can opt out of Google Analytics and its advertising features at any time with the "Cookies / Kuki" button on every page (or "Cookie settings" in the footer), and opt back in the same way. Opting out stops Google Analytics and its advertising features in that browser, and this website deletes the Google cookies it can reach. Your choice is saved in that browser only, in local storage and in a small first-party cookie named jm-consent-v1, so you need to make it again in each browser or device you use. If your browser blocks saving, the opt-out lasts for that tab only. You can also block or delete cookies in your browser settings. Your choice not to give data may mean we cannot reply to you.',
+						'You can opt out of Google Analytics and its advertising features at any time with the cookie icon at the bottom left of every page (or "Cookie settings" in the footer), and opt back in the same way. Opting out stops Google Analytics and its advertising features in that browser, and this website deletes the Google cookies it can reach. Your choice is saved in that browser only, in local storage and in a small first-party cookie named jm-consent-v1, so you need to make it again in each browser or device you use. If your browser blocks saving, the opt-out lasts for that tab only. You can also block or delete cookies in your browser settings. Your choice not to give data may mean we cannot reply to you.',
 					],
 				},
 			],
@@ -283,7 +283,7 @@ const ms: NoticeLanguage<"ms"> = {
 							{ em: "Apabila anda melawat laman web ini:" },
 							" kami menggunakan Google Tag Manager dan Google Analytics untuk mengira lawatan dan memahami cara laman web digunakan. Google juga boleh menggunakan data ini untuk ciri pengiklanannya. Google menetapkan kuki atau pengecam serupa dalam pelayar anda, dan menerima alamat IP serta maklumat peranti dan lawatan anda. ",
 							{ strong: "Dengan menggunakan laman web ini, anda bersetuju." },
-							' Anda boleh menarik diri pada bila-bila masa dengan butang "Cookies / Kuki" pada setiap halaman, atau di bawah "Pilihan anda" di bawah. Ini membantu kami menambah baik kelas dan laman web.',
+							' Anda boleh menarik diri pada bila-bila masa dengan ikon kuki di bahagian bawah kiri setiap halaman, atau di bawah "Pilihan anda" di bawah. Ini membantu kami menambah baik kelas dan laman web.',
 						],
 						[
 							{
@@ -377,7 +377,7 @@ const ms: NoticeLanguage<"ms"> = {
 			blocks: [
 				{
 					p: [
-						'Anda boleh menarik diri daripada Google Analytics dan ciri pengiklanannya pada bila-bila masa dengan butang "Cookies / Kuki" pada setiap halaman (atau "Tetapan kuki" di bahagian bawah), dan memilih semula dengan cara yang sama. Menarik diri menghentikan Google Analytics dan ciri pengiklanannya dalam pelayar itu, dan laman web ini memadam kuki Google yang boleh dicapainya. Pilihan anda disimpan dalam pelayar itu sahaja, dalam storan setempat dan dalam kuki pihak pertama kecil bernama jm-consent-v1, jadi anda perlu membuatnya semula dalam setiap pelayar atau peranti yang anda gunakan. Jika pelayar anda menyekat penyimpanan, penarikan diri ini hanya untuk tab itu. Anda juga boleh menyekat atau memadam kuki dalam tetapan pelayar. Jika anda tidak memberi data, kami mungkin tidak dapat membalas anda.',
+						'Anda boleh menarik diri daripada Google Analytics dan ciri pengiklanannya pada bila-bila masa dengan ikon kuki di bahagian bawah kiri setiap halaman (atau "Tetapan kuki" di bahagian bawah), dan memilih semula dengan cara yang sama. Menarik diri menghentikan Google Analytics dan ciri pengiklanannya dalam pelayar itu, dan laman web ini memadam kuki Google yang boleh dicapainya. Pilihan anda disimpan dalam pelayar itu sahaja, dalam storan setempat dan dalam kuki pihak pertama kecil bernama jm-consent-v1, jadi anda perlu membuatnya semula dalam setiap pelayar atau peranti yang anda gunakan. Jika pelayar anda menyekat penyimpanan, penarikan diri ini hanya untuk tab itu. Anda juga boleh menyekat atau memadam kuki dalam tetapan pelayar. Jika anda tidak memberi data, kami mungkin tidak dapat membalas anda.',
 					],
 				},
 			],
