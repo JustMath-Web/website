@@ -20,7 +20,7 @@
  */
 
 /** The branch whose deploys are production. */
-const PRODUCTION_BRANCH = "main";
+export const PRODUCTION_BRANCH = "main";
 
 export interface DeployEnvCheckResult {
 	/** Fatal disagreement — the caller should throw. */

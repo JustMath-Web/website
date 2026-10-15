@@ -36,6 +36,9 @@ jobs:
       - run: pnpm audit --audit-level=critical
       - run: pnpm format:check
       - run: pnpm check
+      # Typechecks the static scripts in web/public (consent.js, analytics.js), which `astro check`
+      # does not reach. FE-24: the consent logic is typed as well as tested (docs/DECISIONS.md §49).
+      - run: pnpm check:public
       - run: pnpm build
       # Guardrail for docs/DECISIONS.md §29's blog fetch-failure policy: a production build must
       # fail outright if it can't get real Sanity data, never silently render an empty/placeholder
@@ -76,6 +79,11 @@ jobs:
 
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
+
+      # Fails while the privacy notice carries an unfinished owner fact (DECISIONS §49). Deliberately
+      # LAST: it is red by design until the owner supplies the facts, so every step above still
+      # runs and reports on its own.
+      - run: pnpm test:privacy-facts-guard
 
       - if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
