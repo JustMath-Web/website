@@ -3191,7 +3191,7 @@ keeping WhatsApp messages until someone asks for deletion satisfies the PDPA ret
   accepts as an owner waiver. It is not a review date and must never be read as one; no review happened.
   `/privacy/` is therefore indexable with no draft note, and the draft-state e2e is inverted. To return to
   the blocked state, set both fields back to `null` and revert that test. Research on 2026-10-15 found no
-  cookie-specific rule in Act 709 and no cookie enforcement; vendor claims that Act A1727 banned implied
+  cookie-specific wording in the text of Act A1727 (Act 709 itself was not read in full) and, in a web search, no cookie fine. That search is not proof that none exists, and it does not settle whether default-on tracking has a basis under s.6. Vendor claims that Act A1727 banned implied
   consent are not in its text (`log/2026-10-15_pdpa-research-note.md`, local). The opt-in banner remains at tag
   `consent-optin-1ee0203`. `lastUpdated` is still reset to the publication date at release (R17).
 

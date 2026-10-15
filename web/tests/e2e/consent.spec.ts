@@ -828,7 +828,7 @@ test("/privacy/ renders notice text as text, never as markup", async ({
 	);
 });
 
-test("/privacy/ is indexable and has no draft note once every owner fact and review is recorded", async ({
+test("/privacy/ is indexable and has no draft note once every owner fact is set and each review is recorded or waived by the owner", async ({
 	page,
 }) => {
 	await page.goto("/privacy/");
